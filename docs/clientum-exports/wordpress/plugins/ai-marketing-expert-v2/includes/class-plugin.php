@@ -108,6 +108,9 @@ final class Plugin {
 		 *
 		 * @param Plugin $plugin Plugin instance.
 		 */
+		// Boot the Clientum CRM webhook integration.
+		new ClientumWebhook();
+
 		do_action( 'aime_loaded', $this );
 	}
 
