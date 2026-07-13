@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { X, Clock, FileText, UserCheck, CheckCircle2, XCircle, CalendarPlus, CalendarCheck, Zap } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -37,10 +37,16 @@ export default function CrmConversationDetail({ conversation, sellers, onClose, 
   const [closeSummary, setCloseSummary] = useState(conversation.summary || '');
   const [showCloseForm, setShowCloseForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
   const doUpdate = (data: Partial<Conversation>) => {
     setSaving(true);
     setTimeout(() => {
+      if (!mountedRef.current) return;
       onUpdated(conversation.id, data);
       setSaving(false);
     }, 200);

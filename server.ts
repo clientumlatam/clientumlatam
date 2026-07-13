@@ -1258,22 +1258,27 @@ async function enrichWithHunter(domain: string): Promise<{
 // Body: { domain: string }
 // Returns: { contacts, organization, source } or { contacts: [], source: "none" }
 app.post("/api/enrich-contact", requireAuth, async (req, res) => {
-  const { domain } = req.body ?? {};
-  if (!domain || typeof domain !== "string") {
-    return res.status(400).json({ error: "domain requerido" });
+  try {
+    const { domain } = req.body ?? {};
+    if (!domain || typeof domain !== "string") {
+      return res.status(400).json({ error: "domain requerido" });
+    }
+
+    const result = await enrichWithHunter(domain);
+
+    if (!result || result.contacts.length === 0) {
+      return res.json({ contacts: [], organization: null, source: "none" });
+    }
+
+    return res.json({
+      contacts:     result.contacts,
+      organization: result.organization,
+      source:       "hunter",
+    });
+  } catch (error: any) {
+    console.error("[Enrich Contact Error]:", error);
+    return res.status(500).json({ error: "Error al enriquecer el contacto." });
   }
-
-  const result = await enrichWithHunter(domain);
-
-  if (!result || result.contacts.length === 0) {
-    return res.json({ contacts: [], organization: null, source: "none" });
-  }
-
-  return res.json({
-    contacts:     result.contacts,
-    organization: result.organization,
-    source:       "hunter",
-  });
 });
 
 app.post("/api/scrape-places", requireAuth, async (req, res) => {
@@ -2117,43 +2122,58 @@ async function initChatbotLeadsTable() {
 // Lo llama el widget del Asesor Comercial IA cuando el vendedor captura los
 // datos de la persona con la que está conversando.
 app.post("/api/chatbot-leads", requireAuth, async (req, res) => {
-  const { name, phone, email, company, notes, conversation } = req.body ?? {};
-  if (typeof name !== "string" || !name.trim()) {
-    return res.status(400).json({ error: "name requerido" });
+  try {
+    const { name, phone, email, company, notes, conversation } = req.body ?? {};
+    if (typeof name !== "string" || !name.trim()) {
+      return res.status(400).json({ error: "name requerido" });
+    }
+    const result = await pgPool.query(
+      `INSERT INTO chatbot_leads (name, phone, email, company, notes, conversation)
+       VALUES ($1,$2,$3,$4,$5,$6)
+       RETURNING id, name, phone, email, company, notes, status, created_at`,
+      [name.trim(), phone || null, email || null, company || null, notes || null, conversation || null],
+    );
+    res.status(201).json({ ok: true, lead: result.rows[0] });
+  } catch (error: any) {
+    console.error("[Chatbot Leads POST Error]:", error);
+    res.status(500).json({ error: "Error al guardar el lead." });
   }
-  const result = await pgPool.query(
-    `INSERT INTO chatbot_leads (name, phone, email, company, notes, conversation)
-     VALUES ($1,$2,$3,$4,$5,$6)
-     RETURNING id, name, phone, email, company, notes, status, created_at`,
-    [name.trim(), phone || null, email || null, company || null, notes || null, conversation || null],
-  );
-  res.status(201).json({ ok: true, lead: result.rows[0] });
 });
 
 // GET /api/chatbot-leads
 // Lista los leads capturados, para la pestaña "Leads" del CRM.
 app.get("/api/chatbot-leads", requireAuth, async (req, res) => {
-  const result = await pgPool.query(
-    `SELECT id, name, phone, email, company, notes, conversation, status, created_at
-     FROM chatbot_leads
-     ORDER BY created_at DESC`,
-  );
-  res.json({ leads: result.rows });
+  try {
+    const result = await pgPool.query(
+      `SELECT id, name, phone, email, company, notes, conversation, status, created_at
+       FROM chatbot_leads
+       ORDER BY created_at DESC`,
+    );
+    res.json({ leads: result.rows });
+  } catch (error: any) {
+    console.error("[Chatbot Leads GET Error]:", error);
+    res.status(500).json({ error: "Error al obtener los leads." });
+  }
 });
 
 // PATCH /api/chatbot-leads/:id
 // Body: { status: "nuevo"|"contactado"|"calificado"|"descartado" }
 app.patch("/api/chatbot-leads/:id", requireAuth, async (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body ?? {};
-  const VALID = ["nuevo", "contactado", "calificado", "descartado"];
-  if (!VALID.includes(status)) return res.status(400).json({ error: "status inválido" });
-  const result = await pgPool.query(
-    `UPDATE chatbot_leads SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING id`,
-    [status, id],
-  );
-  if (!result.rows[0]) return res.status(404).json({ error: "lead not found" });
-  res.json({ ok: true, id, status });
+  try {
+    const { id } = req.params;
+    const { status } = req.body ?? {};
+    const VALID = ["nuevo", "contactado", "calificado", "descartado"];
+    if (!VALID.includes(status)) return res.status(400).json({ error: "status inválido" });
+    const result = await pgPool.query(
+      `UPDATE chatbot_leads SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING id`,
+      [status, id],
+    );
+    if (!result.rows[0]) return res.status(404).json({ error: "lead not found" });
+    res.json({ ok: true, id, status });
+  } catch (error: any) {
+    console.error("[Chatbot Leads PATCH Error]:", error);
+    res.status(500).json({ error: "Error al actualizar el lead." });
+  }
 });
 
 // ---------------------------------------------------------------------------
@@ -2209,40 +2229,57 @@ async function initSantiTables() {
 //         contact_role, pain_point, fit_score, amount_ars, meddic_score, guiacores_url }
 // Crea un lead nuevo; devuelve el id generado.
 app.post("/api/leads", requireAuth, async (req, res) => {
-  const {
-    company_name, industry, city, address,
-    contact_name, contact_phone, contact_role,
-    pain_point, fit_score, amount_ars, meddic_score, guiacores_url,
-  } = req.body ?? {};
-  if (!company_name) return res.status(400).json({ error: "company_name requerido" });
-  const result = await pgPool.query(
-    `INSERT INTO santi_leads
-       (company_name, industry, city, address, contact_name, contact_phone,
-        contact_role, pain_point, fit_score, amount_ars, meddic_score, guiacores_url)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
-     RETURNING id`,
-    [company_name, industry ?? null, city ?? null, address ?? null,
-     contact_name ?? null, contact_phone ?? null, contact_role ?? null,
-     pain_point ?? null, fit_score ?? null, amount_ars ?? 180000,
-     meddic_score ?? null, guiacores_url ?? null],
-  );
-  res.status(201).json({ ok: true, id: result.rows[0].id });
+  try {
+    const {
+      company_name, industry, city, address,
+      contact_name, contact_phone, contact_role,
+      pain_point, fit_score, amount_ars, meddic_score, guiacores_url,
+    } = req.body ?? {};
+    if (!company_name) return res.status(400).json({ error: "company_name requerido" });
+    const result = await pgPool.query(
+      `INSERT INTO santi_leads
+         (company_name, industry, city, address, contact_name, contact_phone,
+          contact_role, pain_point, fit_score, amount_ars, meddic_score, guiacores_url)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+       RETURNING id`,
+      [company_name, industry ?? null, city ?? null, address ?? null,
+       contact_name ?? null, contact_phone ?? null, contact_role ?? null,
+       pain_point ?? null, fit_score ?? null, amount_ars ?? 180000,
+       meddic_score ?? null, guiacores_url ?? null],
+    );
+    res.status(201).json({ ok: true, id: result.rows[0].id });
+  } catch (error: any) {
+    console.error("[Leads POST Error]:", error);
+    res.status(500).json({ error: "Error al crear el lead." });
+  }
 });
 
 // POST /api/leads/:id/brochure
 // Body: { content, hook? }
 // Guarda (o reemplaza) el brochure generado por IA para ese lead.
+// DELETE + INSERT run inside a transaction so a concurrent request can never
+// leave the row in a deleted-but-not-yet-inserted state.
 app.post("/api/leads/:id/brochure", requireAuth, async (req, res) => {
   const { id } = req.params;
   const { content, hook } = req.body ?? {};
   if (!content) return res.status(400).json({ error: "content requerido" });
-  // Upsert: un lead tiene a lo sumo un brochure vigente
-  await pgPool.query(`DELETE FROM santi_brochures WHERE lead_id = $1`, [id]);
-  await pgPool.query(
-    `INSERT INTO santi_brochures (lead_id, content, hook) VALUES ($1, $2, $3)`,
-    [id, content, hook ?? null],
-  );
-  res.json({ ok: true });
+  const client = await pgPool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query(`DELETE FROM santi_brochures WHERE lead_id = $1`, [id]);
+    await client.query(
+      `INSERT INTO santi_brochures (lead_id, content, hook) VALUES ($1, $2, $3)`,
+      [id, content, hook ?? null],
+    );
+    await client.query("COMMIT");
+    res.json({ ok: true });
+  } catch (error: any) {
+    await client.query("ROLLBACK");
+    console.error("[Leads Brochure POST Error]:", error);
+    res.status(500).json({ error: "Error al guardar el brochure." });
+  } finally {
+    client.release();
+  }
 });
 
 // ---------------------------------------------------------------------------
@@ -2251,59 +2288,79 @@ app.post("/api/leads/:id/brochure", requireAuth, async (req, res) => {
 
 // GET /api/leads?status=pendiente&limit=20
 app.get("/api/leads", requireApiKey, async (req, res) => {
-  const status = (req.query.status as string) || "pendiente";
-  const limit  = Math.min(Number(req.query.limit) || 20, 100);
-  const result = await pgPool.query(
-    `SELECT id, company_name, industry, city, contact_name, contact_phone,
-            contact_role, pain_point, fit_score, amount_ars, status, created_at
-     FROM santi_leads
-     WHERE status = $1
-     ORDER BY created_at ASC
-     LIMIT $2`,
-    [status, limit],
-  );
-  res.json({ leads: result.rows });
+  try {
+    const status = (req.query.status as string) || "pendiente";
+    const limit  = Math.min(Number(req.query.limit) || 20, 100);
+    const result = await pgPool.query(
+      `SELECT id, company_name, industry, city, contact_name, contact_phone,
+              contact_role, pain_point, fit_score, amount_ars, status, created_at
+       FROM santi_leads
+       WHERE status = $1
+       ORDER BY created_at ASC
+       LIMIT $2`,
+      [status, limit],
+    );
+    res.json({ leads: result.rows });
+  } catch (error: any) {
+    console.error("[Leads GET Error]:", error);
+    res.status(500).json({ error: "Error al obtener los leads." });
+  }
 });
 
 // GET /api/leads/:id/brochure
 app.get("/api/leads/:id/brochure", requireApiKey, async (req, res) => {
-  const { id } = req.params;
-  const result = await pgPool.query(
-    `SELECT * FROM santi_brochures WHERE lead_id = $1 LIMIT 1`,
-    [id],
-  );
-  if (!result.rows[0]) return res.status(404).json({ error: "brochure not found" });
-  res.json({ brochure: result.rows[0] });
+  try {
+    const { id } = req.params;
+    const result = await pgPool.query(
+      `SELECT * FROM santi_brochures WHERE lead_id = $1 LIMIT 1`,
+      [id],
+    );
+    if (!result.rows[0]) return res.status(404).json({ error: "brochure not found" });
+    res.json({ brochure: result.rows[0] });
+  } catch (error: any) {
+    console.error("[Leads Brochure GET Error]:", error);
+    res.status(500).json({ error: "Error al obtener el brochure." });
+  }
 });
 
 // PATCH /api/leads/:id
 // Body: { status: "pendiente"|"contactado"|"caliente"|"tibio"|"frio"|"agendado" }
 app.patch("/api/leads/:id", requireApiKey, async (req, res) => {
-  const { id } = req.params;
-  const { status } = req.body ?? {};
-  const VALID = ["pendiente","contactado","caliente","tibio","frio","agendado"];
-  if (!VALID.includes(status)) return res.status(400).json({ error: "status inválido" });
-  const result = await pgPool.query(
-    `UPDATE santi_leads SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING id`,
-    [status, id],
-  );
-  if (!result.rows[0]) return res.status(404).json({ error: "lead not found" });
-  res.json({ ok: true, id, status });
+  try {
+    const { id } = req.params;
+    const { status } = req.body ?? {};
+    const VALID = ["pendiente","contactado","caliente","tibio","frio","agendado"];
+    if (!VALID.includes(status)) return res.status(400).json({ error: "status inválido" });
+    const result = await pgPool.query(
+      `UPDATE santi_leads SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING id`,
+      [status, id],
+    );
+    if (!result.rows[0]) return res.status(404).json({ error: "lead not found" });
+    res.json({ ok: true, id, status });
+  } catch (error: any) {
+    console.error("[Leads PATCH Error]:", error);
+    res.status(500).json({ error: "Error al actualizar el lead." });
+  }
 });
 
 // POST /api/leads/:id/notes
 // Body: { summary: string }
 app.post("/api/leads/:id/notes", requireApiKey, async (req, res) => {
-  const { id } = req.params;
-  const { summary } = req.body ?? {};
-  if (!summary) return res.status(400).json({ error: "summary requerido" });
-  const check = await pgPool.query(`SELECT id FROM santi_leads WHERE id = $1`, [id]);
-  if (!check.rows[0]) return res.status(404).json({ error: "lead not found" });
-  await pgPool.query(
-    `INSERT INTO santi_notes (lead_id, summary) VALUES ($1, $2)`,
-    [id, summary],
-  );
-  res.json({ ok: true, id });
+  try {
+    const { id } = req.params;
+    const { summary } = req.body ?? {};
+    if (!summary) return res.status(400).json({ error: "summary requerido" });
+    const check = await pgPool.query(`SELECT id FROM santi_leads WHERE id = $1`, [id]);
+    if (!check.rows[0]) return res.status(404).json({ error: "lead not found" });
+    await pgPool.query(
+      `INSERT INTO santi_notes (lead_id, summary) VALUES ($1, $2)`,
+      [id, summary],
+    );
+    res.json({ ok: true, id });
+  } catch (error: any) {
+    console.error("[Leads Notes POST Error]:", error);
+    res.status(500).json({ error: "Error al guardar la nota." });
+  }
 });
 
 // Configure Vite or Static Files
