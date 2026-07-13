@@ -1,16 +1,14 @@
 import React, { useState } from 'react';
-import { X, Clock, FileText, UserCheck, CheckCircle2, XCircle, CalendarPlus, CalendarCheck } from 'lucide-react';
-import { Badge } from '../ui/badge';
-import { Button } from '../ui/button';
+import { X, Clock, FileText, UserCheck, CheckCircle2, XCircle, CalendarPlus, CalendarCheck, Zap } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Conversation, Seller } from './crmTypes';
 
 const statusColors: Record<string, string> = {
-  activa: 'bg-blue-100 text-blue-700',
-  derivada: 'bg-yellow-100 text-yellow-700',
-  resuelta: 'bg-green-100 text-green-700',
-  cerrada: 'bg-gray-100 text-gray-600',
+  activa: 'bg-sky-500/10 text-sky-400 border-sky-500/20 shadow-[0_0_10px_rgba(56,189,248,0.1)]',
+  derivada: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20 shadow-[0_0_10px_rgba(99,102,241,0.1)]',
+  resuelta: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]',
+  cerrada: 'bg-slate-800 text-slate-400 border-slate-700',
 };
 
 const typeLabels: Record<string, string> = {
@@ -79,164 +77,187 @@ export default function CrmConversationDetail({ conversation, sellers, onClose, 
   const isClosed = conversation.status === 'cerrada';
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
-      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-md bg-background shadow-2xl flex flex-col h-full overflow-y-auto">
-        <div className="flex items-center justify-between p-5 border-b sticky top-0 bg-background z-10">
+    <div className="fixed inset-0 z-50 flex justify-end animate-fade-in font-sans">
+      <div className="absolute inset-0 bg-[#030712]/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-md bg-[#0A101F] border-l border-[#1E293B] shadow-[-10px_0_30px_rgba(0,0,0,0.5)] flex flex-col h-full overflow-y-auto animate-slide-in-right">
+        <div className="flex items-center justify-between p-5 border-b border-[#1E293B] sticky top-0 bg-[#0A101F]/90 backdrop-blur-md z-10">
           <div>
-            <h2 className="font-bold text-lg text-foreground">
+            <h2 className="font-bold text-lg text-white font-display tracking-wide uppercase">
               {conversation.customer_name || conversation.customer_phone}
             </h2>
-            <p className="text-xs text-muted-foreground">{conversation.customer_phone}</p>
+            <p className="text-xs text-slate-500 font-mono tracking-widest">{conversation.customer_phone}</p>
           </div>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-muted transition-colors">
-            <X className="w-5 h-5 text-muted-foreground" />
+          <button onClick={onClose} className="p-2 rounded bg-[#030712] border border-[#1E293B] hover:bg-[#1E293B] hover:text-sky-400 transition-colors text-slate-400">
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         <div className="p-5 space-y-6 flex-1">
           <div className="flex flex-wrap gap-2">
-            <Badge className={`${statusColors[conversation.status]} border-0`}>{conversation.status}</Badge>
-            <Badge variant="outline">{typeLabels[conversation.query_type] || conversation.query_type}</Badge>
+            <span className={`px-2 py-0.5 rounded border text-[10px] font-bold uppercase tracking-wider font-mono ${statusColors[conversation.status]}`}>
+              {conversation.status}
+            </span>
+            <span className="px-2 py-0.5 rounded border border-[#334155] bg-[#1E293B] text-slate-300 text-[10px] font-bold uppercase tracking-wider font-mono">
+              {typeLabels[conversation.query_type] || conversation.query_type}
+            </span>
             {conversation.budget_generated && (
-              <Badge className="bg-green-100 text-green-700 border-0">✅ Presupuesto generado</Badge>
+              <span className="px-2 py-0.5 rounded border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-wider font-mono flex items-center gap-1">
+                <Zap className="w-3 h-3" /> PRESUPUESTO
+              </span>
             )}
-            <div className="flex items-center gap-1 text-xs text-muted-foreground ml-auto">
-              <Clock className="w-3 h-3" />
-              {conversation.created_date
-                ? format(new Date(conversation.created_date), "d MMM yyyy · HH:mm", { locale: es })
-                : '-'}
-            </div>
+          </div>
+          
+          <div className="flex items-center gap-2 text-xs text-slate-500 font-mono bg-[#030712] p-2 rounded border border-[#1E293B]">
+            <Clock className="w-3.5 h-3.5 text-sky-500/50" />
+            <span>TIMESTAMP: {conversation.created_date ? format(new Date(conversation.created_date), "dd/MM/yyyy HH:mm:ss").toUpperCase() : '--/--/-- --:--:--'}</span>
           </div>
 
           {conversation.summary && (
-            <div className="bg-muted/50 rounded-xl p-4">
-              <p className="text-xs font-semibold text-muted-foreground mb-1 flex items-center gap-1">
-                <FileText className="w-3 h-3" /> RESUMEN
+            <div className="bg-[#030712] border border-[#1E293B] rounded-lg p-4 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-1 h-full bg-slate-600" />
+              <p className="text-[10px] font-bold text-slate-500 mb-2 flex items-center gap-1.5 font-mono uppercase tracking-widest">
+                <FileText className="w-3.5 h-3.5" /> TRANSCRIPCIÓN RESUMIDA
               </p>
-              <p className="text-sm text-foreground">{conversation.summary}</p>
+              <p className="text-sm text-slate-300 font-mono leading-relaxed pl-1">{conversation.summary}</p>
             </div>
           )}
 
           {!isClosed && (
-            <div className="space-y-3">
-              <p className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <UserCheck className="w-4 h-4 text-primary" /> Asignar vendedor
+            <div className="cockpit-panel p-4 border-sky-500/20 bg-[#0f172a]">
+              <p className="text-xs font-bold text-sky-400 flex items-center gap-2 mb-3 font-display tracking-widest uppercase">
+                <UserCheck className="w-4 h-4" /> ASIGNACIÓN DE RECURSOS
               </p>
               <select
                 value={selectedSeller}
                 onChange={e => setSelectedSeller(e.target.value)}
-                className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-ring"
+                className="cockpit-input w-full font-mono text-xs mb-3 bg-[#030712]"
               >
-                <option value="">— Seleccionar vendedor —</option>
+                <option value="">— SELECCIONAR OPERADOR —</option>
                 {sellers.filter(s => s.active).map(s => (
                   <option key={s.id} value={s.name}>
-                    {s.name} · {s.specialty} ({s.branch})
+                    {s.name.toUpperCase()} · {s.specialty.toUpperCase()} ({s.branch?.toUpperCase()})
                   </option>
                 ))}
               </select>
-              <Button onClick={handleAssignSeller} disabled={!selectedSeller || saving} size="sm" className="w-full">
-                {saving ? 'Guardando...' : conversation.assigned_seller ? 'Reasignar vendedor' : 'Asignar y derivar'}
-              </Button>
+              <button 
+                onClick={handleAssignSeller} 
+                disabled={!selectedSeller || saving} 
+                className="w-full cockpit-button-primary py-2 text-[10px] font-bold tracking-widest uppercase font-mono"
+              >
+                {saving ? 'PROCESANDO...' : conversation.assigned_seller ? 'MODIFICAR RUTA' : 'ENRUTAR PAQUETE'}
+              </button>
               {conversation.assigned_seller && (
-                <p className="text-xs text-muted-foreground text-center">
-                  Asignado actualmente: <span className="font-medium text-foreground">{conversation.assigned_seller}</span>
-                  {conversation.assigned_branch && ` · ${conversation.assigned_branch}`}
+                <p className="text-[10px] text-slate-500 text-center font-mono mt-3 uppercase tracking-widest bg-[#030712] py-1.5 rounded border border-[#1E293B]">
+                  RUTA ACTUAL: <span className="font-bold text-sky-400">{conversation.assigned_seller}</span>
+                  {conversation.assigned_branch && ` // ${conversation.assigned_branch}`}
                 </p>
               )}
             </div>
           )}
 
           {!isClosed && (
-            <div className="flex items-center justify-between p-4 rounded-xl border border-border">
+            <div className="flex items-center justify-between p-4 rounded-lg bg-[#0f172a] border border-[#1E293B]">
               <div>
-                <p className="text-sm font-semibold text-foreground">Presupuesto generado</p>
-                <p className="text-xs text-muted-foreground">¿Se envió un presupuesto al cliente?</p>
+                <p className="text-xs font-bold text-slate-200 font-display tracking-widest uppercase">EMISIÓN DE PRESUPUESTO</p>
+                <p className="text-[10px] text-slate-500 font-mono mt-1">¿COTIZACIÓN TRANSMITIDA AL CLIENTE?</p>
               </div>
               <button
                 onClick={handleToggleBudget}
                 disabled={saving}
-                className={`w-12 h-6 rounded-full transition-colors relative ${budgetGenerated ? 'bg-green-500' : 'bg-muted'}`}
+                className={`w-12 h-6 rounded-full transition-colors relative flex-shrink-0 ${budgetGenerated ? 'bg-emerald-500/80 shadow-[0_0_10px_rgba(16,185,129,0.3)]' : 'bg-[#1E293B]'}`}
               >
-                <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${budgetGenerated ? 'left-6' : 'left-0.5'}`} />
+                <span className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all ${budgetGenerated ? 'left-7' : 'left-1'}`} />
               </button>
             </div>
           )}
 
           {!isClosed && budgetGenerated && (
-            <div className="flex items-center justify-between p-4 rounded-xl border border-border">
+            <div className="flex items-center justify-between p-4 rounded-lg bg-[#0f172a] border border-[#1E293B]">
               <div>
-                <p className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-green-500" /> Presupuesto aprobado
+                <p className="text-xs font-bold text-slate-200 font-display tracking-widest uppercase flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" /> VALIDACIÓN DE PRESUPUESTO
                 </p>
-                <p className="text-xs text-muted-foreground">¿El cliente aprobó el presupuesto?</p>
+                <p className="text-[10px] text-slate-500 font-mono mt-1">¿COTIZACIÓN APROBADA POR CLIENTE?</p>
               </div>
               <button
                 onClick={handleToggleBudgetApproved}
                 disabled={saving}
-                className={`w-12 h-6 rounded-full transition-colors relative ${budgetApproved ? 'bg-green-500' : 'bg-muted'}`}
+                className={`w-12 h-6 rounded-full transition-colors relative flex-shrink-0 ${budgetApproved ? 'bg-emerald-500/80 shadow-[0_0_10px_rgba(16,185,129,0.3)]' : 'bg-[#1E293B]'}`}
               >
-                <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all ${budgetApproved ? 'left-6' : 'left-0.5'}`} />
+                <span className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all ${budgetApproved ? 'left-7' : 'left-1'}`} />
               </button>
             </div>
           )}
 
           {!isClosed && budgetApproved && (
-            <div className="space-y-3 p-4 rounded-xl border border-sky-200 bg-sky-50">
-              <p className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <CalendarPlus className="w-4 h-4 text-sky-600" /> Agendar visita técnica
+            <div className="p-4 rounded-lg bg-indigo-500/5 border border-indigo-500/20 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full filter blur-[20px] pointer-events-none" />
+              <p className="text-xs font-bold text-indigo-400 flex items-center gap-2 mb-3 font-display tracking-widest uppercase relative z-10">
+                <CalendarPlus className="w-4 h-4" /> PROGRAMAR INTERVENCIÓN FÍSICA
               </p>
-              {conversation.visit_scheduled && conversation.visit_date ? (
-                <div className="flex items-center gap-2 text-sm text-green-700 bg-green-100 rounded-lg px-3 py-2">
-                  <CalendarCheck className="w-4 h-4" />
-                  Visita agendada: {format(new Date(conversation.visit_date), "d MMM yyyy · HH:mm", { locale: es })}
-                </div>
-              ) : (
-                <>
-                  <input
-                    type="datetime-local"
-                    value={visitDate}
-                    onChange={e => setVisitDate(e.target.value)}
-                    className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-ring"
-                  />
-                  <Button onClick={handleScheduleVisit} disabled={!visitDate || saving} size="sm" className="w-full">
-                    {saving ? 'Agendando...' : 'Confirmar visita'}
-                  </Button>
-                </>
-              )}
+              
+              <div className="relative z-10">
+                {conversation.visit_scheduled && conversation.visit_date ? (
+                  <div className="flex items-center justify-center gap-2 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded py-2.5 font-mono uppercase tracking-widest">
+                    <CalendarCheck className="w-4 h-4" />
+                    T0: {format(new Date(conversation.visit_date), "dd/MM/yyyy HH:mm").toUpperCase()}
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <input
+                      type="datetime-local"
+                      value={visitDate}
+                      onChange={e => setVisitDate(e.target.value)}
+                      className="cockpit-input w-full font-mono text-xs text-slate-300"
+                    />
+                    <button 
+                      onClick={handleScheduleVisit} 
+                      disabled={!visitDate || saving} 
+                      className="w-full bg-indigo-600 hover:bg-indigo-500 text-white rounded py-2 text-[10px] font-bold tracking-widest uppercase font-mono transition-colors disabled:opacity-50"
+                    >
+                      {saving ? 'PROCESANDO...' : 'CONFIRMAR VENTANA DE TIEMPO'}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
           {!isClosed && (
-            <div className="space-y-3">
-              <p className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <XCircle className="w-4 h-4 text-destructive" /> Cerrar conversación
+            <div className="p-4 rounded-lg border border-red-500/20 bg-[#0f172a]">
+              <p className="text-xs font-bold text-red-400 flex items-center gap-2 mb-3 font-display tracking-widest uppercase">
+                <XCircle className="w-4 h-4" /> TERMINACIÓN DE CONEXIÓN
               </p>
               {!showCloseForm ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full border-destructive/30 text-destructive hover:bg-destructive/5"
+                <button
+                  className="w-full bg-transparent border border-red-500/30 text-red-400 hover:bg-red-500/10 rounded py-2 text-[10px] font-bold tracking-widest uppercase font-mono transition-colors"
                   onClick={() => setShowCloseForm(true)}
                 >
-                  Cerrar con resumen
-                </Button>
+                  ABORTAR Y ARCHIVAR
+                </button>
               ) : (
                 <div className="space-y-3">
                   <textarea
                     value={closeSummary}
                     onChange={e => setCloseSummary(e.target.value)}
-                    placeholder="Escribí un resumen de la conversación..."
+                    placeholder="MOTIVO DE CIERRE / NOTAS FINALES..."
                     rows={3}
-                    className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-ring resize-none"
+                    className="cockpit-input w-full font-mono text-xs resize-none"
                   />
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="flex-1" onClick={() => setShowCloseForm(false)}>
-                      Cancelar
-                    </Button>
-                    <Button size="sm" className="flex-1 bg-destructive hover:bg-destructive/90" onClick={handleClose} disabled={saving}>
-                      {saving ? 'Cerrando...' : 'Confirmar cierre'}
-                    </Button>
+                    <button 
+                      className="flex-1 cockpit-button-secondary py-2 text-[10px] font-bold tracking-widest uppercase font-mono" 
+                      onClick={() => setShowCloseForm(false)}
+                    >
+                      CANCELAR
+                    </button>
+                    <button 
+                      className="flex-1 bg-red-600 hover:bg-red-500 text-white rounded py-2 text-[10px] font-bold tracking-widest uppercase font-mono transition-colors disabled:opacity-50" 
+                      onClick={handleClose} 
+                      disabled={saving}
+                    >
+                      {saving ? 'CERRANDO...' : 'CONFIRMAR'}
+                    </button>
                   </div>
                 </div>
               )}
@@ -244,9 +265,10 @@ export default function CrmConversationDetail({ conversation, sellers, onClose, 
           )}
 
           {isClosed && (
-            <div className="bg-muted/50 rounded-xl p-4 text-center">
-              <CheckCircle2 className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground font-medium">Conversación cerrada</p>
+            <div className="bg-[#030712] border border-[#1E293B] rounded-lg p-5 text-center flex flex-col items-center">
+              <CheckCircle2 className="w-8 h-8 text-slate-600 mb-2" />
+              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest font-mono">CONEXIÓN ARCHIVADA</p>
+              <p className="text-xs text-slate-600 font-mono mt-1">NO SE PERMITEN MODIFICACIONES</p>
             </div>
           )}
         </div>

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import {
   Server, Download, Search, Filter, Globe, Code2, ExternalLink,
-  CheckCircle2, AlertCircle, Clock, FileText, Database
+  CheckCircle2, AlertCircle, Clock, FileText, Database, Terminal
 } from 'lucide-react';
 
 /* ── Types ─────────────────────────────────────────────────────────────── */
@@ -203,21 +203,21 @@ const initialData: CMDBEntry[] = [
 const AMBIENTES: Ambiente[] = ['Producción', 'Desarrollo', 'Externo'];
 
 const ambienteStyle: Record<Ambiente, string> = {
-  'Producción': 'bg-emerald-100 text-emerald-700 border border-emerald-200',
-  'Desarrollo': 'bg-sky-100 text-sky-700 border border-sky-200',
-  'Externo':    'bg-violet-100 text-violet-700 border border-violet-200',
+  'Producción': 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_8px_rgba(16,185,129,0.15)]',
+  'Desarrollo': 'bg-sky-500/10 text-sky-400 border border-sky-500/20 shadow-[0_0_8px_rgba(14,165,233,0.15)]',
+  'Externo':    'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-[0_0_8px_rgba(99,102,241,0.15)]',
 };
 
 const estadoIcon: Record<Estado, React.ReactNode> = {
-  'Activo':      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />,
-  'En revisión': <Clock className="w-3.5 h-3.5 text-amber-500" />,
+  'Activo':      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />,
+  'En revisión': <Clock className="w-3.5 h-3.5 text-amber-400" />,
   'Inactivo':    <AlertCircle className="w-3.5 h-3.5 text-red-400" />,
 };
 
 const estadoTextStyle: Record<Estado, string> = {
-  'Activo':      'text-emerald-700',
-  'En revisión': 'text-amber-700',
-  'Inactivo':    'text-red-500',
+  'Activo':      'text-emerald-400',
+  'En revisión': 'text-amber-400',
+  'Inactivo':    'text-red-400',
 };
 
 /* ── Export helpers ──────────────────────────────────────────────────────── */
@@ -292,202 +292,210 @@ export default function CrmFullCMDB() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Database className="w-5 h-5 text-primary" />
-            <h1 className="text-xl font-bold text-slate-800">Inventario de Infraestructura</h1>
-          </div>
-          <p className="text-sm text-slate-500">CMDB – {data.length} recursos registrados</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-white mb-1 font-display tracking-wide flex items-center gap-3">
+            <Database className="w-6 h-6 text-sky-400" />
+            TOPOLOGÍA CMDB
+          </h1>
+          <p className="text-xs text-slate-500 font-mono tracking-wider uppercase">
+            REGISTRO DE INFRAESTRUCTURA · {data.length} NODOS ACTIVOS
+          </p>
         </div>
         <div className="flex gap-2 flex-wrap">
           <button
             onClick={() => download(toCSV(filtered), 'clientum-infraestructura.csv', 'text/csv')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 shadow-xs transition-all"
+            className="cockpit-button-secondary px-3 py-1.5 flex items-center gap-2 text-[10px] font-mono font-bold uppercase tracking-widest"
           >
-            <Download className="w-3.5 h-3.5" /> Exportar CSV
+            <Download className="w-3.5 h-3.5 text-sky-400" /> CSV DUMP
           </button>
           <button
             onClick={() => download(toMarkdown(filtered), 'clientum-infraestructura.md', 'text/markdown')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 shadow-xs transition-all"
+            className="cockpit-button-secondary px-3 py-1.5 flex items-center gap-2 text-[10px] font-mono font-bold uppercase tracking-widest"
           >
-            <FileText className="w-3.5 h-3.5" /> Exportar Markdown
+            <FileText className="w-3.5 h-3.5 text-indigo-400" /> MD EXPORT
           </button>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 stagger-1 animate-slide-up">
         {([
-          { label: 'Total', value: data.length, color: 'bg-slate-100 text-slate-700', icon: <Server className="w-4 h-4" /> },
-          { label: 'Producción', value: counts['Producción'] ?? 0, color: 'bg-emerald-50 text-emerald-700', icon: <Globe className="w-4 h-4" /> },
-          { label: 'Desarrollo', value: counts['Desarrollo'] ?? 0, color: 'bg-sky-50 text-sky-700', icon: <Code2 className="w-4 h-4" /> },
-          { label: 'Externos', value: counts['Externo'] ?? 0, color: 'bg-violet-50 text-violet-700', icon: <ExternalLink className="w-4 h-4" /> },
+          { label: 'TOTAL NODOS', value: data.length, color: 'text-slate-200 border-slate-700 bg-[#0A101F]', icon: <Server className="w-5 h-5 text-slate-400" /> },
+          { label: 'PRODUCCIÓN', value: counts['Producción'] ?? 0, color: 'text-emerald-400 border-emerald-500/30 bg-[#0f172a] shadow-[0_0_15px_rgba(16,185,129,0.05)]', icon: <Globe className="w-5 h-5 text-emerald-400" /> },
+          { label: 'DESARROLLO', value: counts['Desarrollo'] ?? 0, color: 'text-sky-400 border-sky-500/30 bg-[#0f172a] shadow-[0_0_15px_rgba(14,165,233,0.05)]', icon: <Code2 className="w-5 h-5 text-sky-400" /> },
+          { label: 'EXTERNAL', value: counts['Externo'] ?? 0, color: 'text-indigo-400 border-indigo-500/30 bg-[#0f172a] shadow-[0_0_15px_rgba(99,102,241,0.05)]', icon: <ExternalLink className="w-5 h-5 text-indigo-400" /> },
         ] as const).map(({ label, value, color, icon }) => (
-          <div key={label} className={`rounded-xl p-4 flex items-center gap-3 ${color}`}>
-            {icon}
+          <div key={label} className={`rounded-xl p-4 flex items-center gap-4 border ${color}`}>
+            <div className="bg-[#030712] p-2 rounded-lg border border-[#1E293B]">
+              {icon}
+            </div>
             <div>
-              <div className="text-xl font-bold">{value}</div>
-              <div className="text-xs font-medium opacity-70">{label}</div>
+              <div className="text-2xl font-bold font-display tracking-wide">{value}</div>
+              <div className="text-[10px] font-mono uppercase tracking-widest text-slate-500">{label}</div>
             </div>
           </div>
         ))}
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 items-center">
-        <div className="relative flex-1 min-w-48">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+      <div className="flex flex-col sm:flex-row gap-3 stagger-2 animate-slide-up bg-[#0A101F] p-4 rounded-xl border border-[#1E293B]">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-sky-500/50" />
           <input
             type="text"
-            placeholder="Buscar servicio, URL, tecnología…"
+            placeholder="CONSULTA GREP: URL, TECNOLOGÍA, SERVICIO..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-8 pr-3 py-1.5 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="cockpit-input w-full pl-9 bg-[#030712] border-[#1E293B] focus:border-sky-500/50 text-xs font-mono uppercase tracking-wide"
           />
         </div>
-        <div className="flex items-center gap-1.5">
-          <Filter className="w-3.5 h-3.5 text-slate-400" />
+        <div className="flex items-center gap-2">
+          <div className="bg-[#030712] border border-[#1E293B] p-2 rounded flex items-center justify-center">
+            <Filter className="w-4 h-4 text-slate-500" />
+          </div>
           <select
             value={filterAmbiente}
             onChange={e => setFilterAmbiente(e.target.value as Ambiente | 'Todos')}
-            className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="cockpit-input bg-[#030712] border-[#1E293B] text-[10px] font-mono uppercase tracking-widest"
           >
-            <option value="Todos">Todos los ambientes</option>
-            {AMBIENTES.map(a => <option key={a} value={a}>{a}</option>)}
+            <option value="Todos">ENV: TODOS</option>
+            {AMBIENTES.map(a => <option key={a} value={a}>ENV: {a.toUpperCase()}</option>)}
           </select>
           <select
             value={filterEstado}
             onChange={e => setFilterEstado(e.target.value as Estado | 'Todos')}
-            className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="cockpit-input bg-[#030712] border-[#1E293B] text-[10px] font-mono uppercase tracking-widest"
           >
-            <option value="Todos">Todos los estados</option>
-            {(['Activo','En revisión','Inactivo'] as Estado[]).map(s => <option key={s} value={s}>{s}</option>)}
+            <option value="Todos">STAT: TODOS</option>
+            {(['Activo','En revisión','Inactivo'] as Estado[]).map(s => <option key={s} value={s}>STAT: {s.toUpperCase()}</option>)}
           </select>
         </div>
-        {(search || filterAmbiente !== 'Todos' || filterEstado !== 'Todos') && (
-          <span className="text-xs text-slate-500">{filtered.length} resultado{filtered.length !== 1 ? 's' : ''}</span>
-        )}
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-x-auto">
-        <table className="w-full text-xs min-w-[900px]">
-          <thead>
-            <tr className="border-b border-slate-100 bg-slate-50">
-              {['Servicio','URL','Ambiente','Tecnología','Función','Estado','Responsable','Dependencias','Observaciones',''].map(h => (
-                <th key={h} className="text-left px-3 py-2.5 font-semibold text-slate-500 whitespace-nowrap">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map(row => {
-              const isEditing = editingId === row.id;
-              return (
-                <tr key={row.id} className="border-b border-slate-50 hover:bg-slate-50/60 transition-colors group">
-                  {isEditing && editRow ? (
-                    <>
-                      {(['servicio','url','tecnologia','funcion'] as const).map(k => (
-                        <td key={k} className="px-2 py-1.5">
-                          <input
-                            className="w-full border border-primary/40 rounded px-1.5 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary/30"
-                            value={editRow[k]}
-                            onChange={e => setEditRow({ ...editRow, [k]: e.target.value })}
-                          />
-                        </td>
-                      ))}
-                      {/* ambiente */}
-                      <td className="px-2 py-1.5">
-                        <select
-                          className="border border-primary/40 rounded px-1 py-0.5 text-xs focus:outline-none"
-                          value={editRow.ambiente}
-                          onChange={e => setEditRow({ ...editRow, ambiente: e.target.value as Ambiente })}
-                        >
-                          {AMBIENTES.map(a => <option key={a}>{a}</option>)}
-                        </select>
-                      </td>
-                      {/* estado */}
-                      <td className="px-2 py-1.5">
-                        <select
-                          className="border border-primary/40 rounded px-1 py-0.5 text-xs focus:outline-none"
-                          value={editRow.estado}
-                          onChange={e => setEditRow({ ...editRow, estado: e.target.value as Estado })}
-                        >
-                          {(['Activo','En revisión','Inactivo'] as Estado[]).map(s => <option key={s}>{s}</option>)}
-                        </select>
-                      </td>
-                      {(['responsable','dependencias','observaciones'] as const).map(k => (
-                        <td key={k} className="px-2 py-1.5">
-                          <input
-                            className="w-full border border-primary/40 rounded px-1.5 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary/30"
-                            value={editRow[k]}
-                            onChange={e => setEditRow({ ...editRow, [k]: e.target.value })}
-                          />
-                        </td>
-                      ))}
-                      <td className="px-2 py-1.5">
-                        <div className="flex gap-1">
-                          <button onClick={saveEdit}   className="px-2 py-0.5 rounded bg-primary text-white text-xs font-semibold">✓</button>
-                          <button onClick={cancelEdit} className="px-2 py-0.5 rounded bg-slate-200 text-slate-600 text-xs font-semibold">✕</button>
-                        </div>
-                      </td>
-                    </>
-                  ) : (
-                    <>
-                      <td className="px-3 py-2.5 font-medium text-slate-700 whitespace-nowrap max-w-[160px] truncate" title={row.servicio}>{row.servicio}</td>
-                      <td className="px-3 py-2.5 max-w-[200px]">
-                        <a
-                          href={row.url} target="_blank" rel="noreferrer"
-                          className="text-primary hover:underline truncate block max-w-full"
-                          title={row.url}
-                        >
-                          {row.url}
-                        </a>
-                      </td>
-                      <td className="px-3 py-2.5">
-                        <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap ${ambienteStyle[row.ambiente]}`}>
-                          {row.ambiente}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap max-w-[140px] truncate" title={row.tecnologia}>{row.tecnologia}</td>
-                      <td className="px-3 py-2.5 text-slate-600 max-w-[180px] truncate" title={row.funcion}>{row.funcion}</td>
-                      <td className="px-3 py-2.5">
-                        <div className={`flex items-center gap-1 whitespace-nowrap font-medium ${estadoTextStyle[row.estado]}`}>
-                          {estadoIcon[row.estado]} {row.estado}
-                        </div>
-                      </td>
-                      <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{row.responsable}</td>
-                      <td className="px-3 py-2.5 text-slate-500 max-w-[160px] truncate" title={row.dependencias}>{row.dependencias || '—'}</td>
-                      <td className="px-3 py-2.5 text-slate-500 max-w-[160px] truncate" title={row.observaciones}>{row.observaciones || '—'}</td>
-                      <td className="px-3 py-2.5">
-                        <button
-                          onClick={() => startEdit(row)}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] px-2 py-0.5 rounded border border-slate-200 text-slate-500 hover:text-primary hover:border-primary/40"
-                        >
-                          Editar
-                        </button>
-                      </td>
-                    </>
-                  )}
-                </tr>
-              );
-            })}
-            {filtered.length === 0 && (
-              <tr>
-                <td colSpan={10} className="text-center py-10 text-slate-400 text-sm">
-                  No se encontraron recursos con los filtros aplicados.
-                </td>
+      <div className="cockpit-panel overflow-hidden stagger-3 animate-slide-up">
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs min-w-[1000px]">
+            <thead>
+              <tr className="border-b border-[#1E293B] bg-[#030712]">
+                {['ID NODO','ENLACE DSN','ENV','STACK','OPERACIÓN','STAT','OWNER','DEP','NOTAS',''].map((h, i) => (
+                  <th key={i} className="text-left px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-widest text-slate-500 whitespace-nowrap">
+                    {h}
+                  </th>
+                ))}
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-[#1E293B]/50 font-mono text-[11px]">
+              {filtered.map(row => {
+                const isEditing = editingId === row.id;
+                return (
+                  <tr key={row.id} className="hover:bg-sky-500/5 transition-colors group">
+                    {isEditing && editRow ? (
+                      <>
+                        <td className="px-4 py-2">
+                          <input className="cockpit-input w-full p-1" value={editRow.servicio} onChange={e => setEditRow({ ...editRow, servicio: e.target.value })} />
+                        </td>
+                        <td className="px-2 py-2">
+                          <input className="cockpit-input w-full p-1" value={editRow.url} onChange={e => setEditRow({ ...editRow, url: e.target.value })} />
+                        </td>
+                        <td className="px-2 py-2">
+                          <select className="cockpit-input w-full p-1" value={editRow.ambiente} onChange={e => setEditRow({ ...editRow, ambiente: e.target.value as Ambiente })}>
+                            {AMBIENTES.map(a => <option key={a}>{a.toUpperCase()}</option>)}
+                          </select>
+                        </td>
+                        <td className="px-2 py-2">
+                          <input className="cockpit-input w-full p-1" value={editRow.tecnologia} onChange={e => setEditRow({ ...editRow, tecnologia: e.target.value })} />
+                        </td>
+                        <td className="px-2 py-2">
+                          <input className="cockpit-input w-full p-1" value={editRow.funcion} onChange={e => setEditRow({ ...editRow, funcion: e.target.value })} />
+                        </td>
+                        <td className="px-2 py-2">
+                          <select className="cockpit-input w-full p-1" value={editRow.estado} onChange={e => setEditRow({ ...editRow, estado: e.target.value as Estado })}>
+                            {(['Activo','En revisión','Inactivo'] as Estado[]).map(s => <option key={s}>{s.toUpperCase()}</option>)}
+                          </select>
+                        </td>
+                        <td className="px-2 py-2">
+                          <input className="cockpit-input w-full p-1" value={editRow.responsable} onChange={e => setEditRow({ ...editRow, responsable: e.target.value })} />
+                        </td>
+                        <td className="px-2 py-2">
+                          <input className="cockpit-input w-full p-1" value={editRow.dependencias} onChange={e => setEditRow({ ...editRow, dependencias: e.target.value })} />
+                        </td>
+                        <td className="px-2 py-2">
+                          <input className="cockpit-input w-full p-1" value={editRow.observaciones} onChange={e => setEditRow({ ...editRow, observaciones: e.target.value })} />
+                        </td>
+                        <td className="px-4 py-2">
+                          <div className="flex gap-2 justify-end">
+                            <button onClick={saveEdit} className="p-1 rounded bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white transition-colors"><CheckCircle2 className="w-4 h-4" /></button>
+                            <button onClick={cancelEdit} className="p-1 rounded bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-colors"><AlertCircle className="w-4 h-4" /></button>
+                          </div>
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td className="px-4 py-3 font-medium text-slate-300 font-display uppercase whitespace-nowrap max-w-[160px] truncate" title={row.servicio}>
+                          <div className="flex items-center gap-2">
+                            <Terminal className="w-3.5 h-3.5 text-slate-500 opacity-50" />
+                            {row.servicio}
+                          </div>
+                        </td>
+                        <td className="px-2 py-3 max-w-[200px]">
+                          <a href={row.url} target="_blank" rel="noreferrer" className="text-sky-400 hover:text-sky-300 hover:underline truncate block" title={row.url}>
+                            {row.url.replace(/^https?:\/\//, '')}
+                          </a>
+                        </td>
+                        <td className="px-2 py-3">
+                          <span className={`inline-block px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest whitespace-nowrap ${ambienteStyle[row.ambiente]}`}>
+                            {row.ambiente}
+                          </span>
+                        </td>
+                        <td className="px-2 py-3 text-slate-400 max-w-[140px] truncate uppercase" title={row.tecnologia}>{row.tecnologia}</td>
+                        <td className="px-2 py-3 text-slate-500 max-w-[180px] truncate" title={row.funcion}>{row.funcion}</td>
+                        <td className="px-2 py-3">
+                          <div className={`flex items-center gap-1.5 whitespace-nowrap font-bold uppercase tracking-widest text-[9px] ${estadoTextStyle[row.estado]}`}>
+                            {estadoIcon[row.estado]} {row.estado}
+                          </div>
+                        </td>
+                        <td className="px-2 py-3 text-slate-400 whitespace-nowrap uppercase">{row.responsable}</td>
+                        <td className="px-2 py-3 text-slate-500 max-w-[160px] truncate uppercase" title={row.dependencias}>{row.dependencias || '—'}</td>
+                        <td className="px-2 py-3 text-slate-500 max-w-[160px] truncate uppercase" title={row.observaciones}>{row.observaciones || '—'}</td>
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            onClick={() => startEdit(row)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] uppercase font-bold tracking-widest px-2 py-1 rounded bg-[#030712] border border-[#1E293B] text-sky-400 hover:border-sky-500/50 hover:bg-sky-500/10"
+                          >
+                            MOD
+                          </button>
+                        </td>
+                      </>
+                    )}
+                  </tr>
+                );
+              })}
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={10} className="text-center py-12">
+                    <p className="text-slate-500 font-display tracking-widest uppercase">RESULTADO DE CONSULTA: NULL</p>
+                    <p className="text-[10px] text-slate-600 mt-2">NO SE ENCONTRARON NODOS QUE COINCIDAN CON LOS PARÁMETROS ESPECIFICADOS.</p>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-
-      <p className="text-xs text-slate-400 text-right">
-        Mostrando {filtered.length} de {data.length} recursos · Hacé clic en "Editar" para actualizar un registro
-      </p>
+      
+      <div className="flex justify-between items-center px-2">
+        <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest flex items-center gap-2">
+          <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+          SISTEMA EN LÍNEA Y ACTUALIZADO
+        </p>
+        <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">
+          {filtered.length} / {data.length} REGISTROS RENDERIZADOS
+        </p>
+      </div>
     </div>
   );
 }

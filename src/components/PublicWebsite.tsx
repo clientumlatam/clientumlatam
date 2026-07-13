@@ -55,7 +55,15 @@ import {
   Stethoscope,
   Coffee,
   Home,
-  Play
+  Play,
+  Megaphone,
+  Smartphone,
+  Cloud,
+  CreditCard,
+  Radio,
+  Terminal,
+  Rocket,
+  Handshake
 } from "lucide-react";
 
 import { BrochureData } from "../types";
@@ -112,6 +120,17 @@ export default function PublicWebsite({
     (window as any).__setActiveTab = setActiveTab;
     return () => { delete (window as any).__setActiveTab; };
   }, []);
+  // El catálogo completo es solo para usuarios autenticados. Algunos botones
+  // (grilla "Todas las Soluciones", accesos rápidos del footer, tarjetas de
+  // categoría) llaman a setActiveTab("catalogo") sin verificar sesión, lo que
+  // dejaba la pestaña en blanco para visitantes públicos. Este guard corrige
+  // esos casos redirigiendo a "servicios" y, si existe, abriendo el login.
+  useEffect(() => {
+    if (activeTab === "catalogo" && !authUser) {
+      setActiveTab("servicios");
+      onOpenLogin?.();
+    }
+  }, [activeTab, authUser, onOpenLogin]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [mobileOpenSection, setMobileOpenSection] = useState<string | null>(null);
@@ -699,55 +718,70 @@ export default function PublicWebsite({
     );
   }, [blogSearchQuery]);
 
+  // ── Taxonomía única del sitio ──────────────────────────────────────────
+  // Estas 4 listas son la ÚNICA fuente de verdad para "Soluciones",
+  // "Empresa", "Recursos" y "Soporte". El menú superior, el sitemap del
+  // footer y el cuerpo principal del footer reutilizan estos mismos arrays
+  // (en vez de tener 3 taxonomías distintas y desincronizadas) para que
+  // agregar/renombrar un ítem lo actualice en todo el sitio a la vez.
+  // Los ítems con `query` no tienen una sección propia: abren el catálogo
+  // de servicios filtrado por esa búsqueda (igual que hacía el footer).
+  // Taxonomía por "problema de negocio" (no por función/tecnología): cada
+  // solución resuelve algo concreto. Asistente IA, Portal del Cliente,
+  // Desarrollo Web e Integraciones dejaron de ser productos de primer nivel
+  // y ahora se explican como características DENTRO de estas 8 soluciones.
+  const SOLUTIONS_ITEMS = useMemo(() => [
+    { id: "chatbot", label: "Chatbot WhatsApp", desc: "Tu negocio atiende solo, las 24 horas", icon: Bot, color: "text-green-500 bg-green-50" },
+    { id: "crm_inteligente", label: "CRM Inteligente", desc: "Nunca más perdas una venta", icon: Briefcase, color: "text-blue-500 bg-blue-50" },
+    { id: "afip", label: "Facturación AFIP", desc: "Facturá electrónicamente sin salir del CRM", icon: FileText, color: "text-blue-700 bg-blue-50" },
+    { id: "mercadopago", label: "Suscripciones Mercado Pago", desc: "Cobros recurrentes y links de pago automáticos", icon: CreditCard, color: "text-sky-600 bg-sky-50" },
+    { id: "leads", label: "Prospección de Leads", desc: "Encontrá y calificá clientes potenciales con IA", icon: Rocket, color: "text-violet-500 bg-violet-50" },
+    { id: "automatizacion", label: "Broadcast & Automatización", desc: "Campañas masivas de WhatsApp y flujos sin código", icon: Radio, color: "text-amber-500 bg-amber-50" },
+    { id: "reportes", label: "Business Intelligence", desc: "Métricas y reportes accionables de tu negocio", icon: BarChart2, color: "text-fuchsia-500 bg-fuchsia-50" },
+    { id: "ecommerce", label: "E-Commerce", desc: "Vendé online, integrado a tu CRM y stock", icon: ShoppingCart, color: "text-orange-500 bg-orange-50", query: "ecommerce" },
+  ], []);
+  // Directorio de industrias — reutiliza los mismos 9 sectores con casos de
+  // éxito reales (PROJECTS) para no inventar contenido sin respaldo.
+  const INDUSTRIES_ITEMS = useMemo(() => [
+    { id: "retail", label: "Comercios y Retail", icon: ShoppingCart, color: "text-orange-500 bg-orange-50" },
+    { id: "salud", label: "Salud", icon: Stethoscope, color: "text-rose-500 bg-rose-50" },
+    { id: "agroindustria", label: "Agroindustria", icon: Package, color: "text-lime-600 bg-lime-50" },
+    { id: "inmobiliaria", label: "Inmobiliaria", icon: Home, color: "text-teal-500 bg-teal-50" },
+    { id: "logística", label: "Logística y Distribución", icon: Truck, color: "text-slate-600 bg-slate-100" },
+    { id: "industrial", label: "Industrial y Manufactura", icon: Building, color: "text-amber-600 bg-amber-50" },
+    { id: "automotriz", label: "Automotriz", icon: Compass, color: "text-blue-600 bg-blue-50" },
+    { id: "medios", label: "Medios", icon: Monitor, color: "text-fuchsia-600 bg-fuchsia-50" },
+    { id: "institucional", label: "Institucional", icon: Building, color: "text-indigo-600 bg-indigo-50" },
+  ], []);
+  // Empresa = solo institucional. Casos de Éxito pasa a ser su propio ítem
+  // de primer nivel (no vive "adentro" de Empresa). Contacto y Partners
+  // viven acá y en ningún otro dropdown (antes se repetían en "Soporte").
+  const EMPRESA_ITEMS = useMemo(() => [
+    { id: "nosotros", label: "Sobre Clientum", desc: "Quiénes somos y nuestra misión", icon: Building, color: "text-[#1A3461] bg-slate-100" },
+    { id: "clientes", label: "Clientes", desc: "Empresas que ya confían en Clientum", icon: Users, color: "text-teal-500 bg-teal-50" },
+    { id: "asociacion", label: "Partners", desc: "Programa de Afiliados y Partners", icon: Handshake, color: "text-violet-500 bg-violet-50" },
+    { id: "carreras", label: "Trabajá con Nosotros", desc: "Sumate al equipo de Clientum", icon: Users, color: "text-emerald-500 bg-emerald-50" },
+    { id: "contacto", label: "Contacto", desc: "Escríbenos o visita nuestras oficinas", icon: MapPin, color: "text-teal-500 bg-teal-50" },
+  ], []);
+  // Recursos = solo contenido/ayuda. Partners y Casos de Éxito se sacaron de
+  // aquí porque ya viven en Empresa / nivel superior — un solo lugar cada uno.
+  const RECURSOS_ITEMS = useMemo(() => [
+    { id: "blog", label: "Blog", desc: "Aprende tácticas de ventas y marketing", icon: BookOpen, color: "text-rose-500 bg-rose-50" },
+    { id: "academia", label: "Academia Clientum", desc: "Cursos gratis de CRM y automatizaciones", icon: GraduationCap, color: "text-indigo-600 bg-indigo-50" },
+    { id: "ayuda", label: "Centro de Ayuda", desc: "Preguntas frecuentes y soporte técnico", icon: HelpCircle, color: "text-slate-800 bg-slate-100" },
+    { id: "documentacion", label: "Documentación API", desc: "Referencia técnica para integrar tu CRM", icon: Terminal, color: "text-slate-700 bg-slate-100" },
+    ...(authUser ? [{ id: "catalogo", label: "Catálogo de Servicios", desc: "425 servicios en 14 categorías con precios", icon: LayoutGrid, color: "text-indigo-500 bg-indigo-50" }] : []),
+  ], [authUser]);
+
   const menuConfig = useMemo(() => [
     { id: "inicio", label: "Inicio", type: "link" as const },
-    {
-      id: "soluciones",
-      label: "Soluciones",
-      type: "dropdown" as const,
-      children: [
-        { id: "chatbot", label: "Chatbot WhatsApp", desc: "Tu negocio atiende solo, las 24 horas", icon: Bot, color: "text-green-500 bg-green-50" },
-        { id: "crm_inteligente", label: "CRM Inteligente", desc: "Nunca más perdas una venta", icon: Briefcase, color: "text-blue-500 bg-blue-50" },
-        { id: "asistente_ia", label: "Asistente IA", desc: "Tu analista de negocio, siempre disponible", icon: Sparkles, color: "text-violet-500 bg-violet-50" },
-        { id: "automatizacion", label: "Automatización", desc: "Hacé más con menos esfuerzo", icon: Zap, color: "text-amber-500 bg-amber-50" },
-        { id: "portal_cliente", label: "Portal del Cliente", desc: "Tus clientes se autoatienden", icon: LayoutGrid, color: "text-teal-500 bg-teal-50" },
-        { id: "desarrollo_web", label: "Desarrollo Web", desc: "Tu presencia web, conectada al CRM", icon: Code2, color: "text-slate-600 bg-slate-100" },
-        { id: "integraciones", label: "Integraciones", desc: "WhatsApp, AFIP, MercadoPago, ERPs y más", icon: Globe, color: "text-cyan-600 bg-cyan-50" },
-      ]
-    },
+    { id: "soluciones", label: "Soluciones", type: "dropdown" as const, children: SOLUTIONS_ITEMS },
+    { id: "industrias", label: "Industrias", type: "link" as const },
+    { id: "casos", label: "Casos de Éxito", type: "link" as const },
+    { id: "recursos", label: "Recursos", type: "dropdown" as const, children: RECURSOS_ITEMS },
     { id: "planes", label: "Precios", type: "link" as const },
-    {
-      id: "empresa",
-      label: "Empresa",
-      type: "dropdown" as const,
-      children: [
-        { id: "nosotros", label: "Nosotros", desc: "Quiénes somos y nuestra misión", icon: Building, color: "text-[#1A3461] bg-slate-100" },
-        { id: "casos", label: "Casos de Éxito", desc: "Historias de éxito de PyMEs reales", icon: Star, color: "text-amber-500 bg-amber-50" },
-        { id: "clientes", label: "Clientes", desc: "Empresas que ya confían en Clientum", icon: Users, color: "text-teal-500 bg-teal-50" },
-      ]
-    },
-    {
-      id: "recursos",
-      label: "Recursos",
-      type: "dropdown" as const,
-      children: [
-        { id: "academia", label: "Academia", desc: "Cursos gratis de CRM y automatizaciones", icon: GraduationCap, color: "text-indigo-600 bg-indigo-50" },
-        { id: "blog", label: "Blog & Recursos", desc: "Aprende tácticas de ventas y marketing", icon: BookOpen, color: "text-rose-500 bg-rose-50" },
-        { id: "catalogo", label: "Catálogo de Servicios", desc: "425 servicios en 14 categorías con precios", icon: LayoutGrid, color: "text-indigo-500 bg-indigo-50" },
-        { id: "integraciones", label: "Integraciones", desc: "Conecta tu CRM con WhatsApp, AFIP y más", icon: Zap, color: "text-amber-500 bg-amber-50" },
-      ]
-    },
-    {
-      id: "ayuda_soporte",
-      label: "Soporte",
-      type: "dropdown" as const,
-      children: [
-        { id: "ayuda", label: "Centro de Ayuda", desc: "Preguntas frecuentes y soporte técnico", icon: HelpCircle, color: "text-slate-800 bg-slate-100" },
-        { id: "asociacion", label: "Partners & Afiliados", desc: "Programa de Afiliados y Partners", icon: Users, color: "text-violet-500 bg-violet-50" },
-        { id: "contacto", label: "Contacto", desc: "Escríbenos o visita nuestras oficinas", icon: MapPin, color: "text-teal-500 bg-teal-50" }
-      ]
-    }
-  ], []);
+    { id: "empresa", label: "Empresa", type: "dropdown" as const, children: EMPRESA_ITEMS },
+  ], [SOLUTIONS_ITEMS, RECURSOS_ITEMS, EMPRESA_ITEMS]);
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 text-slate-800 selection:bg-[#1A3461] selection:text-white relative">
@@ -825,7 +859,7 @@ export default function PublicWebsite({
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute left-0 mt-2 w-80 bg-white border border-slate-200 rounded-2xl shadow-xl p-3 z-50 flex flex-col gap-1"
+                        className="absolute left-0 mt-2 w-96 max-h-[75vh] overflow-y-auto bg-white border border-slate-200 rounded-2xl shadow-xl p-3 z-50 flex flex-col gap-1"
                       >
                         {item.children.map(child => {
                           const ChildIcon = child.icon;
@@ -834,7 +868,14 @@ export default function PublicWebsite({
                             <button
                               key={child.id}
                               onClick={() => {
-                                setActiveTab(child.id);
+                                if ((child as any).query) {
+                                  setActiveTab("catalogo");
+                                  setCatalogQuery((child as any).query);
+                                  setCatalogCat("");
+                                  setCatalogPage(1);
+                                } else {
+                                  setActiveTab(child.id);
+                                }
                                 setActiveDropdown(null);
                                 window.scrollTo({ top: 0, behavior: "smooth" });
                               }}
@@ -969,7 +1010,14 @@ export default function PublicWebsite({
                             <button
                               key={child.id}
                               onClick={() => {
-                                setActiveTab(child.id);
+                                if ((child as any).query) {
+                                  setActiveTab("catalogo");
+                                  setCatalogQuery((child as any).query);
+                                  setCatalogCat("");
+                                  setCatalogPage(1);
+                                } else {
+                                  setActiveTab(child.id);
+                                }
                                 setMobileMenuOpen(false);
                                 window.scrollTo({ top: 0, behavior: "smooth" });
                               }}
@@ -2175,8 +2223,8 @@ export default function PublicWebsite({
               </div>
             )}
 
-            {/* CATÁLOGO COMPLETO DE SERVICIOS TAB */}
-            {activeTab === "catalogo" && (
+            {/* CATÁLOGO COMPLETO DE SERVICIOS TAB — solo usuarios autenticados */}
+            {activeTab === "catalogo" && authUser && (
               <div className="flex flex-col">
                 {/* Navy hero band */}
                 <div className="bg-[#1A3461] text-center py-14 px-6">
@@ -4632,15 +4680,15 @@ export default function PublicWebsite({
               <div className="max-w-6xl mx-auto px-6 py-12 flex flex-col gap-16">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                   <div>
-                    <span className="text-amber-600 font-mono text-xs uppercase tracking-widest font-bold">Automatización</span>
+                    <span className="text-amber-600 font-mono text-xs uppercase tracking-widest font-bold">Broadcast & Automatización</span>
                     <h1 className="text-3xl md:text-4xl font-display font-black text-slate-950 tracking-tight mt-1">
-                      Hacé más con<br />menos esfuerzo
+                      Llegá a todos tus<br />clientes a la vez
                     </h1>
                     <p className="text-slate-500 text-sm mt-4 leading-relaxed">
-                      Automatizá seguimientos, alertas, emails y tareas. Tu equipo se enfoca en vender — el sistema hace el resto.
+                      Enviá campañas masivas de WhatsApp segmentadas por etapa o rubro, y automatizá seguimientos, alertas y tareas. Tu equipo se enfoca en vender — el sistema hace el resto.
                     </p>
                     <ul className="mt-6 flex flex-col gap-3 text-xs text-slate-600">
-                      {["Sin código", "Flujos visuales", "Activación inmediata"].map((item) => (
+                      {["Broadcast masivo por WhatsApp", "Sin código", "Flujos visuales"].map((item) => (
                         <li key={item} className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-500 shrink-0" />{item}</li>
                       ))}
                     </ul>
@@ -4667,6 +4715,29 @@ export default function PublicWebsite({
                     <p className="text-[10px] text-slate-400 text-center mt-4 font-mono">Se ejecuta automáticamente, sin intervención manual</p>
                   </div>
                 </div>
+                {/* Broadcast masivo — campañas segmentadas de WhatsApp */}
+                <div>
+                  <div className="text-center mb-10">
+                    <span className="text-amber-600 font-mono text-[10px] uppercase tracking-widest font-bold">Broadcast</span>
+                    <h2 className="text-2xl font-display font-black text-slate-950 tracking-tight mt-2">Campañas masivas de WhatsApp, sin spam</h2>
+                    <p className="text-slate-500 text-xs max-w-2xl mx-auto mt-3 leading-relaxed">
+                      Enviá un mismo mensaje a cientos de contactos segmentados por etapa, rubro o ciudad — con nombre personalizado y respetando los límites de WhatsApp Business para no arriesgar tu número.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {[
+                      { title: "Segmentación por etapa", icon: Radio, desc: "Elegí a quién le llega cada campaña: nuevos leads, contactados por el bot, propuestas pendientes o clientes ganados." },
+                      { title: "Plantillas aprobadas", icon: FileText, desc: "Mensajes con variables personalizadas (nombre, empresa, monto) usando plantillas de WhatsApp Business API." },
+                      { title: "Envío escalonado", icon: Clock, desc: "El envío se distribuye en el tiempo automáticamente para proteger la reputación de tu número." },
+                    ].map(({ title, icon: Icon, desc }) => (
+                      <div key={title} className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                        <Icon className="w-5 h-5 text-amber-500 mb-3" />
+                        <h4 className="font-bold text-slate-900 text-sm mb-2">{title}</h4>
+                        <p className="text-xs text-slate-500 leading-relaxed">{desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {[
                     { title: "Recordatorios automáticos", desc: "Si un deal no tiene actividad en X días, el sistema alerta al responsable automáticamente." },
@@ -4687,6 +4758,189 @@ export default function PublicWebsite({
                   <h3 className="text-lg font-display font-bold text-slate-900">Automatizá tu negocio hoy</h3>
                   <p className="text-xs text-slate-500 mt-2">Probalo 14 días gratis y activá tus primeros flujos en minutos.</p>
                   <button onClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="mt-5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs px-6 py-2.5 rounded-lg transition-all cursor-pointer">Probar gratis →</button>
+                </div>
+              </div>
+            )}
+
+            {/* ── SOLUCIÓN: FACTURACIÓN AFIP ── */}
+            {activeTab === "afip" && (
+              <div className="max-w-6xl mx-auto px-6 py-12 flex flex-col gap-16">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                  <div>
+                    <span className="text-blue-700 font-mono text-xs uppercase tracking-widest font-bold">Facturación AFIP</span>
+                    <h1 className="text-3xl md:text-4xl font-display font-black text-slate-950 tracking-tight mt-1">
+                      Facturá electrónicamente<br />sin salir del CRM
+                    </h1>
+                    <p className="text-slate-500 text-sm mt-4 leading-relaxed">
+                      Cuando cerrás una venta en el pipeline, Clientum emite la factura electrónica en AFIP (Clase A, B o C) automáticamente. Sin planillas, sin doble carga, sin errores de tipeo.
+                    </p>
+                    <ul className="mt-6 flex flex-col gap-3 text-xs text-slate-600">
+                      {["Homologado con AFIP/ARCA", "Factura A, B y C", "CAE y numeración automática"].map((item) => (
+                        <li key={item} className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-500 shrink-0" />{item}</li>
+                      ))}
+                    </ul>
+                    <div className="flex gap-3 mt-8">
+                      <button onClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="bg-[#1A3461] hover:bg-[#0d1f3c] text-white font-bold text-xs px-5 py-2.5 rounded-lg transition-all cursor-pointer">Probar gratis</button>
+                    </div>
+                  </div>
+                  <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-3">
+                      <span className="text-xs font-bold text-slate-800">Factura B — Electrónica</span>
+                      <span className="text-[9px] font-mono bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-bold">CAE Aprobado</span>
+                    </div>
+                    <div className="flex flex-col gap-2 text-[11px] text-slate-500">
+                      <div className="flex justify-between"><span>Cliente</span><span className="text-slate-800 font-semibold">Distribuidora del Sur S.A.</span></div>
+                      <div className="flex justify-between"><span>CUIT</span><span className="text-slate-800 font-mono">30-71234567-9</span></div>
+                      <div className="flex justify-between"><span>Punto de venta</span><span className="text-slate-800 font-mono">0003</span></div>
+                      <div className="flex justify-between"><span>CAE</span><span className="text-slate-800 font-mono">74123456789012</span></div>
+                    </div>
+                    <div className="flex items-center justify-between border-t border-slate-100 pt-3 mt-3">
+                      <span className="text-xs text-slate-500">Total</span>
+                      <span className="text-lg font-black text-slate-900">$250.000</span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 text-center mt-4 font-mono">Emitida automáticamente al marcar el deal como "Ganado"</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {[
+                    { title: "Emisión automática", desc: "Al ganar un deal en el pipeline, se genera y emite la factura sin intervención manual." },
+                    { title: "Nota de crédito y débito", desc: "Anulá o corregí facturas emitidas con notas de crédito/débito electrónicas, también automáticas." },
+                    { title: "Link de pago incluido", desc: "Cada factura sale con el link de cobro de Mercado Pago listo para compartir por WhatsApp." },
+                    { title: "Libro IVA digital", desc: "Exportá tus ventas y compras en el formato que necesita tu contador, sin armar planillas a mano." },
+                    { title: "Multi-punto de venta", desc: "Facturá desde varias sucursales o vendedores, cada uno con su propio punto de venta habilitado." },
+                    { title: "Historial y reimpresión", desc: "Buscá cualquier factura emitida y volvé a enviarla por email o WhatsApp en un click." },
+                  ].map((f) => (
+                    <div key={f.title} className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                      <FileText className="w-5 h-5 text-blue-700 mb-3" />
+                      <h4 className="font-bold text-slate-900 text-sm mb-2">{f.title}</h4>
+                      <p className="text-xs text-slate-500 leading-relaxed">{f.desc}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="bg-blue-50 border border-blue-200 rounded-2xl p-8 text-center">
+                  <h3 className="text-lg font-display font-bold text-slate-900">Dejá de facturar a mano</h3>
+                  <p className="text-xs text-slate-500 mt-2">Conectá tu CUIT y empezá a emitir facturas homologadas desde tu primera venta.</p>
+                  <button onClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="mt-5 bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs px-6 py-2.5 rounded-lg transition-all cursor-pointer">Probar gratis →</button>
+                </div>
+              </div>
+            )}
+
+            {/* ── SOLUCIÓN: SUSCRIPCIONES MERCADO PAGO ── */}
+            {activeTab === "mercadopago" && (
+              <div className="max-w-6xl mx-auto px-6 py-12 flex flex-col gap-16">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                  <div>
+                    <span className="text-sky-600 font-mono text-xs uppercase tracking-widest font-bold">Suscripciones Mercado Pago</span>
+                    <h1 className="text-3xl md:text-4xl font-display font-black text-slate-950 tracking-tight mt-1">
+                      Cobros recurrentes,<br />sin perseguir a nadie
+                    </h1>
+                    <p className="text-slate-500 text-sm mt-4 leading-relaxed">
+                      Conectá tu cuenta de Mercado Pago y cobrá suscripciones, planes mensuales o cuotas de forma automática. El link de pago sale solo al cerrar el deal o al vencer cada ciclo.
+                    </p>
+                    <ul className="mt-6 flex flex-col gap-3 text-xs text-slate-600">
+                      {["Débito automático mensual", "Links de pago por WhatsApp/email", "Conciliación automática en el CRM"].map((item) => (
+                        <li key={item} className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-500 shrink-0" />{item}</li>
+                      ))}
+                    </ul>
+                    <div className="flex gap-3 mt-8">
+                      <button onClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="bg-[#1A3461] hover:bg-[#0d1f3c] text-white font-bold text-xs px-5 py-2.5 rounded-lg transition-all cursor-pointer">Probar gratis</button>
+                    </div>
+                  </div>
+                  <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                    <h4 className="font-bold text-slate-950 text-sm mb-4">Plan Mensual — Distribuidora del Sur</h4>
+                    <div className="flex flex-col gap-2">
+                      {[
+                        "Suscripción creada al cerrar el deal",
+                        "Mercado Pago cobra automáticamente el día 1",
+                        "CRM marca el pago como recibido",
+                        "Si falla el cobro, se reintenta y se avisa por WhatsApp",
+                      ].map((step, i) => (
+                        <div key={step} className="flex items-center gap-3">
+                          <div className="w-6 h-6 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center text-[10px] font-bold shrink-0">{i + 1}</div>
+                          <span className="text-xs text-slate-700">{step}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-slate-400 text-center mt-4 font-mono">Sin gestión manual de cobranza</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {[
+                    { title: "Suscripciones recurrentes", desc: "Cobrá planes mensuales, trimestrales o anuales con débito automático en tarjeta." },
+                    { title: "Links de pago únicos", desc: "Generá un link de cobro por WhatsApp o email para ventas puntuales, sin suscripción." },
+                    { title: "Recordatorio de vencimiento", desc: "Si un pago falla o vence, el sistema le avisa al cliente automáticamente por WhatsApp." },
+                    { title: "Conciliación automática", desc: "Cada pago recibido actualiza el estado del deal y la factura correspondiente en el CRM." },
+                    { title: "Cuotas sin interés", desc: "Ofrecé cuotas a tus clientes usando las promociones activas de Mercado Pago." },
+                    { title: "Reportes de cobranza", desc: "Vé qué clientes están al día, cuáles vencen esta semana y cuáles tienen pagos fallidos." },
+                  ].map((f) => (
+                    <div key={f.title} className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                      <CreditCard className="w-5 h-5 text-sky-600 mb-3" />
+                      <h4 className="font-bold text-slate-900 text-sm mb-2">{f.title}</h4>
+                      <p className="text-xs text-slate-500 leading-relaxed">{f.desc}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="bg-sky-50 border border-sky-200 rounded-2xl p-8 text-center">
+                  <h3 className="text-lg font-display font-bold text-slate-900">Cobrá todos los meses sin pedirlo</h3>
+                  <p className="text-xs text-slate-500 mt-2">Conectá Mercado Pago y activá tu primera suscripción hoy mismo.</p>
+                  <button onClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="mt-5 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs px-6 py-2.5 rounded-lg transition-all cursor-pointer">Probar gratis →</button>
+                </div>
+              </div>
+            )}
+
+            {/* ── SOLUCIÓN: PROSPECCIÓN DE LEADS ── */}
+            {activeTab === "leads" && (
+              <div className="max-w-6xl mx-auto px-6 py-12 flex flex-col gap-16">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                  <div>
+                    <span className="text-violet-600 font-mono text-xs uppercase tracking-widest font-bold">Prospección de Leads</span>
+                    <h1 className="text-3xl md:text-4xl font-display font-black text-slate-950 tracking-tight mt-1">
+                      Encontrá clientes<br />antes de que te busquen
+                    </h1>
+                    <p className="text-slate-500 text-sm mt-4 leading-relaxed">
+                      Buscá negocios reales de tu zona por rubro y ciudad usando datos de Google Maps, calificalos con IA y sumalos directo a tu pipeline — sin comprar bases de datos viejas.
+                    </p>
+                    <ul className="mt-6 flex flex-col gap-3 text-xs text-slate-600">
+                      {["Datos reales de Google Maps", "Diagnóstico comercial con IA", "Alta directa al CRM en un click"].map((item) => (
+                        <li key={item} className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-500 shrink-0" />{item}</li>
+                      ))}
+                    </ul>
+                    <div className="flex gap-3 mt-8">
+                      <button onClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="bg-[#1A3461] hover:bg-[#0d1f3c] text-white font-bold text-xs px-5 py-2.5 rounded-lg transition-all cursor-pointer">Probar gratis</button>
+                    </div>
+                  </div>
+                  <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                    <h4 className="font-bold text-slate-950 text-sm mb-4">Prospector IA — Resultado de búsqueda</h4>
+                    <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 flex flex-col gap-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-800">Ferretería Central</span>
+                        <span className="text-[9px] font-mono bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded-full font-bold">Lead Sugerido</span>
+                      </div>
+                      <p className="text-[10px] text-slate-500">Diagnóstico IA: sin chatbot, respuestas lentas en Instagram, alto volumen de consultas de precio.</p>
+                    </div>
+                    <p className="text-[10px] text-slate-400 text-center mt-4 font-mono">20 prospectos encontrados en General Roca, Río Negro</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {[
+                    { title: "Búsqueda por rubro y ciudad", desc: "Filtrá negocios reales por industria, ciudad y radio de búsqueda usando la API oficial de Google Maps." },
+                    { title: "Diagnóstico comercial con IA", desc: "Cada prospecto llega con un análisis de sus puntos débiles digitales, para personalizar tu propuesta." },
+                    { title: "Alta directa al pipeline", desc: "Sumá el lead a tu CRM con un click, con toda su información de contacto ya cargada." },
+                    { title: "Filtros de calidad", desc: "Descartá negocios sin teléfono, cerrados o con mala puntuación para enfocarte en los leads con más potencial." },
+                    { title: "Exportación a CSV", desc: "Descargá tu lista de prospectos para trabajarla en otra herramienta si lo necesitás." },
+                    { title: "Definición de cliente ideal", desc: "Con el ICP Builder definís las características de tu cliente ideal antes de salir a buscar." },
+                  ].map((f) => (
+                    <div key={f.title} className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                      <Rocket className="w-5 h-5 text-violet-600 mb-3" />
+                      <h4 className="font-bold text-slate-900 text-sm mb-2">{f.title}</h4>
+                      <p className="text-xs text-slate-500 leading-relaxed">{f.desc}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="bg-violet-50 border border-violet-200 rounded-2xl p-8 text-center">
+                  <h3 className="text-lg font-display font-bold text-slate-900">Tu próximo cliente ya existe, solo falta encontrarlo</h3>
+                  <p className="text-xs text-slate-500 mt-2">Probá el Prospectador IA gratis y sumá tus primeros leads hoy.</p>
+                  <button onClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="mt-5 bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs px-6 py-2.5 rounded-lg transition-all cursor-pointer">Probar gratis →</button>
                 </div>
               </div>
             )}
@@ -4859,49 +5113,32 @@ export default function PublicWebsite({
           <div className="max-w-6xl mx-auto px-6 py-10 grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
               {
-                title: "Por industria",
+                // Mismos 9 sectores que la página "Industrias" y "Casos de Éxito" — casos reales, no inventados.
+                title: "Industrias",
                 items: [
-                  { label: "Minoristas y retail", query: "minorista" },
-                  { label: "Manufactura", query: "manufactura" },
-                  { label: "Agroindustria", query: "agroindustria" },
-                  { label: "Distribuidores y mayoristas", query: "distribuidor" },
-                  { label: "Servicios profesionales", tab: "servicios" },
-                  { label: "PyMEs B2C", query: "b2c" },
-                  { label: "Empresas B2B", query: "b2b" },
+                  ...INDUSTRIES_ITEMS.map((i) => ({ label: i.label, industry: i.id })),
+                  { label: "Ver todas", industry: "todos" },
                 ],
               },
               {
-                title: "Por solución",
-                items: [
-                  { label: "Chatbot WhatsApp IA", tab: "chatbot" },
-                  { label: "CRM Inteligente", tab: "crm_inteligente" },
-                  { label: "E-Commerce", query: "ecommerce" },
-                  { label: "Marketing Digital", query: "marketing" },
-                  { label: "App Mobile", query: "aplicación móvil" },
-                  { label: "Business Intelligence", tab: "reportes" },
-                  { label: "Cloud & Hosting", query: "cloud" },
-                ],
+                // Misma taxonomía que el dropdown "Soluciones" del menú — una sola fuente de verdad.
+                title: "Soluciones",
+                items: SOLUTIONS_ITEMS.map((s) => ({ label: s.label, tab: s.query ? undefined : s.id, query: s.query })),
               },
               {
+                // Misma taxonomía que el dropdown "Recursos" del menú.
                 title: "Recursos",
                 items: [
-                  { label: "Blog & Novedades", tab: "blog" },
-                  { label: "Academia Clientum", tab: "academia" },
+                  ...RECURSOS_ITEMS.filter((r) => r.id !== "catalogo").map((r) => ({ label: r.label, tab: r.id })),
                   { label: "Casos de Éxito", tab: "casos" },
-                  { label: "Centro de Ayuda", tab: "ayuda" },
-                  { label: "Planes & Precios", tab: "planes" },
-                  { label: "Partners & Afiliados", tab: "asociacion" },
                 ],
               },
               {
-                title: "Nuevos lanzamientos",
+                // Misma taxonomía que el dropdown "Empresa" del menú.
+                title: "Empresa",
                 items: [
-                  { label: "🤖 Copiloto IA", tab: "asistente_ia" },
-                  { label: "📱 Clientum Mobile", query: "aplicación móvil" },
-                  { label: "📊 BI Dashboard", tab: "reportes" },
-                  { label: "🔗 WhatsApp API v2", tab: "chatbot" },
-                  { label: "🏪 Portal del Cliente", tab: "portal_cliente" },
-                  { label: "⚙️ Automatización", tab: "automatizacion" },
+                  ...EMPRESA_ITEMS.filter((e) => e.id !== "carreras").map((e) => ({ label: e.label, tab: e.id })),
+                  { label: "Planes & Precios", tab: "planes" },
                 ],
               },
             ].map((col) => (
@@ -4912,7 +5149,10 @@ export default function PublicWebsite({
                     <li key={item.label}>
                       <button
                         onClick={() => {
-                          if (item.tab) {
+                          if ((item as any).industry) {
+                            setIndustryFilter((item as any).industry);
+                            setActiveTab("casos");
+                          } else if (item.tab) {
                             setActiveTab(item.tab);
                           } else {
                             setActiveTab("catalogo");
@@ -4968,22 +5208,27 @@ export default function PublicWebsite({
             </div>
           </div>
 
-          {/* Soluciones — 2 cols */}
+          {/* Soluciones — 2 cols — misma taxonomía que el menú (SOLUTIONS_ITEMS) */}
           <div className="md:col-span-2">
             <h4 className="text-slate-300 font-bold uppercase tracking-widest text-[10px] mb-4">Soluciones</h4>
             <ul className="flex flex-col gap-2.5">
               {[
-                { id: "chatbot", label: "Chatbot WhatsApp" },
-                { id: "crm_inteligente", label: "CRM Inteligente" },
-                { id: "asistente_ia", label: "Asistente IA" },
-                { id: "automatizacion", label: "Automatización" },
-                { id: "portal_cliente", label: "Portal del Cliente" },
-                { id: "desarrollo_web", label: "Desarrollo Web" },
+                ...SOLUTIONS_ITEMS.map((s) => ({ id: s.id, label: s.label, query: s.query })),
                 { id: "planes", label: "Planes & Precios" },
               ].map((item) => (
                 <li key={item.id}>
                   <button
-                    onClick={() => { setActiveTab(item.id); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                    onClick={() => {
+                      if (item.query) {
+                        setActiveTab("catalogo");
+                        setCatalogQuery(item.query);
+                        setCatalogCat("");
+                        setCatalogPage(1);
+                      } else {
+                        setActiveTab(item.id);
+                      }
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
                     className="text-slate-400 hover:text-emerald-400 transition-colors text-xs cursor-pointer"
                   >
                     {item.label}
@@ -4993,16 +5238,12 @@ export default function PublicWebsite({
             </ul>
           </div>
 
-          {/* Empresa — 2 cols */}
+          {/* Empresa — 2 cols — misma taxonomía que el menú (EMPRESA_ITEMS) */}
           <div className="md:col-span-2">
             <h4 className="text-slate-300 font-bold uppercase tracking-widest text-[10px] mb-4">Empresa</h4>
             <ul className="flex flex-col gap-2.5">
               {[
-                { id: "nosotros", label: "Sobre Nosotros" },
-                { id: "casos", label: "Casos de Éxito" },
-                { id: "clientes", label: "Clientes" },
-                { id: "blog", label: "Blog & Recursos" },
-                { id: "asociacion", label: "Partners & Afiliados" },
+                ...EMPRESA_ITEMS.map((e) => ({ id: e.id, label: e.label })),
                 { id: "privacidad", label: "Política de Privacidad" },
               ].map((item) => (
                 <li key={item.id}>
@@ -5017,15 +5258,13 @@ export default function PublicWebsite({
             </ul>
           </div>
 
-          {/* Soporte — 2 cols */}
+          {/* Recursos — 2 cols — misma taxonomía que el menú (RECURSOS_ITEMS) */}
           <div className="md:col-span-2">
-            <h4 className="text-slate-300 font-bold uppercase tracking-widest text-[10px] mb-4">Soporte</h4>
+            <h4 className="text-slate-300 font-bold uppercase tracking-widest text-[10px] mb-4">Recursos</h4>
             <ul className="flex flex-col gap-2.5">
               {[
-                { id: "ayuda", label: "Centro de Ayuda" },
-                { id: "academia", label: "Academia" },
-                { id: "asociacion", label: "Partners & Afiliados" },
-                { id: "contacto", label: "Contacto" },
+                ...RECURSOS_ITEMS.filter((r) => r.id !== "catalogo"),
+                { id: "casos", label: "Casos de Éxito" },
               ].map((item) => (
                 <li key={item.id}>
                   <button

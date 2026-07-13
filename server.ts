@@ -33,7 +33,7 @@ if (!process.env.SESSION_SECRET) {
 
 app.use(
   session({
-    store: new PgSession({ pool: pgPool, tableName: "session" }),
+    store: new PgSession({ pool: pgPool, tableName: "session", createTableIfMissing: true }),
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
@@ -2071,6 +2071,24 @@ Proporciona consejos estratégicos, creativos y prácticos. Usa el voseo argenti
 });
 
 // ---------------------------------------------------------------------------
+// Users — cuentas del CRM (login/registro). Sin esta tabla, /api/auth/register
+// y /api/auth/login fallan con "relation users does not exist" en cualquier
+// base de datos nueva, ya que no hay ningún ORM/migración que la genere.
+// ---------------------------------------------------------------------------
+async function initUsersTable() {
+  await pgPool.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id            SERIAL PRIMARY KEY,
+      username      VARCHAR(32) NOT NULL UNIQUE,
+      password_hash TEXT NOT NULL,
+      role          VARCHAR(20) NOT NULL DEFAULT 'user',
+      created_at    TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+  `);
+  console.log("[Auth] Tabla users lista.");
+}
+
+// ---------------------------------------------------------------------------
 // Chatbot leads — captura real de leads desde el Asesor Comercial IA
 // (ChatbotSim), a diferencia de santi_leads que son prospectos generados
 // por el buscador satelital. Estos son personas reales que el vendedor
@@ -2290,6 +2308,7 @@ app.post("/api/leads/:id/notes", requireApiKey, async (req, res) => {
 
 // Configure Vite or Static Files
 async function setupServer() {
+  await initUsersTable();
   await initChatbotLeadsTable();
   await initSantiTables();
 

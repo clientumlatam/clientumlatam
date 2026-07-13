@@ -137,22 +137,22 @@ export default function CrmFullApp({ activeTabOverride, hideNav = false }: CrmFu
   };
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50 font-sans text-slate-800 overflow-hidden">
+    <div className="flex flex-col h-screen cockpit-bg font-sans text-slate-200 overflow-hidden">
       {/* Sub-navigation */}
       {!hideNav && (
-      <nav className="bg-white border-b border-slate-200 px-4 py-2 flex items-center gap-1 overflow-x-auto flex-shrink-0 shadow-xs">
+      <nav className="bg-[#0A101F]/80 backdrop-blur-md border-b border-[#1E293B] px-4 py-2 flex items-center gap-1 overflow-x-auto flex-shrink-0 z-10 relative">
         <div className="flex items-center gap-1.5 mr-4 flex-shrink-0">
-          <Building2 className="w-5 h-5 text-primary" />
-          <span className="font-bold text-sm text-slate-700">CRM Completo</span>
+          <Building2 className="w-5 h-5 text-sky-400 drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]" />
+          <span className="font-bold text-sm font-display tracking-wide text-white uppercase">Clientum CRM</span>
         </div>
         {tabs.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-200 ${
               activeTab === tab.id
-                ? 'bg-primary text-white shadow-sm'
-                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
+                ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30 shadow-[0_0_10px_rgba(14,165,233,0.15)]'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'
             }`}
           >
             {tab.icon}
@@ -163,8 +163,8 @@ export default function CrmFullApp({ activeTabOverride, hideNav = false }: CrmFu
       )}
 
       {/* Content */}
-      <main className="flex-1 overflow-y-auto">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
+      <main className="flex-1 overflow-y-auto relative">
+        <div className="max-w-[1600px] mx-auto px-4 md:px-6 py-6 lg:py-8">
           {renderContent()}
         </div>
       </main>

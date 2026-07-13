@@ -57,7 +57,9 @@ import {
   Sliders,
   Edit3,
   Clock,
-  PlusCircle
+  PlusCircle,
+  Activity,
+  Save
 } from "lucide-react";
 
 interface SalesProspectorDashboardProps {
@@ -182,25 +184,66 @@ export default function SalesProspectorDashboard({
     "brochure" | "config" | "pages" | "ai" | "activity" | "quickcreate"
   >("config");
   // "CRM Completo" reorganizado: barra horizontal de categorías (arriba) + menú vertical (izquierda)
-  // Single unified navigation — all tools in one sidebar, no category switcher.
-  const NAV_ITEMS = [
-    { id: "pipeline" as const, label: "CRM Pipeline", icon: Compass },
-    { id: "products" as const, label: "Productos", icon: Package },
-    { id: "sellers" as const, label: "Vendedores", icon: Users },
-    { id: "branches" as const, label: "Sucursales", icon: Building2 },
-    { id: "icp" as const, label: "ICP Builder", desc: "Definí tu cliente ideal", icon: Target },
-    { id: "research" as const, label: "Patagonia Explorer", desc: "Buscá y calificá leads reales", icon: Search },
-    { id: "meddic" as const, label: "Calificación MEDDIC", desc: "Auditá el potencial de cada lead", icon: Award },
-    { id: "outreach" as const, label: "Outreach Campaigns", desc: "Generá campañas de contacto", icon: Mail },
-    { id: "conversations" as const, label: "Conversaciones", icon: MessageSquare },
-    { id: "bot" as const, label: "Bot", icon: Bot },
-    { id: "brochure" as const, label: "Brochure", icon: FileText },
-    { id: "config" as const, label: "Configuración", icon: Sliders },
-    { id: "pages" as const, label: "Contenido", icon: Edit3 },
-    { id: "ai" as const, label: "Copiloto IA", icon: Sparkles },
-    { id: "activity" as const, label: "Actividad", icon: Clock },
-    { id: "quickcreate" as const, label: "Creación Rápida", icon: PlusCircle },
+  // Single unified navigation, organized into task-based groups so every AI Client
+  // Prospector capability reads as part of one coherent workflow instead of a flat list.
+  type NavTabId = typeof activeTab;
+  type NavItem = { id: NavTabId; label: string; desc?: string; icon: typeof Compass };
+  const NAV_GROUPS: { id: string; label: string; icon: typeof Compass; items: NavItem[] }[] = [
+    {
+      id: "prospeccion",
+      label: "Prospección",
+      icon: Search,
+      items: [
+        { id: "icp", label: "ICP Builder", desc: "Definí tu cliente ideal", icon: Target },
+        { id: "research", label: "Patagonia Explorer", desc: "Buscá y calificá leads reales", icon: Search },
+      ],
+    },
+    {
+      id: "pipeline",
+      label: "Pipeline de Ventas",
+      icon: Compass,
+      items: [
+        { id: "pipeline", label: "CRM Pipeline", icon: Compass },
+        { id: "meddic", label: "Calificación MEDDIC", desc: "Auditá el potencial de cada lead", icon: Award },
+        { id: "outreach", label: "Outreach Campaigns", desc: "Generá campañas de contacto", icon: Mail },
+        { id: "quickcreate", label: "Creación Rápida", icon: PlusCircle },
+        { id: "activity", label: "Actividad", icon: Clock },
+      ],
+    },
+    {
+      id: "comunicacion",
+      label: "Comunicación",
+      icon: MessageSquare,
+      items: [
+        { id: "conversations", label: "Conversaciones", icon: MessageSquare },
+        { id: "bot", label: "Bot", icon: Bot },
+      ],
+    },
+    {
+      id: "catalogo",
+      label: "Catálogo & Equipo",
+      icon: Package,
+      items: [
+        { id: "products", label: "Productos", icon: Package },
+        { id: "sellers", label: "Vendedores", icon: Users },
+        { id: "branches", label: "Sucursales", icon: Building2 },
+      ],
+    },
+    {
+      id: "marca",
+      label: "Brochure & Contenido",
+      icon: FileText,
+      items: [
+        { id: "brochure", label: "Brochure", icon: FileText },
+        { id: "pages", label: "Contenido", icon: Edit3 },
+        { id: "config", label: "Configuración", icon: Sliders },
+        { id: "ai", label: "Copiloto IA", icon: Sparkles },
+      ],
+    },
   ];
+  const NAV_ITEMS: NavItem[] = NAV_GROUPS.flatMap((g) => g.items);
+  const activeNavItem = NAV_ITEMS.find((i) => i.id === activeTab);
+  const activeNavGroup = NAV_GROUPS.find((g) => g.items.some((i) => i.id === activeTab));
   const brochureActivePages = hideChatbot ? [1, 2, 4, 6, 7, 8] : [1, 2, 3, 4, 5, 6, 7, 8];
   const resolvedContactInfo = contactInfo || {
     website: "clientum.com.ar",
@@ -876,9 +919,9 @@ export default function SalesProspectorDashboard({
   };
 
   const getMEDDICStatusLabel = (score: number) => {
-    if (score >= 75) return "HOT 🔥 (Alta Conversión)";
-    if (score >= 45) return "WARM ⚡ (Medianamente Calificado)";
-    return "COLD ❄ (Baja Calificación)";
+    if (score >= 75) return "HOT  (Alta Conversión)";
+    if (score >= 45) return "WARM  (Medianamente Calificado)";
+    return "COLD  (Baja Calificación)";
   };
 
   // CSV Exporter
@@ -915,39 +958,48 @@ export default function SalesProspectorDashboard({
   };
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-slate-50 relative animate-fadeIn h-full">
-      {/* Top Professional Header */}
-      <div className="bg-slate-900 border-b border-slate-800 text-white px-6 py-4 flex items-center justify-between no-print z-10 shadow-md">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-900/30">
-            <Target className="w-5 h-5 text-white animate-pulse" />
+    <div className="flex-1 flex flex-col overflow-hidden bg-[#F8FAFC] relative animate-fadeIn h-full font-sans">
+      {/* Cockpit Top Bar */}
+      <div className="bg-[#0B131D] border-b border-[#1A2733] text-zinc-100 px-5 py-3 flex items-center justify-between no-print z-20">
+        <div className="flex items-center gap-4">
+          <div className="w-9 h-9 bg-[#10B981]/10 border border-[#10B981]/20 rounded flex items-center justify-center shadow-[0_0_15px_rgba(16,185,129,0.15)]">
+            <Target className="w-4.5 h-4.5 text-[#34D399]" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm font-extrabold tracking-tight">AI CLIENT PROSPECTOR</h2>
-              <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[9px] font-bold px-1.5 py-0.5 rounded-full font-mono uppercase tracking-widest">
+            <div className="flex items-center gap-2.5">
+              <h2 className="text-[13px] font-black tracking-wide text-zinc-100 uppercase">AI Client Prospector</h2>
+              <span className="bg-[#10B981]/10 text-[#34D399] border border-[#10B981]/20 text-[9px] font-bold px-1.5 py-0.5 rounded-sm font-mono uppercase tracking-widest">
                 v2.0 PRO
               </span>
             </div>
-            <p className="text-[10px] text-slate-400 mt-0.5">
-              Sistema integral de prospección B2B, calificación MEDDIC y automatización de outreach en la Patagonia.
-            </p>
+            {activeNavGroup && activeNavItem ? (
+              <div className="flex items-center gap-1.5 mt-1 text-[10px] font-mono text-zinc-500 uppercase tracking-wider">
+                <activeNavGroup.icon className="w-3 h-3 text-[#10B981]/70" />
+                <span className="text-zinc-400 font-semibold">{activeNavGroup.label}</span>
+                <ChevronRight className="w-3 h-3 text-zinc-600" />
+                <span className="text-zinc-300">{activeNavItem.label}</span>
+              </div>
+            ) : (
+              <p className="text-[10px] text-zinc-500 mt-1 font-mono uppercase tracking-wider">
+                Sistema Integral de Prospección B2B
+              </p>
+            )}
           </div>
         </div>
 
-        {/* Back and CSV triggers */}
-        <div className="flex items-center gap-2">
+        {/* Top Bar Actions */}
+        <div className="flex items-center gap-2.5">
           <button
             onClick={handleExportToCSV}
-            className="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all text-slate-300"
+            className="bg-[#1A2733]/50 hover:bg-[#1A2733] border border-[#2D3B48]/50 text-[11px] font-semibold px-3 py-1.5 rounded flex items-center gap-2 transition-all text-zinc-300 hover:text-white"
           >
-            <FileDown className="w-3.5 h-3.5 text-blue-400" />
+            <FileDown className="w-3.5 h-3.5 text-[#34D399]" />
             Exportar CSV
           </button>
           {onBack && (
             <button
               onClick={onBack}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all"
+              className="bg-[#10B981]/10 hover:bg-[#10B981]/20 border border-[#10B981]/20 text-[#34D399] text-[11px] font-semibold px-3 py-1.5 rounded flex items-center gap-2 transition-all hover:text-white hover:border-[#10B981]/40"
             >
               Volver al Editor
               <ArrowRight className="w-3.5 h-3.5" />
@@ -957,7 +1009,7 @@ export default function SalesProspectorDashboard({
             <button
               onClick={onLogout}
               title={currentUsername ? `Sesión: ${currentUsername}` : undefined}
-              className="bg-slate-800 hover:bg-red-900/60 border border-slate-700 hover:border-red-800 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all text-slate-300"
+              className="bg-[#1A2733]/50 hover:bg-red-950/30 border border-[#2D3B48]/50 hover:border-red-900/50 text-[11px] font-semibold px-3 py-1.5 rounded flex items-center gap-2 transition-all text-zinc-400 hover:text-red-400"
             >
               <Lock className="w-3.5 h-3.5" />
               Cerrar sesión
@@ -967,43 +1019,62 @@ export default function SalesProspectorDashboard({
       </div>
 
       {showFallbackBanner && (
-        <div className="bg-emerald-50 border-b border-emerald-100 px-6 py-2.5 flex items-center justify-between gap-4 text-emerald-800 text-xs font-semibold animate-fadeIn no-print">
+        <div className="bg-[#10B981]/10 border-b border-[#10B981]/20 px-6 py-2.5 flex items-center justify-between gap-4 text-[#065F46] text-xs font-semibold animate-fadeIn no-print backdrop-blur-sm">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-emerald-600 animate-pulse flex-shrink-0" />
+            <Sparkles className="w-4 h-4 text-[#10B981] animate-pulse flex-shrink-0" />
             <span>
               <strong>Resiliencia de Clientum:</strong> {showFallbackBanner}
             </span>
           </div>
           <button 
             onClick={() => setShowFallbackBanner(null)}
-            className="text-emerald-500 hover:text-emerald-800 font-bold transition-all px-2 py-0.5 hover:bg-emerald-100 rounded text-sm cursor-pointer"
+            className="text-[#10B981] hover:text-[#065F46] font-bold transition-all px-2 py-0.5 hover:bg-[#10B981]/20 rounded text-sm cursor-pointer"
           >
             ×
           </button>
         </div>
       )}
 
-      {/* Cuerpo: menú vertical unificado + contenido */}
+      {/* Main Layout */}
       <div className="flex-1 flex overflow-hidden">
-        <aside className="w-56 bg-white border-r border-slate-200 overflow-y-auto flex-shrink-0 no-print py-3 px-2">
-          <div className="px-2.5 pb-2 mb-1 border-b border-slate-100 flex items-center gap-1.5 text-slate-400">
-            <Compass className="w-3.5 h-3.5" />
-            <span className="text-[10px] font-bold uppercase tracking-wider font-mono">Pipeline, Prospección &amp; Comunicación</span>
-          </div>
-          {NAV_ITEMS.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`w-full text-left px-2.5 py-2 rounded-lg flex items-start gap-2.5 transition-colors cursor-pointer mb-0.5 ${
-                activeTab === item.id ? "bg-emerald-50" : "hover:bg-slate-50"
-              }`}
-            >
-              <item.icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${activeTab === item.id ? "text-emerald-600" : "text-slate-400"}`} />
-              <span>
-                <span className={`block text-xs font-bold ${activeTab === item.id ? "text-emerald-700" : "text-slate-700"}`}>{item.label}</span>
-                {"desc" in item && item.desc && <span className="block text-[10px] text-slate-400">{item.desc}</span>}
-              </span>
-            </button>
+        <aside className="w-64 bg-[#0B131D] border-r border-[#1A2733] overflow-y-auto flex-shrink-0 no-print py-5 px-3 flex flex-col gap-6 custom-scrollbar">
+          {NAV_GROUPS.map((group) => (
+            <div key={group.id} className="flex flex-col gap-1.5">
+              <div className="px-3 pb-1 flex items-center gap-2">
+                <group.icon className="w-3.5 h-3.5 text-zinc-600 flex-shrink-0" />
+                <span className="text-[10px] font-bold uppercase tracking-widest font-mono text-zinc-500">
+                  {group.label}
+                </span>
+              </div>
+              <div className="flex flex-col gap-0.5">
+                {group.items.map((item) => {
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setActiveTab(item.id)}
+                      className={`w-full text-left px-3 py-2 rounded flex items-center gap-3 transition-all cursor-pointer border border-transparent group ${
+                        isActive
+                          ? "bg-[#10B981]/10 border-[#10B981]/20 shadow-[inset_2px_0_0_0_rgba(16,185,129,1)]"
+                          : "hover:bg-[#1A2733]/50 hover:border-[#2D3B48]/50"
+                      }`}
+                    >
+                      <item.icon className={`w-4 h-4 flex-shrink-0 transition-colors ${isActive ? "text-[#34D399]" : "text-zinc-500 group-hover:text-zinc-400"}`} />
+                      <div className="flex flex-col">
+                        <span className={`text-[11px] font-semibold tracking-wide transition-colors ${isActive ? "text-white" : "text-zinc-400 group-hover:text-zinc-300"}`}>
+                          {item.label}
+                        </span>
+                        {"desc" in item && item.desc && (
+                          <span className={`text-[9px] mt-0.5 font-medium transition-colors ${isActive ? "text-[#34D399]/70" : "text-zinc-600"}`}>
+                            {item.desc}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           ))}
         </aside>
 
@@ -1012,161 +1083,166 @@ export default function SalesProspectorDashboard({
         
         {/* TAB 1: PIPELINE & SALES TRACKER DASHBOARD */}
         {activeTab === "pipeline" && (
-          <div className="flex flex-col gap-6 h-full max-w-7xl mx-auto w-full">
+          <div className="flex flex-col gap-6 h-full max-w-7xl mx-auto w-full animate-fadeIn">
             
             {/* Executive Pipeline Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-white border border-slate-200 shadow-xs rounded-xl p-4 flex items-center gap-4">
-                <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center">
-                  <TrendingUp className="w-6 h-6" />
+              <div className="bg-white border border-zinc-200 shadow-sm rounded p-4 flex flex-col gap-2 relative overflow-hidden group hover:border-[#10B981]/50 transition-colors">
+                <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                  <TrendingUp className="w-12 h-12 text-[#10B981]" />
                 </div>
-                <div>
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider font-mono">Valor Total Pipeline</span>
-                  <h3 className="text-xl font-black text-slate-800 mt-0.5">${totalPipelineVal.toLocaleString("es-AR")} ARS</h3>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                  <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest font-mono">Valor Pipeline</span>
                 </div>
+                <h3 className="text-2xl font-black text-zinc-800 tracking-tight">${totalPipelineVal.toLocaleString("es-AR")}</h3>
               </div>
 
-              <div className="bg-white border border-slate-200 shadow-xs rounded-xl p-4 flex items-center gap-4">
-                <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center">
-                  <DollarSign className="w-6 h-6" />
+              <div className="bg-white border border-zinc-200 shadow-sm rounded p-4 flex flex-col gap-2 relative overflow-hidden group hover:border-[#10B981]/50 transition-colors">
+                <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                  <DollarSign className="w-12 h-12 text-[#10B981]" />
                 </div>
-                <div>
-                  <span className="text-[10px] text-emerald-500 font-bold uppercase tracking-wider font-mono">Facturación Ganada</span>
-                  <h3 className="text-xl font-black text-emerald-800 mt-0.5">${closedVal.toLocaleString("es-AR")} ARS</h3>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-[#10B981]"></div>
+                  <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest font-mono">Ganado</span>
                 </div>
+                <h3 className="text-2xl font-black text-[#065F46] tracking-tight">${closedVal.toLocaleString("es-AR")}</h3>
               </div>
 
-              <div className="bg-white border border-slate-200 shadow-xs rounded-xl p-4 flex items-center gap-4">
-                <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center">
-                  <Users className="w-6 h-6" />
+              <div className="bg-white border border-zinc-200 shadow-sm rounded p-4 flex flex-col gap-2 relative overflow-hidden group hover:border-[#10B981]/50 transition-colors">
+                <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                  <Users className="w-12 h-12 text-indigo-500" />
                 </div>
-                <div>
-                  <span className="text-[10px] text-indigo-400 font-bold uppercase tracking-wider font-mono">Prospectos Activos</span>
-                  <h3 className="text-xl font-black text-indigo-800 mt-0.5">{activeLeadsCount} Leads</h3>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
+                  <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest font-mono">Activos</span>
                 </div>
+                <h3 className="text-2xl font-black text-zinc-800 tracking-tight">{activeLeadsCount} Leads</h3>
               </div>
 
-              <div className="bg-white border border-slate-200 shadow-xs rounded-xl p-4 flex items-center gap-4">
-                <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-lg flex items-center justify-center">
-                  <CheckCircle className="w-6 h-6" />
+              <div className="bg-white border border-zinc-200 shadow-sm rounded p-4 flex flex-col gap-2 relative overflow-hidden group hover:border-[#10B981]/50 transition-colors">
+                <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                  <CheckCircle className="w-12 h-12 text-amber-500" />
                 </div>
-                <div>
-                  <span className="text-[10px] text-amber-500 font-bold uppercase tracking-wider font-mono">Tasa de Conversión</span>
-                  <h3 className="text-xl font-black text-amber-800 mt-0.5">
-                    {deals.length > 0 ? Math.round((closedCount / deals.length) * 100) : 0}% Win-Rate
-                  </h3>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-amber-500"></div>
+                  <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest font-mono">Win-Rate</span>
                 </div>
+                <h3 className="text-2xl font-black text-zinc-800 tracking-tight">
+                  {deals.length > 0 ? Math.round((closedCount / deals.length) * 100) : 0}%
+                </h3>
               </div>
             </div>
 
             {/* Main Interactive Grid: Kanban + Actions Checklist */}
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 items-start h-full">
               
               {/* Kanban Pipeline Column Board (Occupies 3 cols) */}
-              <div className="lg:col-span-3 flex flex-col gap-4">
+              <div className="xl:col-span-3 flex flex-col gap-4 h-full">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 border-l-3 border-emerald-500 pl-2">
-                    Tablero Kanban de Ventas v2.0
+                  <h3 className="text-[13px] font-black tracking-wide text-zinc-800 uppercase flex items-center gap-2">
+                    <Layout className="w-4 h-4 text-[#10B981]" />
+                    Pipeline Engine v2.0
                   </h3>
                   <button
                     onClick={() => setShowAddForm(!showAddForm)}
-                    className="bg-slate-900 hover:bg-slate-850 text-white text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-sm"
+                    className="bg-[#0B131D] hover:bg-[#1A2733] text-white text-[11px] font-bold px-3 py-1.5 rounded flex items-center gap-1.5 shadow-sm transition-colors border border-[#2D3B48]"
                   >
-                    <Plus className="w-4 h-4" />
-                    Nuevo Lead Manual
+                    <Plus className="w-3.5 h-3.5" />
+                    Nuevo Lead
                   </button>
                 </div>
 
                 {showAddForm && (
-                  <form onSubmit={handleAddDealManual} className="bg-white border border-slate-250 rounded-xl p-4 flex flex-col gap-3 shadow-md animate-fadeIn max-w-xl">
-                    <h4 className="text-xs font-extrabold text-slate-800 border-b border-slate-100 pb-2 flex items-center gap-1.5">
-                      <Building2 className="w-4 h-4 text-slate-500" />
-                      Registrar Nuevo Prospecto Comercial
-                    </h4>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase font-mono">Empresa</label>
+                  <form onSubmit={handleAddDealManual} className="bg-white border border-zinc-200 rounded p-5 flex flex-col gap-4 shadow-sm animate-fadeIn max-w-2xl relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-[#10B981]"></div>
+                    <div className="flex items-center justify-between border-b border-zinc-100 pb-3">
+                      <h4 className="text-xs font-black text-zinc-800 uppercase tracking-wide flex items-center gap-2">
+                        <Building2 className="w-4 h-4 text-zinc-400" />
+                        Registro de Prospecto
+                      </h4>
+                      <button type="button" onClick={() => setShowAddForm(false)} className="text-zinc-400 hover:text-zinc-600">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest font-mono">Empresa</label>
                         <input
                           type="text"
                           required
                           placeholder="Ej. Distribuidora Comahue"
                           value={addCompany}
                           onChange={(e) => setAddCompany(e.target.value)}
-                          className="bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white"
+                          className="bg-zinc-50 border border-zinc-200 rounded p-2 text-xs text-zinc-800 font-medium focus:outline-none focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981]/20 transition-all"
                         />
                       </div>
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase font-mono">Valor Estimado (ARS)</label>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest font-mono">Valor Estimado (ARS)</label>
                         <input
                           type="number"
                           placeholder="Ej. 180000"
                           value={addAmount}
                           onChange={(e) => setAddAmount(e.target.value)}
-                          className="bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white"
+                          className="bg-zinc-50 border border-zinc-200 rounded p-2 text-xs text-zinc-800 font-medium focus:outline-none focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981]/20 transition-all"
                         />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase font-mono">Contacto Directo</label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest font-mono">Contacto Directo</label>
                         <input
                           type="text"
                           placeholder="Ej. Marcos Ramirez (Dueño)"
                           value={addContact}
                           onChange={(e) => setAddContact(e.target.value)}
-                          className="bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white"
+                          className="bg-zinc-50 border border-zinc-200 rounded p-2 text-xs text-zinc-800 font-medium focus:outline-none focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981]/20 transition-all"
                         />
                       </div>
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase font-mono">Teléfono Local</label>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest font-mono">Teléfono Local</label>
                         <input
                           type="text"
                           placeholder="Ej. +54 298 4432120"
                           value={addPhone}
                           onChange={(e) => setAddPhone(e.target.value)}
-                          className="bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-800 focus:outline-none focus:border-emerald-500 focus:bg-white"
+                          className="bg-zinc-50 border border-zinc-200 rounded p-2 text-xs text-zinc-800 font-medium focus:outline-none focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981]/20 transition-all font-mono"
                         />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase font-mono">Rubro Comercial</label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest font-mono">Rubro Comercial</label>
                         <select
                           value={addIndustry}
                           onChange={(e) => setAddIndustry(e.target.value)}
-                          className="bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-800 focus:outline-none focus:border-emerald-500"
+                          className="bg-zinc-50 border border-zinc-200 rounded p-2 text-xs text-zinc-800 font-medium focus:outline-none focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981]/20 transition-all"
                         >
                           {INDUSTRIES_PRESET.map((i) => (
                             <option key={i} value={i}>{i}</option>
                           ))}
                         </select>
                       </div>
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase font-mono">Etapa del Embudo</label>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest font-mono">Etapa</label>
                         <select
                           value={addStage}
                           onChange={(e) => setAddStage(e.target.value as any)}
-                          className="bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-800 focus:outline-none focus:border-emerald-500"
+                          className="bg-zinc-50 border border-zinc-200 rounded p-2 text-xs text-zinc-800 font-medium focus:outline-none focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981]/20 transition-all"
                         >
-                          <option value="leads">Nuevos Leads (Prospectos)</option>
-                          <option value="bot_contact">Bot Calificador Whatsapp</option>
+                          <option value="leads">Nuevos Leads</option>
+                          <option value="bot_contact">Bot Calificador</option>
                           <option value="proposed">Propuesta Presentada</option>
-                          <option value="closed">Venta Cerrada (Ganado)</option>
+                          <option value="closed">Venta Cerrada</option>
                         </select>
                       </div>
                     </div>
-                    <div className="flex justify-end gap-2 border-t border-slate-100 pt-3">
-                      <button
-                        type="button"
-                        onClick={() => setShowAddForm(false)}
-                        className="text-slate-500 hover:text-slate-800 text-xs font-bold px-3 py-2"
-                      >
-                        Cancelar
-                      </button>
+                    <div className="flex justify-end pt-2">
                       <button
                         type="submit"
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-lg"
+                        className="bg-[#10B981] hover:bg-[#059669] text-white text-[11px] font-bold px-5 py-2 rounded shadow-sm transition-colors uppercase tracking-wide flex items-center gap-1.5"
                       >
+                        <Save className="w-3.5 h-3.5" />
                         Guardar Lead
                       </button>
                     </div>
@@ -1174,56 +1250,56 @@ export default function SalesProspectorDashboard({
                 )}
 
                 {/* The Kanban Board Layout */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-start h-full">
                   
                   {/* Column 1: Leads */}
-                  <div className="bg-slate-100/80 rounded-xl p-3 border border-slate-200 flex flex-col gap-3 min-h-[450px]">
-                    <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                      <span className="text-xs font-extrabold text-slate-700 font-mono uppercase tracking-wider flex items-center gap-1.5">
-                        <span className="w-2.5 h-2.5 bg-blue-500 rounded-full"></span>
-                        Nuevos Leads
+                  <div className="bg-zinc-200/40 rounded p-2.5 border border-zinc-200 flex flex-col gap-2.5 min-h-[500px]">
+                    <div className="flex items-center justify-between pb-1.5 border-b border-zinc-200/60">
+                      <span className="text-[10px] font-black text-zinc-600 font-mono uppercase tracking-widest flex items-center gap-1.5">
+                        <span className="w-2 h-2 bg-blue-500 rounded-sm"></span>
+                        Leads
                       </span>
-                      <span className="bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full font-mono">
+                      <span className="bg-white border border-zinc-200 text-zinc-500 text-[9px] font-bold px-1.5 py-0.5 rounded font-mono">
                         {deals.filter((d) => d.stage === "leads").length}
                       </span>
                     </div>
-                    <div className="flex flex-col gap-2 max-h-[500px] overflow-y-auto pr-0.5 scrollbar-thin">
+                    <div className="flex flex-col gap-2 overflow-y-auto custom-scrollbar">
                       {deals.filter((d) => d.stage === "leads").map((deal) => (
-                        <div key={deal.id} className="bg-white border border-slate-200 p-3 rounded-lg shadow-xs flex flex-col gap-2 hover:border-blue-400 transition-all border-l-3 border-l-blue-400">
+                        <div key={deal.id} className="bg-white border border-zinc-200 p-2.5 rounded shadow-sm flex flex-col gap-2 hover:border-blue-400 hover:shadow-md transition-all relative overflow-hidden group">
+                          <div className="absolute top-0 left-0 w-0.5 h-full bg-blue-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                           <div className="flex justify-between items-start">
-                            <div>
-                              <h5 className="text-[11px] font-bold text-slate-800">{deal.company}</h5>
-                              <span className="text-[9px] text-slate-400 font-medium">{deal.industry}</span>
+                            <div className="pr-4">
+                              <h5 className="text-[11px] font-black tracking-wide text-zinc-800 leading-tight">{deal.company}</h5>
+                              <span className="text-[9px] text-zinc-400 font-medium uppercase tracking-wide">{deal.industry}</span>
                             </div>
-                            <button onClick={() => handleDeleteDeal(deal.id)} className="text-slate-300 hover:text-red-500">
+                            <button onClick={() => handleDeleteDeal(deal.id)} className="text-zinc-300 hover:text-red-500 transition-colors absolute top-2.5 right-2.5 opacity-0 group-hover:opacity-100">
                               <Trash2 className="w-3 h-3" />
                             </button>
                           </div>
                           
-                          <div className="text-[10px] text-slate-500 flex flex-col gap-0.5 mt-1 border-t border-slate-100 pt-1.5">
-                            <div className="flex items-center gap-1">
-                              <User className="w-3 h-3 text-slate-400" />
-                              <span>{deal.contact}</span>
+                          <div className="text-[9px] text-zinc-500 flex flex-col gap-1 mt-1 border-t border-zinc-100 pt-1.5 font-medium">
+                            <div className="flex items-center gap-1.5 truncate">
+                              <User className="w-3 h-3 text-zinc-400 flex-shrink-0" />
+                              <span className="truncate">{deal.contact}</span>
                             </div>
-                            <div className="flex items-center gap-1">
-                              <Phone className="w-3 h-3 text-slate-400" />
+                            <div className="flex items-center gap-1.5">
+                              <Phone className="w-3 h-3 text-zinc-400 flex-shrink-0" />
                               <span className="font-mono">{deal.phone}</span>
                             </div>
                           </div>
 
-                          <div className="flex justify-between items-center mt-2 border-t border-slate-100 pt-2">
-                            <span className="text-xs font-black text-slate-700 font-mono">${deal.amount.toLocaleString("es-AR")}</span>
-                            <div className="flex gap-1">
+                          <div className="flex justify-between items-center mt-1 pt-1.5 border-t border-zinc-100">
+                            <span className="text-[11px] font-black text-zinc-800 font-mono tracking-tight">${deal.amount.toLocaleString("es-AR")}</span>
+                            <div className="flex gap-1 items-center">
                               <button
                                 onClick={() => { setSelectedMeddicLeadId(deal.id); setActiveTab("meddic"); }}
-                                className="bg-slate-50 hover:bg-slate-100 text-slate-500 text-[9px] font-extrabold px-1.5 py-0.5 rounded border border-slate-200 font-mono"
-                                title="Calificar MEDDIC"
+                                className="bg-zinc-50 hover:bg-zinc-100 text-zinc-500 text-[9px] font-bold px-1.5 py-0.5 rounded border border-zinc-200 font-mono transition-colors"
                               >
-                                MEDDIC: {deal.meddicScore || 0}%
+                                SC: {deal.meddicScore || 0}
                               </button>
                               <button
                                 onClick={() => moveDeal(deal.id, "next")}
-                                className="bg-slate-900 hover:bg-black text-white p-1 rounded transition-colors"
+                                className="bg-zinc-800 hover:bg-black text-white p-1 rounded transition-colors"
                               >
                                 <ArrowRight className="w-3 h-3" />
                               </button>
@@ -1235,53 +1311,48 @@ export default function SalesProspectorDashboard({
                   </div>
 
                   {/* Column 2: Whatsapp Bot Contact */}
-                  <div className="bg-slate-100/80 rounded-xl p-3 border border-slate-200 flex flex-col gap-3 min-h-[450px]">
-                    <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                      <span className="text-xs font-extrabold text-slate-700 font-mono uppercase tracking-wider flex items-center gap-1.5">
-                        <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full"></span>
-                        WhatsApp Bot
+                  <div className="bg-zinc-200/40 rounded p-2.5 border border-zinc-200 flex flex-col gap-2.5 min-h-[500px]">
+                    <div className="flex items-center justify-between pb-1.5 border-b border-zinc-200/60">
+                      <span className="text-[10px] font-black text-zinc-600 font-mono uppercase tracking-widest flex items-center gap-1.5">
+                        <span className="w-2 h-2 bg-[#10B981] rounded-sm"></span>
+                        WA Bot
                       </span>
-                      <span className="bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full font-mono">
+                      <span className="bg-white border border-zinc-200 text-zinc-500 text-[9px] font-bold px-1.5 py-0.5 rounded font-mono">
                         {deals.filter((d) => d.stage === "bot_contact").length}
                       </span>
                     </div>
-                    <div className="flex flex-col gap-2 max-h-[500px] overflow-y-auto pr-0.5 scrollbar-thin">
+                    <div className="flex flex-col gap-2 overflow-y-auto custom-scrollbar">
                       {deals.filter((d) => d.stage === "bot_contact").map((deal) => (
-                        <div key={deal.id} className="bg-white border border-slate-200 p-3 rounded-lg shadow-xs flex flex-col gap-2 hover:border-emerald-400 transition-all border-l-3 border-l-emerald-400">
+                        <div key={deal.id} className="bg-white border border-zinc-200 p-2.5 rounded shadow-sm flex flex-col gap-2 hover:border-[#10B981] hover:shadow-md transition-all relative overflow-hidden group">
+                          <div className="absolute top-0 left-0 w-0.5 h-full bg-[#10B981] opacity-0 group-hover:opacity-100 transition-opacity"></div>
                           <div className="flex justify-between items-start">
-                            <div>
-                              <h5 className="text-[11px] font-bold text-slate-800">{deal.company}</h5>
-                              <span className="text-[9px] text-slate-400 font-medium">{deal.industry}</span>
+                            <div className="pr-4">
+                              <h5 className="text-[11px] font-black tracking-wide text-zinc-800 leading-tight">{deal.company}</h5>
+                              <span className="text-[9px] text-zinc-400 font-medium uppercase tracking-wide">{deal.industry}</span>
                             </div>
-                            <button onClick={() => handleDeleteDeal(deal.id)} className="text-slate-300 hover:text-red-500">
+                            <button onClick={() => handleDeleteDeal(deal.id)} className="text-zinc-300 hover:text-red-500 transition-colors absolute top-2.5 right-2.5 opacity-0 group-hover:opacity-100">
                               <Trash2 className="w-3 h-3" />
                             </button>
                           </div>
                           
-                          <div className="text-[9px] bg-emerald-50 text-emerald-800 p-1.5 rounded-md border border-emerald-100 font-sans mt-1">
-                            <strong className="block font-bold">Respuesta del Bot de WhatsApp:</strong>
-                            <p className="mt-0.5 leading-relaxed text-slate-700 italic">"Hola! Registramos tu interés en la propuesta para el rubro..."</p>
+                          <div className="text-[9px] bg-[#10B981]/10 text-[#065F46] p-1.5 rounded border border-[#10B981]/20 mt-1">
+                            <strong className="block font-bold">Bot Update:</strong>
+                            <span className="italic">Contacto inicial enviado...</span>
                           </div>
 
-                          <div className="flex justify-between items-center mt-2 border-t border-slate-100 pt-2">
-                            <span className="text-xs font-black text-slate-700 font-mono">${deal.amount.toLocaleString("es-AR")}</span>
-                            <div className="flex gap-1">
-                              <button
-                                onClick={() => moveDeal(deal.id, "prev")}
-                                className="bg-slate-100 hover:bg-slate-200 text-slate-500 p-1 rounded transition-colors"
-                              >
+                          <div className="flex justify-between items-center mt-1 pt-1.5 border-t border-zinc-100">
+                            <span className="text-[11px] font-black text-zinc-800 font-mono tracking-tight">${deal.amount.toLocaleString("es-AR")}</span>
+                            <div className="flex gap-1 items-center">
+                              <button onClick={() => moveDeal(deal.id, "prev")} className="text-zinc-400 hover:text-zinc-700 p-0.5">
                                 <ArrowLeft className="w-3 h-3" />
                               </button>
                               <button
                                 onClick={() => { setSelectedOutreachLeadId(deal.id); setActiveTab("outreach"); }}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded font-mono"
+                                className="bg-[#10B981] hover:bg-[#059669] text-white text-[9px] font-bold px-1.5 py-0.5 rounded font-mono transition-colors"
                               >
-                                Outreach
+                                OUT
                               </button>
-                              <button
-                                onClick={() => moveDeal(deal.id, "next")}
-                                className="bg-slate-900 hover:bg-black text-white p-1 rounded transition-colors"
-                              >
+                              <button onClick={() => moveDeal(deal.id, "next")} className="bg-zinc-800 hover:bg-black text-white p-1 rounded transition-colors">
                                 <ArrowRight className="w-3 h-3" />
                               </button>
                             </div>
@@ -1291,59 +1362,55 @@ export default function SalesProspectorDashboard({
                     </div>
                   </div>
 
-                  {/* Column 3: Proposal/Proposed */}
-                  <div className="bg-slate-100/80 rounded-xl p-3 border border-slate-200 flex flex-col gap-3 min-h-[450px]">
-                    <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                      <span className="text-xs font-extrabold text-slate-700 font-mono uppercase tracking-wider flex items-center gap-1.5">
-                        <span className="w-2.5 h-2.5 bg-indigo-500 rounded-full"></span>
+                  {/* Column 3: Proposed */}
+                  <div className="bg-zinc-200/40 rounded p-2.5 border border-zinc-200 flex flex-col gap-2.5 min-h-[500px]">
+                    <div className="flex items-center justify-between pb-1.5 border-b border-zinc-200/60">
+                      <span className="text-[10px] font-black text-zinc-600 font-mono uppercase tracking-widest flex items-center gap-1.5">
+                        <span className="w-2 h-2 bg-indigo-500 rounded-sm"></span>
                         Propuesta
                       </span>
-                      <span className="bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full font-mono">
+                      <span className="bg-white border border-zinc-200 text-zinc-500 text-[9px] font-bold px-1.5 py-0.5 rounded font-mono">
                         {deals.filter((d) => d.stage === "proposed").length}
                       </span>
                     </div>
-                    <div className="flex flex-col gap-2 max-h-[500px] overflow-y-auto pr-0.5 scrollbar-thin">
+                    <div className="flex flex-col gap-2 overflow-y-auto custom-scrollbar">
                       {deals.filter((d) => d.stage === "proposed").map((deal) => (
-                        <div key={deal.id} className="bg-white border border-slate-200 p-3 rounded-lg shadow-xs flex flex-col gap-2 hover:border-indigo-400 transition-all border-l-3 border-l-indigo-400">
+                        <div key={deal.id} className="bg-white border border-zinc-200 p-2.5 rounded shadow-sm flex flex-col gap-2 hover:border-indigo-400 hover:shadow-md transition-all relative overflow-hidden group">
+                          <div className="absolute top-0 left-0 w-0.5 h-full bg-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                           <div className="flex justify-between items-start">
-                            <div>
-                              <h5 className="text-[11px] font-bold text-slate-800">{deal.company}</h5>
-                              <span className="text-[9px] text-slate-400 font-medium">{deal.industry}</span>
+                            <div className="pr-4">
+                              <h5 className="text-[11px] font-black tracking-wide text-zinc-800 leading-tight">{deal.company}</h5>
+                              <span className="text-[9px] text-zinc-400 font-medium uppercase tracking-wide">{deal.industry}</span>
                             </div>
-                            <button onClick={() => handleDeleteDeal(deal.id)} className="text-slate-300 hover:text-red-500">
+                            <button onClick={() => handleDeleteDeal(deal.id)} className="text-zinc-300 hover:text-red-500 transition-colors absolute top-2.5 right-2.5 opacity-0 group-hover:opacity-100">
                               <Trash2 className="w-3 h-3" />
                             </button>
                           </div>
                           
                           {deal.meddicScore ? (
-                            <div className={`text-[9px] p-1.5 rounded border ${getMEDDICStatusColor(deal.meddicScore)} font-semibold`}>
-                              MEDDIC: {deal.meddicScore}% ({deal.meddicScore >= 75 ? "HOT" : "WARM"})
+                            <div className={`text-[9px] p-1.5 rounded border mt-1 font-bold flex items-center gap-1 ${getMEDDICStatusColor(deal.meddicScore)}`}>
+                              <Award className="w-3 h-3" />
+                              M: {deal.meddicScore}% ({deal.meddicScore >= 75 ? "HOT" : "WARM"})
                             </div>
                           ) : (
-                            <div className="text-[9px] bg-amber-50 text-amber-800 p-1.5 rounded border border-amber-100 italic">
-                              ⚠️ Requiere calificación MEDDIC para avanzar con seguridad.
+                            <div className="text-[9px] bg-amber-50 text-amber-700 p-1.5 rounded border border-amber-200 mt-1 font-bold">
+                              Falta Calificar
                             </div>
                           )}
 
-                          <div className="flex justify-between items-center mt-2 border-t border-slate-100 pt-2">
-                            <span className="text-xs font-black text-slate-700 font-mono">${deal.amount.toLocaleString("es-AR")}</span>
-                            <div className="flex gap-1">
-                              <button
-                                onClick={() => moveDeal(deal.id, "prev")}
-                                className="bg-slate-100 hover:bg-slate-200 text-slate-500 p-1 rounded transition-colors"
-                              >
+                          <div className="flex justify-between items-center mt-1 pt-1.5 border-t border-zinc-100">
+                            <span className="text-[11px] font-black text-zinc-800 font-mono tracking-tight">${deal.amount.toLocaleString("es-AR")}</span>
+                            <div className="flex gap-1 items-center">
+                              <button onClick={() => moveDeal(deal.id, "prev")} className="text-zinc-400 hover:text-zinc-700 p-0.5">
                                 <ArrowLeft className="w-3 h-3" />
                               </button>
                               <button
                                 onClick={() => { setSelectedMeddicLeadId(deal.id); setActiveTab("meddic"); }}
-                                className="bg-indigo-600 hover:bg-indigo-700 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded font-mono"
+                                className="bg-indigo-600 hover:bg-indigo-700 text-white text-[9px] font-bold px-1.5 py-0.5 rounded font-mono transition-colors"
                               >
-                                Score
+                                CALIF
                               </button>
-                              <button
-                                onClick={() => moveDeal(deal.id, "next")}
-                                className="bg-slate-900 hover:bg-black text-white p-1 rounded transition-colors"
-                              >
+                              <button onClick={() => moveDeal(deal.id, "next")} className="bg-zinc-800 hover:bg-black text-white p-1 rounded transition-colors">
                                 <ArrowRight className="w-3 h-3" />
                               </button>
                             </div>
@@ -1353,45 +1420,41 @@ export default function SalesProspectorDashboard({
                     </div>
                   </div>
 
-                  {/* Column 4: Closed Won */}
-                  <div className="bg-slate-100/80 rounded-xl p-3 border border-slate-200 flex flex-col gap-3 min-h-[450px]">
-                    <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                      <span className="text-xs font-extrabold text-slate-700 font-mono uppercase tracking-wider flex items-center gap-1.5">
-                        <span className="w-2.5 h-2.5 bg-emerald-600 rounded-full"></span>
-                        Ganados (Closed)
+                  {/* Column 4: Closed */}
+                  <div className="bg-zinc-200/40 rounded p-2.5 border border-zinc-200 flex flex-col gap-2.5 min-h-[500px]">
+                    <div className="flex items-center justify-between pb-1.5 border-b border-zinc-200/60">
+                      <span className="text-[10px] font-black text-zinc-600 font-mono uppercase tracking-widest flex items-center gap-1.5">
+                        <span className="w-2 h-2 bg-[#059669] rounded-sm"></span>
+                        Ganados
                       </span>
-                      <span className="bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full font-mono">
+                      <span className="bg-white border border-zinc-200 text-zinc-500 text-[9px] font-bold px-1.5 py-0.5 rounded font-mono">
                         {deals.filter((d) => d.stage === "closed").length}
                       </span>
                     </div>
-                    <div className="flex flex-col gap-2 max-h-[500px] overflow-y-auto pr-0.5 scrollbar-thin">
+                    <div className="flex flex-col gap-2 overflow-y-auto custom-scrollbar">
                       {deals.filter((d) => d.stage === "closed").map((deal) => (
-                        <div key={deal.id} className="bg-white border border-slate-200 p-3 rounded-lg shadow-xs flex flex-col gap-2 hover:border-emerald-600 transition-all border-l-3 border-l-emerald-600">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h5 className="text-[11px] font-bold text-slate-800">{deal.company}</h5>
-                              <span className="text-[9px] text-slate-400 font-medium">{deal.industry}</span>
+                        <div key={deal.id} className="bg-white border border-[#10B981]/30 p-2.5 rounded shadow-sm flex flex-col gap-2 relative overflow-hidden group">
+                          <div className="absolute inset-0 bg-[#10B981]/5 pointer-events-none"></div>
+                          <div className="flex justify-between items-start relative z-10">
+                            <div className="pr-4">
+                              <h5 className="text-[11px] font-black tracking-wide text-zinc-800 leading-tight">{deal.company}</h5>
+                              <span className="text-[9px] text-zinc-400 font-medium uppercase tracking-wide">{deal.industry}</span>
                             </div>
-                            <button onClick={() => handleDeleteDeal(deal.id)} className="text-slate-300 hover:text-red-500">
+                            <button onClick={() => handleDeleteDeal(deal.id)} className="text-zinc-300 hover:text-red-500 transition-colors absolute top-2.5 right-2.5 opacity-0 group-hover:opacity-100">
                               <Trash2 className="w-3 h-3" />
                             </button>
                           </div>
                           
-                          <div className="text-[9px] bg-emerald-100 text-emerald-800 p-1.5 rounded-md border border-emerald-250 font-semibold flex items-center gap-1">
+                          <div className="text-[9px] bg-[#10B981]/10 text-[#065F46] p-1.5 rounded border border-[#10B981]/20 mt-1 font-bold flex items-center gap-1.5 relative z-10">
                             <CheckCircle className="w-3.5 h-3.5" />
-                            Facturado & AFIP Clase A
+                            CERRADO
                           </div>
 
-                          <div className="flex justify-between items-center mt-2 border-t border-slate-100 pt-2">
-                            <span className="text-xs font-black text-slate-800 font-mono">${deal.amount.toLocaleString("es-AR")}</span>
-                            <div className="flex gap-1">
-                              <button
-                                onClick={() => moveDeal(deal.id, "prev")}
-                                className="bg-slate-100 hover:bg-slate-200 text-slate-500 p-1 rounded transition-colors"
-                              >
-                                <ArrowLeft className="w-3 h-3" />
-                              </button>
-                            </div>
+                          <div className="flex justify-between items-center mt-1 pt-1.5 border-t border-zinc-100 relative z-10">
+                            <span className="text-[11px] font-black text-[#065F46] font-mono tracking-tight">${deal.amount.toLocaleString("es-AR")}</span>
+                            <button onClick={() => moveDeal(deal.id, "prev")} className="text-zinc-400 hover:text-zinc-700 p-0.5">
+                              <ArrowLeft className="w-3 h-3" />
+                            </button>
                           </div>
                         </div>
                       ))}
@@ -1401,49 +1464,51 @@ export default function SalesProspectorDashboard({
                 </div>
               </div>
 
-              {/* Sidebar Action Center / Top Movers & Checklist (1 Column) */}
-              <div className="flex flex-col gap-6">
+              {/* Sidebar Action Center / Top Movers & Checklist */}
+              <div className="xl:col-span-1 flex flex-col gap-5 h-full">
                 
                 {/* Pipeline Health & Recommendations */}
-                <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-                  <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5 border-b border-slate-100 pb-2.5">
-                    <Lightbulb className="w-4.5 h-4.5 text-amber-500" />
-                    Recomendaciones Estratégicas
+                <div className="bg-white border border-zinc-200 rounded p-4 shadow-sm flex flex-col gap-3">
+                  <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest font-mono flex items-center gap-1.5 border-b border-zinc-100 pb-2">
+                    <Activity className="w-3.5 h-3.5" />
+                    Radar de Pipeline
                   </h4>
-                  <div className="flex flex-col gap-2.5 mt-3">
+                  <div className="flex flex-col gap-2">
                     {deals.filter((d) => d.stage === "proposed" && !d.meddicScore).length > 0 && (
-                      <div className="bg-amber-50 border border-amber-100 rounded-lg p-2.5 text-[10px] text-amber-900 leading-relaxed">
-                        <strong className="block font-bold">Alerta de Riesgo Comercial</strong>
-                        Hay propuestas presentadas sin puntuación de calificación MEDDIC. Evaluá sus tomadores de decisiones para evitar perder oportunidades.
+                      <div className="bg-amber-50 border border-amber-200/60 rounded p-2.5 text-[10px] text-amber-900 flex gap-2">
+                        <AlertTriangle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0 mt-0.5" />
+                        <div className="flex flex-col gap-0.5">
+                          <strong className="font-bold uppercase tracking-wide text-[9px]">Falta Calificar</strong>
+                          <span className="leading-snug opacity-90">Tenés propuestas sin score MEDDIC. Riesgo de estancamiento alto.</span>
+                        </div>
                       </div>
                     )}
                     {deals.filter((d) => d.stage === "leads").length >= 4 && (
-                      <div className="bg-blue-50 border border-blue-100 rounded-lg p-2.5 text-[10px] text-blue-900 leading-relaxed">
-                        <strong className="block font-bold">Cuello de Botella en Entrada</strong>
-                        Tenés muchos prospectos en etapa inicial de 'Leads'. Activá el bot de WhatsApp calificador para agilizar el contacto automático.
+                      <div className="bg-blue-50 border border-blue-200/60 rounded p-2.5 text-[10px] text-blue-900 flex gap-2">
+                        <Info className="w-3.5 h-3.5 text-blue-600 flex-shrink-0 mt-0.5" />
+                        <div className="flex flex-col gap-0.5">
+                          <strong className="font-bold uppercase tracking-wide text-[9px]">Cuello de Botella</strong>
+                          <span className="leading-snug opacity-90">Muchos leads nuevos. Activá secuencias de Outreach o WA Bot ahora.</span>
+                        </div>
                       </div>
                     )}
-                    <div className="bg-slate-50 border border-slate-150 rounded-lg p-2.5 text-[10px] text-slate-600 leading-relaxed">
-                      <strong className="block font-bold">Tip de Conversión Patagónico</strong>
-                      Ofrecer precios transparentes en pesos acelera el paso de WhatsApp Bot a Propuesta técnica en un 35% en Río Negro y Neuquén.
-                    </div>
                   </div>
                 </div>
 
                 {/* Top Movers (This week) */}
-                <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-                  <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5 border-b border-slate-100 pb-2.5">
-                    <TrendingUp className="w-4.5 h-4.5 text-emerald-500" />
-                    Top Movers & Alertas
+                <div className="bg-white border border-zinc-200 rounded p-4 shadow-sm flex flex-col gap-3">
+                  <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest font-mono flex items-center gap-1.5 border-b border-zinc-100 pb-2">
+                    <Star className="w-3.5 h-3.5" />
+                    Top Prospects
                   </h4>
-                  <div className="flex flex-col gap-2.5 mt-3">
+                  <div className="flex flex-col gap-2">
                     {deals.slice(0, 3).map((deal, idx) => (
-                      <div key={idx} className="flex justify-between items-center text-[11px] border-b border-slate-50 pb-1.5 last:border-0 last:pb-0">
-                        <div className="truncate">
-                          <strong className="font-bold text-slate-850 block truncate">{deal.company}</strong>
-                          <span className="text-[10px] text-slate-400 capitalize">{deal.stage.replace('_', ' ')}</span>
+                      <div key={idx} className="flex justify-between items-center text-[10px] border-b border-zinc-50 pb-1.5 last:border-0 last:pb-0">
+                        <div className="flex flex-col truncate pr-2">
+                          <strong className="font-bold text-zinc-800 truncate">{deal.company}</strong>
+                          <span className="text-[9px] text-zinc-400 uppercase tracking-wide font-medium">{deal.stage.replace('_', ' ')}</span>
                         </div>
-                        <span className="font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-extrabold text-[10px]">
+                        <span className="font-mono text-[#065F46] bg-[#10B981]/10 px-1.5 py-0.5 rounded font-bold text-[9px]">
                           ${deal.amount.toLocaleString("es-AR")}
                         </span>
                       </div>
@@ -1452,17 +1517,17 @@ export default function SalesProspectorDashboard({
                 </div>
 
                 {/* Sales Pipeline Weekly Actions Checklist */}
-                <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-                  <h4 className="text-xs font-bold text-slate-800 flex items-center justify-between border-b border-slate-100 pb-2.5">
-                    <span className="flex items-center gap-1.5">
-                      <CheckSquare className="w-4.5 h-4.5 text-blue-500" />
-                      Weekly Action Checklist
+                <div className="bg-[#0B131D] rounded p-4 shadow-sm flex flex-col gap-3 border border-[#1A2733] text-zinc-300">
+                  <div className="flex items-center justify-between border-b border-[#1A2733] pb-2">
+                    <h4 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest font-mono flex items-center gap-1.5">
+                      <Target className="w-3.5 h-3.5 text-[#10B981]" />
+                      Focus Semanal
+                    </h4>
+                    <span className="text-[9px] font-mono text-[#10B981] font-bold bg-[#10B981]/10 px-1.5 py-0.5 rounded">
+                      {checklist.filter((t) => t.checked).length}/{checklist.length}
                     </span>
-                    <span className="text-[9px] font-mono text-slate-400">
-                      {checklist.filter((t) => t.checked).length}/{checklist.length} done
-                    </span>
-                  </h4>
-                  <div className="flex flex-col gap-2 mt-3">
+                  </div>
+                  <div className="flex flex-col gap-2">
                     {checklist.map((task) => (
                       <button
                         key={task.id}
@@ -1471,14 +1536,14 @@ export default function SalesProspectorDashboard({
                             prev.map((t) => (t.id === task.id ? { ...t, checked: !t.checked } : t))
                           );
                         }}
-                        className="flex items-start gap-2 text-left text-[11px] hover:bg-slate-50 p-1 rounded transition-colors group cursor-pointer"
+                        className="flex items-start gap-2 text-left text-[10px] hover:bg-[#1A2733]/50 p-1.5 rounded transition-colors group cursor-pointer"
                       >
                         {task.checked ? (
-                          <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                          <CheckCircle className="w-3.5 h-3.5 text-[#10B981] flex-shrink-0" />
                         ) : (
-                          <div className="w-4 h-4 border border-slate-300 rounded flex-shrink-0 mt-0.5 group-hover:border-emerald-500"></div>
+                          <div className="w-3.5 h-3.5 border border-zinc-600 rounded flex-shrink-0 group-hover:border-[#10B981] transition-colors"></div>
                         )}
-                        <span className={`leading-snug ${task.checked ? "line-through text-slate-400" : "text-slate-700"}`}>
+                        <span className={`leading-tight mt-0.5 font-medium ${task.checked ? "line-through text-zinc-600" : "text-zinc-300"}`}>
                           {task.text}
                         </span>
                       </button>
@@ -1492,8 +1557,7 @@ export default function SalesProspectorDashboard({
 
           </div>
         )}
-
-        {/* TAB 2: IDEAL CUSTOMER PROFILE BUILDER */}
+{/* TAB 2: IDEAL CUSTOMER PROFILE BUILDER */}
         {activeTab === "icp" && (
           <div className="flex-1 max-w-4xl mx-auto w-full flex flex-col gap-6">
             
@@ -1584,7 +1648,7 @@ export default function SalesProspectorDashboard({
                     <div className="bg-white rounded-lg p-4 border border-slate-150">
                       <h5 className="font-bold text-slate-800 flex items-center gap-1.5 border-b border-slate-50 pb-1.5 mb-2.5">
                         <Building2 className="w-4 h-4 text-emerald-600" />
-                        🏢 Perfil Corporativo
+                         Perfil Corporativo
                       </h5>
                       <div className="flex flex-col gap-1.5 text-xs text-slate-600">
                         <div><strong>Rubros Verticales:</strong> {icpResult.industry}</div>
@@ -1599,7 +1663,7 @@ export default function SalesProspectorDashboard({
                     <div className="bg-white rounded-lg p-4 border border-slate-150">
                       <h5 className="font-bold text-slate-800 flex items-center gap-1.5 border-b border-slate-50 pb-1.5 mb-2.5">
                         <User className="w-4 h-4 text-emerald-600" />
-                        👤 Tomador de Decisiones Key
+                         Tomador de Decisiones Key
                       </h5>
                       <div className="flex flex-col gap-1.5 text-xs text-slate-600">
                         <div><strong>Rol Principal:</strong> {icpResult.decisionMakerRole}</div>
@@ -1620,7 +1684,7 @@ export default function SalesProspectorDashboard({
                     <div className="bg-white rounded-lg p-4 border border-slate-150">
                       <h5 className="font-bold text-slate-800 flex items-center gap-1.5 border-b border-slate-50 pb-1.5 mb-2.5">
                         <TrendingUp className="w-4 h-4 text-emerald-600" />
-                        💰 Impacto Financiero
+                         Impacto Financiero
                       </h5>
                       <div className="flex flex-col gap-1.5 text-xs text-slate-600">
                         <div><strong>Valor Contrato Promedio:</strong> {icpResult.avgContractValue}</div>
@@ -1634,7 +1698,7 @@ export default function SalesProspectorDashboard({
                     <div className="bg-white rounded-lg p-4 border border-slate-150">
                       <h5 className="font-bold text-slate-800 flex items-center gap-1.5 border-b border-slate-50 pb-1.5 mb-2.5">
                         <MapPin className="w-4 h-4 text-emerald-600" />
-                        📍 Foco Geográfico
+                         Foco Geográfico
                       </h5>
                       <div className="flex flex-col gap-1.5 text-xs text-slate-600">
                         <div><strong>Regiones Foco:</strong> {icpResult.regions}</div>
@@ -1648,7 +1712,7 @@ export default function SalesProspectorDashboard({
                   <div className="bg-white rounded-lg p-5 border border-slate-200 mt-2">
                     <h5 className="font-black text-slate-800 text-xs uppercase tracking-wider font-mono border-b border-slate-100 pb-2 mb-3 flex items-center gap-1.5">
                       <Award className="w-4 h-4 text-emerald-600" />
-                      ✅ Criterios de Calificación MEDDIC de Conversión
+                       Criterios de Calificación MEDDIC de Conversión
                     </h5>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-600">
                       <div><strong>Metrics (Métricas):</strong> {icpResult.meddicMetrics}</div>
@@ -1695,7 +1759,7 @@ export default function SalesProspectorDashboard({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5 font-bold text-emerald-700">
                       <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
-                      <span>Buscador Google Maps Activo ✅</span>
+                      <span>Buscador Google Maps Activo </span>
                     </div>
                     <button
                       onClick={() => {
@@ -1719,7 +1783,7 @@ export default function SalesProspectorDashboard({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5 font-bold text-slate-700">
                       <Globe className="w-3.5 h-3.5 text-slate-500" />
-                      <span>Prospección Local Simulada ⚠️</span>
+                      <span>Prospección Local Simulada ️</span>
                     </div>
                     <button
                       onClick={() => {
@@ -1746,7 +1810,7 @@ export default function SalesProspectorDashboard({
                     }}
                     className="mt-1 w-full text-center py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold text-[9px] transition tracking-wide uppercase font-mono cursor-pointer"
                   >
-                    Configurar Clave Real ⚙️
+                    Configurar Clave Real ️
                   </button>
                 </div>
               )}
@@ -1950,7 +2014,7 @@ export default function SalesProspectorDashboard({
                         onChange={() => setFilterMinRating("3.5")}
                         className="accent-emerald-600 cursor-pointer"
                       />
-                      <span>3.5+ ★ Estrellas</span>
+                      <span>3.5+  Estrellas</span>
                     </label>
                     <label className="flex items-center gap-1.5 cursor-pointer hover:text-emerald-700 transition">
                       <input
@@ -1961,7 +2025,7 @@ export default function SalesProspectorDashboard({
                         onChange={() => setFilterMinRating("4.0")}
                         className="accent-emerald-600 cursor-pointer"
                       />
-                      <span>4.0+ ★ Estrellas</span>
+                      <span>4.0+  Estrellas</span>
                     </label>
                     <label className="flex items-center gap-1.5 cursor-pointer hover:text-emerald-700 transition">
                       <input
@@ -1972,7 +2036,7 @@ export default function SalesProspectorDashboard({
                         onChange={() => setFilterMinRating("4.5")}
                         className="accent-emerald-600 cursor-pointer"
                       />
-                      <span>4.5+ ★ Estrellas</span>
+                      <span>4.5+  Estrellas</span>
                     </label>
                   </div>
                 </div>
@@ -2078,16 +2142,16 @@ export default function SalesProspectorDashboard({
                                 <h5 className="text-xs font-black text-slate-800">{p.company}</h5>
                                 <div className="flex flex-wrap gap-1 mt-1.5">
                                   <span className="bg-slate-100 text-slate-700 border border-slate-200 text-[8px] font-bold px-1.5 py-0.5 rounded-md font-mono">
-                                    📍 {p.city}
+                                     {p.city}
                                   </span>
                                   {p.rating && (
                                     <span className="bg-amber-50 text-amber-700 border border-amber-100 text-[8px] font-bold px-1.5 py-0.5 rounded-md font-mono flex items-center gap-0.5">
-                                      ★ {p.rating.toFixed(1)}
+                                       {p.rating.toFixed(1)}
                                     </span>
                                   )}
                                   {p.distance && (
                                     <span className="bg-sky-50 text-sky-700 border border-sky-100 text-[8px] font-bold px-1.5 py-0.5 rounded-md font-mono">
-                                      🚗 {p.distance.toFixed(1)} km
+                                       {p.distance.toFixed(1)} km
                                     </span>
                                   )}
                                   {p.priceLevel && (
