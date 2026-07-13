@@ -16,6 +16,7 @@ import {
   Video,
   Award,
   Calendar,
+  Clock,
   Users,
   Briefcase,
   Zap,
