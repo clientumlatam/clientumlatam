@@ -1,0 +1,80 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "POwnzQUKxxyfzcD2tTQcv"
+uri = "file://files-6/Catalogo_Servicios_Viaweb.xlsx"
+type = "table"
+title = "Catálogo Servicios Viaweb — con hojas Clientum"
+
+[[outputs]]
+id = "ydBsLaDJ7mMyPk1WW05eS"
+uri = "file://clientum-wp-theme/clientum-theme.zip"
+type = "unspecified"
+title = "clientum-theme.zip — Tema WordPress Clientum (actualizado)"
+
+[[outputs]]
+id = "USlQsU4lzmByWmVCgwDeg"
+uri = "file://clientum-wp-theme/clientum-theme-content.xml"
+type = "unspecified"
+title = "Clientum — Contenido para importar (WXR)"
+
+[[outputs]]
+id = "e93cNHLdkpwG_HG_tlxFX"
+uri = "file://clientum-paginas-sitio-web.csv"
+type = "table"
+title = "Clientum – Contenido de páginas del sitio web"
+
+[[outputs]]
+id = "s6amMwnNd1RRLvGNNrZS1"
+uri = "file://clientum-ai-client-prospector.csv"
+type = "table"
+title = "Clientum — AI Client Prospector (CSV)"
+
+[[outputs]]
+id = "MEhEifKNRDHaopDs1coAB"
+uri = "file://Clientum_catalogo_woocommerce_v4.csv"
+type = "table"
+title = "Catálogo WooCommerce v4 — CSV (489 filas, 7 off-brand marcados)"
+
+[[outputs]]
+id = "5z47XSisKUjIjM7fDtPE9"
+uri = "file://Clientum_catalogo_reestructurado_v4.xlsx"
+type = "table"
+title = "Catálogo Reestructurado v4 — XLSX (9 hojas: 7 ref + WooCommerce v4 + ⚡ Diferencias)"
+
+[[outputs]]
+id = "SgOV_kukw4dfGN3_DkrXE"
+uri = "file://Clientum_sitio_copy_referencia_v4.md"
+type = "text"
+title = "Sitio Copy Referencia v4 — MD (con sección Header + SVG + colores)"
+
+[[outputs]]
+id = "pHeJ30MHfvfb0hveahm8r"
+uri = "file://Clientum_WooCommerce_FINAL.csv"
+type = "table"
+title = "WooCommerce FINAL — CSV (482 productos · solo on-brand · español)"
+
+[[outputs]]
+id = "4sBj22b3lEvUP0ipg2iXP"
+uri = "file://Clientum_Catalogo_Referencia_FINAL.xlsx"
+type = "table"
+title = "Catálogo Referencia FINAL — XLSX (6 hojas especializadas)"
+
+[[outputs]]
+id = "EFSAUDRE8AKNap7wyC9pZ"
+uri = "file://Clientum_Copy_FINAL.md"
+type = "text"
+title = "Copy del Sitio FINAL — MD (fuente de verdad · limpio · sin pendientes)"
+
+[[outputs]]
+id = "UrA3eFZZBOMTSLI7M1cSj"
+uri = "file://clientum-exports/Clientum_Textos_Paginas.csv"
+type = "table"
+title = "Clientum — Textos por Página (CSV)"
+
+[[outputs]]
+id = "cgr3x4t91-Rf7hgQfE0bg"
+uri = "file://exports/clientum-catalogo-final.csv"
+type = "table"
+title = "Clientum — Catálogo Final (WooCommerce)"
