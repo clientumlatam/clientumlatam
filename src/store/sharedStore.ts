@@ -27,7 +27,10 @@ export interface ActivityLogItem {
 export function loadDeals(): CRMDeal[] {
   try {
     const raw = localStorage.getItem(DEALS_KEY);
-    if (raw) return JSON.parse(raw) as CRMDeal[];
+    if (raw) {
+      const parsed = JSON.parse(raw) as CRMDeal[];
+      if (Array.isArray(parsed)) return parsed;
+    }
   } catch {
     // ignore
   }
