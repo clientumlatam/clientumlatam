@@ -2371,7 +2371,14 @@ async function setupServer() {
 
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        allowedHosts: true,
+        // Replit proxies traffic through HTTPS on port 443; tell Vite's
+        // HMR client to connect back on that port instead of the raw
+        // container port (5000), otherwise the WebSocket handshake fails.
+        hmr: { clientPort: 443 },
+      },
       appType: "spa",
     });
     app.use(vite.middlewares);
