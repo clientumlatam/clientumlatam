@@ -87,6 +87,24 @@ function requireApiKey(req: express.Request, res: express.Response, next: expres
   next();
 }
 
+// ---------------------------------------------------------------------------
+// CRM token middleware — server-to-server calls from the WordPress plugin.
+// The plugin sends the shared CRM_INTERNAL_TOKEN in the X-CRM-Token header
+// (same header and env var used by class-crm-proxy.php).
+// ---------------------------------------------------------------------------
+function requireCrmToken(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const token = req.header("x-crm-token");
+  const expected = process.env.CRM_INTERNAL_TOKEN;
+  if (!expected) {
+    // Misconfigured — fail closed so leads are never silently lost.
+    return res.status(503).json({ error: "CRM webhook not configured (missing CRM_INTERNAL_TOKEN)." });
+  }
+  if (!token || token !== expected) {
+    return res.status(401).json({ error: "unauthorized" });
+  }
+  next();
+}
+
 app.post("/api/auth/register", async (req, res) => {
   try {
     const { username, password } = req.body || {};
@@ -2156,6 +2174,44 @@ app.get("/api/chatbot-leads", requireAuth, async (req, res) => {
   }
 });
 
+// POST /api/webhooks/chatbot-lead
+// ---------------------------------------------------------------------------
+// Inbound webhook — called by the WordPress AI Marketing Expert plugin when a
+// visitor fills in the chatbot lead capture form.  Authenticated via the
+// shared CRM_INTERNAL_TOKEN (X-CRM-Token header), matching class-crm-proxy.php.
+//
+// Expected body (mirrors aime_chatbot_lead_captured action payload):
+//   { email, first_name, last_name?, phone?, company?, source, tags?, metadata? }
+// ---------------------------------------------------------------------------
+app.post("/api/webhooks/chatbot-lead", requireCrmToken, async (req, res) => {
+  try {
+    const { email, first_name, last_name, phone, company, source, tags, metadata } = req.body ?? {};
+    if (typeof email !== "string" || !email.trim()) {
+      return res.status(400).json({ error: "email requerido" });
+    }
+
+    const name = [first_name, last_name].filter(Boolean).join(" ").trim() || email;
+    const notes = [
+      source ? `Fuente: ${source}` : null,
+      tags?.length ? `Tags: ${(tags as string[]).join(", ")}` : null,
+      metadata?.page_url ? `Página: ${metadata.page_url}` : null,
+    ].filter(Boolean).join("\n") || null;
+
+    const conversation = metadata ? JSON.stringify(metadata) : null;
+
+    const result = await pgPool.query(
+      `INSERT INTO chatbot_leads (name, phone, email, company, notes, conversation)
+       VALUES ($1,$2,$3,$4,$5,$6)
+       RETURNING id, name, phone, email, company, notes, status, created_at`,
+      [name, phone?.trim() || null, email.trim(), company?.trim() || null, notes, conversation],
+    );
+    res.status(201).json({ ok: true, lead: result.rows[0] });
+  } catch (error: any) {
+    console.error("[Webhook Chatbot Lead Error]:", error);
+    res.status(500).json({ error: "Error al guardar el lead." });
+  }
+});
+
 // PATCH /api/chatbot-leads/:id
 // Body: { status: "nuevo"|"contactado"|"calificado"|"descartado" }
 app.patch("/api/chatbot-leads/:id", requireAuth, async (req, res) => {
@@ -2365,34 +2421,67 @@ app.post("/api/leads/:id/notes", requireApiKey, async (req, res) => {
 
 // Configure Vite or Static Files
 async function setupServer() {
+  const isProd = process.env.NODE_ENV === "production";
+
+  // In production, register static middleware synchronously BEFORE binding
+  // the port so every request — including the very first healthcheck — is
+  // served correctly without a race window.
+  if (isProd) {
+    const distPath = path.join(process.cwd(), "dist");
+    app.use(express.static(distPath));
+    app.get("*", (_req, res) => {
+      res.sendFile(path.join(distPath, "index.html"));
+    });
+  }
+
+  // Bind the port BEFORE any async work so Cloud Run's healthcheck never
+  // sees a refused connection and incorrectly triggers a restart loop.
+  const httpServer = app.listen(PORT, "0.0.0.0", () => {
+    console.log(`[Clientum Server] Servidor corriendo en http://localhost:${PORT}`);
+  });
+
+  // Handle EADDRINUSE and other listen errors gracefully instead of letting
+  // the unhandled 'error' event crash the process and create a crash loop
+  // where a new instance inherits a still-occupied port.
+  httpServer.on("error", (err: NodeJS.ErrnoException) => {
+    if (err.code === "EADDRINUSE") {
+      console.error(`[Clientum Server] Puerto ${PORT} ya en uso. Terminando.`);
+    } else {
+      console.error("[Clientum Server] Error al iniciar el servidor:", err.message);
+    }
+    process.exit(1);
+  });
+
+  // Init DB tables after port is bound — failures here won't block responses.
   await initUsersTable();
   await initChatbotLeadsTable();
   await initSantiTables();
 
-  if (process.env.NODE_ENV !== "production") {
+  // In dev, attach Vite middleware after DB init.
+  if (!isProd) {
     const vite = await createViteServer({
       server: {
         middlewareMode: true,
         allowedHosts: true,
-        // Replit proxies traffic through HTTPS on port 443; tell Vite's
-        // HMR client to connect back on that port instead of the raw
-        // container port (5000), otherwise the WebSocket handshake fails.
+        // Replit proxies through HTTPS/443; tell the HMR client to connect
+        // on 443 instead of the raw container port, or the WS handshake fails.
         hmr: { clientPort: 443 },
       },
       appType: "spa",
     });
     app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
-    app.get("*", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
-    });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`[Clientum Server] Servidor corriendo en http://localhost:${PORT}`);
-  });
 }
 
-setupServer();
+// Export app and DB init functions for Vercel serverless deployment.
+// All API routes are registered at module level above, so importing this
+// file is enough to wire up Express; setupServer() only adds static serving,
+// app.listen(), and Vite dev middleware — none of which apply on Vercel.
+export { app };
+export { initUsersTable, initChatbotLeadsTable, initSantiTables };
+
+// Only bind a TCP port when NOT running as a Vercel serverless function.
+if (!process.env.VERCEL) {
+  setupServer();
+}
