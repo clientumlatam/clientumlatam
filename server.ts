@@ -16,11 +16,35 @@ app.use(express.json({ limit: "10mb" }));
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 5000;
 
 // --- Auth: database pool, session store, and user routes ---
-// On Vercel (or any host outside Replit's internal network) DATABASE_URL
-// must point to a publicly reachable Postgres (Neon, Supabase, etc.), and
-// those providers require SSL. Replit's own internal DB uses
-// `sslmode=disable`, so only force SSL when that's not explicitly set.
-const databaseUrl = process.env.DATABASE_URL ?? "";
+// This app is unified on Neon Postgres for both Replit dev and Vercel
+// production, so the same database is used everywhere. If NEON_API_KEY and
+// NEON_PROJECT_ID are set, the pooled connection string is resolved live
+// from Neon's API (avoids hand-copying a connection string that can go
+// stale if it's ever rotated). Otherwise falls back to DATABASE_URL
+// (Replit's own internal Postgres) for local-only setups.
+async function resolveDatabaseUrl(): Promise<string> {
+  const neonApiKey = process.env.NEON_API_KEY;
+  const neonProjectId = process.env.NEON_PROJECT_ID;
+  if (neonApiKey && neonProjectId) {
+    const headers = { Authorization: `Bearer ${neonApiKey}`, Accept: "application/json" };
+    const branchesRes = await fetch(`https://console.neon.tech/api/v2/projects/${neonProjectId}/branches`, { headers });
+    if (!branchesRes.ok) throw new Error(`No se pudo listar branches de Neon (${branchesRes.status})`);
+    const branches = await branchesRes.json();
+    const branchId = branches.branches?.find((b: any) => b.default)?.id ?? branches.branches?.[0]?.id;
+    if (!branchId) throw new Error("El proyecto Neon no tiene branches.");
+    const uriRes = await fetch(
+      `https://console.neon.tech/api/v2/projects/${neonProjectId}/connection_uri?branch_id=${branchId}&database_name=neondb&role_name=neondb_owner&pooled=true`,
+      { headers }
+    );
+    if (!uriRes.ok) throw new Error(`No se pudo obtener el connection string de Neon (${uriRes.status})`);
+    const data = await uriRes.json();
+    if (!data.uri) throw new Error("Neon no devolvió un connection string.");
+    return data.uri;
+  }
+  return process.env.DATABASE_URL ?? "";
+}
+
+const databaseUrl = await resolveDatabaseUrl();
 const pgPool = new Pool({
   connectionString: databaseUrl,
   ssl: /sslmode=disable/i.test(databaseUrl) ? false : { rejectUnauthorized: false },

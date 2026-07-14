@@ -79,3 +79,4 @@ The app starts on port 5000.
 ## User preferences
 
 - Keep the existing project structure and stack
+- Hablar siempre en español (Argentina) en el chat con el agente
