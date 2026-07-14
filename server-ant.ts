@@ -2,6 +2,7 @@ import express from "express";
 import path from "path";
 import dotenv from "dotenv";
 import { GoogleGenAI, Type } from "@google/genai";
+import { createServer as createViteServer } from "vite";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import bcrypt from "bcryptjs";
@@ -2509,14 +2510,7 @@ async function setupServer() {
   await initSantiTables();
 
   // In dev, attach Vite middleware after DB init.
-  // Dynamic import (not a static top-level import) so that in production
-  // (Vercel) the "vite" package — and the "rollup" native binary it pulls
-  // in — is never loaded at all. A static import would load it on module
-  // init regardless of NODE_ENV, which is what was crashing the /api/index
-  // serverless function on Vercel with "Cannot find module
-  // @rollup/rollup-linux-x64-gnu".
   if (!isProd) {
-    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: {
         middlewareMode: true,
