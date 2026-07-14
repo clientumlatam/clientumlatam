@@ -36,11 +36,7 @@ Get your key from https://console.cloud.google.com/google/maps-apis/start?utm_ca
 
 GOOGLE_MAPS_PLATFORM_KEY="YOUR_API_KEY"
 
-SESSION_SECRET="0y73vWTfD8W9uLxqgmMX+3J+uQYBjbVIMqXDitjlmObNNWkPTHa8hn7L5oSLLgmhpqX9wBwZcVowUhUV5bpSFw==" SANTI_API_KEY="5440b3f62c3d7e5950572ab45cc2a721e27e1b5abec0b9b6ccff194cef627849" HUNTER_API_KEY="0711d0e54b9d37e59e30e8f15e6b62574675bb50" GOOGLE_MAPS_PLATFORM_KEY="" GEMINI_API_KEY="GEMINI_KEY_REMOVED" APIFY_API_TOKEN=""
-
-SESSION_SECRET LnANXN2ztZLQ0OyKSr+2crMuuiskErUk+Q6NKJb+Qmz9HvkQQqTKjKRsFdm22RDROrfWcM4rwrfPrk/anf6xwQ==
-
-SESSION_SECRET="LnANXN2ztZLQ0OyKSr+2crMuuiskErUk+Q6NKJb+Qmz9HvkQQqTKjKRsFdm22RDROrfWcM4rwrfPrk/anf6xwQ==" GEMINI_API_KEY="GEMINI_KEY_REMOVED" GOOGLE_MAPS_PLATFORM_KEY="AIzaSyDnoQFe18QKyyTmGNl9qJ3VfxVulbG3KUY" HUNTER_ SANTI_API_KEY="5440b3f62c3d7e5950572ab45cc2a721e27e1b5abec0b9b6ccff194cef627849" APIFY_API_TOKEN="apify_api_IhjB4U6ajM8gfFy1iXba7MkVYngc1u1UQ0GB" APP_URL="https://clientum.com.ar/"
+[Redacted: this session excerpt originally contained real secret values pasted in chat. They were removed from this file — see replit.md for the rotation reminder.]
 47 minutes ago
 Securing Sensitive Information
 

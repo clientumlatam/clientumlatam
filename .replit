@@ -58,17 +58,5 @@ deploymentTarget = "cloudrun"
 build = ["npm", "run", "build"]
 run = ["npm", "run", "start"]
 
-[userenv]
-
-[userenv.production]
-GEMINI_API_KEY = "GEMINI_KEY_REMOVED"
-GOOGLE_MAPS_PLATFORM_KEY = "AIzaSyDnoQFe18QKyyTmGNl9qJ3VfxVulbG3KUY"
-HUNTER_API_KEY = "0711d0e54b9d37e59e30e8f15e6b62574675bb50"
-SANTI_API_KEY = "5440b3f62c3d7e5950572ab45cc2a721e27e1b5abec0b9b6ccff194cef627849"
-SESSION_SECRET = "LnANXN2ztZLQ0OyKSr+2crMuuiskErUk+Q6NKJb+Qmz9HvkQQqTKjKRsFdm22RDROrfWcM4rwrfPrk/anf6xwQ=="
-
-[userenv.shared]
-APIFY_API_TOKEN = "apify_api_IhjB4U6ajM8gfFy1iXba7MkVYngc1u1UQ0GB"
-
 [objectStorage]
 defaultBucketID = "replit-objstore-ee52125a-7ef9-4c14-a221-3b1abc6ac4b1"

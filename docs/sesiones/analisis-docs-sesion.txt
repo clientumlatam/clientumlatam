@@ -36,7 +36,7 @@ Dos cosas encontradas — ¿qué hacemos? docs/screens/ tiene datos reales de co
 
 Worked for 47 seconds
 
-2 actions Add secrets GEMINI_API_KEY GEMINI_KEY_REMOVED
+2 actions Add secrets GEMINI_API_KEY [redacted]
 
 Worked for 13 seconds Nueva clave guardada. Reinicio el servidor y confirmo que Gemini responde bien.
 

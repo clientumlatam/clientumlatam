@@ -29,3 +29,11 @@ opted into an external host instead.
 Follow-up code change made: `pgPool` in server.ts now sets `ssl: { rejectUnauthorized: false }`
 unless the connection string has `sslmode=disable`, since external providers
 (Neon/Supabase) require SSL and Replit's internal DB explicitly disables it.
+
+3. **Playwright as a dependency hangs/times out `npm install` on Vercel's build.**
+   It was removed from this project entirely (unused) to fix Vercel install
+   failures. **Why:** Playwright's postinstall downloads browser binaries,
+   which is slow/blocked in Vercel's build sandbox and isn't needed for a
+   plain Express+Vite app. **How to apply:** if a Vercel build for this project
+   hangs or times out during install, check for heavy postinstall deps
+   (Playwright, Puppeteer, Chromium downloads) before assuming a code bug.
