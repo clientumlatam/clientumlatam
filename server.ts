@@ -16,7 +16,15 @@ app.use(express.json({ limit: "10mb" }));
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 5000;
 
 // --- Auth: database pool, session store, and user routes ---
-const pgPool = new Pool({ connectionString: process.env.DATABASE_URL });
+// On Vercel (or any host outside Replit's internal network) DATABASE_URL
+// must point to a publicly reachable Postgres (Neon, Supabase, etc.), and
+// those providers require SSL. Replit's own internal DB uses
+// `sslmode=disable`, so only force SSL when that's not explicitly set.
+const databaseUrl = process.env.DATABASE_URL ?? "";
+const pgPool = new Pool({
+  connectionString: databaseUrl,
+  ssl: /sslmode=disable/i.test(databaseUrl) ? false : { rejectUnauthorized: false },
+});
 const PgSession = connectPgSimple(session);
 
 declare module "express-session" {
