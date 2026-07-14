@@ -4,6 +4,7 @@ import { INITIAL_DEALS } from "../data";
 import { loadDeals, saveDeals, addActivity, DEALS_EVENT } from "../store/sharedStore";
 import CrmFullApp from "./crm-full/CrmFullApp";
 import SidebarEditor from "./SidebarEditor";
+import AsistenteIA from "./AsistenteIA";
 import BrochurePreview from "./BrochurePreview";
 import {
   Users,
@@ -55,6 +56,7 @@ import {
   Package,
   Bot,
   Sliders,
+  MessageCircle,
   Edit3,
   Clock,
   PlusCircle,
@@ -372,6 +374,7 @@ export default function SalesProspectorDashboard({
   const [activeOutreachSubTab, setActiveOutreachSubTab] = useState<"email1" | "email2" | "email3" | "linkedin" | "phone">("email1");
   const [copySuccess, setCopySuccess] = useState<string | null>(null);
   const [showFallbackBanner, setShowFallbackBanner] = useState<string | null>(null);
+  const [copilotOpen, setCopilotOpen] = useState(false);
 
   // Pipeline checklist state
   const [checklist, setChecklist] = useState<{ id: string; text: string; checked: boolean }[]>(() => {
@@ -989,6 +992,19 @@ export default function SalesProspectorDashboard({
 
         {/* Top Bar Actions */}
         <div className="flex items-center gap-2.5">
+          {/* Asistente IA toggle */}
+          <button
+            onClick={() => setCopilotOpen((v) => !v)}
+            title="Asistente IA"
+            className={`border text-[11px] font-semibold px-3 py-1.5 rounded flex items-center gap-2 transition-all ${
+              copilotOpen
+                ? "bg-[#10B981]/15 border-[#10B981]/40 text-[#34D399]"
+                : "bg-[#1A2733]/50 hover:bg-[#1A2733] border-[#2D3B48]/50 text-zinc-300 hover:text-white"
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            Asistente IA
+          </button>
           <button
             onClick={handleExportToCSV}
             className="bg-[#1A2733]/50 hover:bg-[#1A2733] border border-[#2D3B48]/50 text-[11px] font-semibold px-3 py-1.5 rounded flex items-center gap-2 transition-all text-zinc-300 hover:text-white"
@@ -3181,6 +3197,14 @@ export default function SalesProspectorDashboard({
           </div>
         </div>
       )}
+      {/* Asistente IA — right-side copilot panel */}
+      <AsistenteIA
+        open={copilotOpen}
+        onClose={() => setCopilotOpen(false)}
+        brochureData={brochureData}
+        activeSection={activeTab}
+        currentUsername={currentUsername}
+      />
     </div>
   );
 }
