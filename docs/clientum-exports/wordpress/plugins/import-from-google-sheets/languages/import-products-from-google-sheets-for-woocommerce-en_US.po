@@ -1,0 +1,891 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-04-04T17:07:39-03:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: English\n"
+"Language: en_US\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Domain: import-products-from-google-sheets-for-woocommerce\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: Admin.php:56 Admin.php:57
+msgid "Products Import GSW"
+msgstr ""
+
+#: Admin.php:67 Admin.php:68 Admin.php:124
+msgid "Import configuration"
+msgstr ""
+
+#: Admin.php:76 Admin.php:77 Admin.php:131
+msgid "Imports"
+msgstr ""
+
+#: Admin.php:86 Admin.php:87 Admin.php:143 Admin.php:224
+msgid "Cron Scheduler"
+msgstr ""
+
+#: Admin.php:95 Admin.php:96 Admin.php:156
+msgid "Logs"
+msgstr ""
+
+#: Admin.php:104 Admin.php:105 Admin.php:163
+msgid "Settings"
+msgstr ""
+
+#: Admin.php:169 Settings.php:64
+msgid "Open AI API"
+msgstr ""
+
+#: Admin.php:170 Settings.php:357
+msgid "Google API"
+msgstr ""
+
+#: Admin.php:171 Settings.php:620
+msgid "Product Statuses"
+msgstr ""
+
+#: Admin.php:211 Mapping_Settings.php:234
+msgid "Save"
+msgstr ""
+
+#: Admin.php:227
+msgid "Cron scheduler is available in the PRO version of the plugin."
+msgstr ""
+
+#: helpers.php:22
+msgid "Security check failed."
+msgstr ""
+
+#: hooks.php:20
+msgid "Learn more about PRO"
+msgstr ""
+
+#: Imports.php:89
+msgid "Run imports instantly, view last status, or schedule via Cron."
+msgstr ""
+
+#: Imports.php:91
+msgid "Auto refresh every 5s while any job is running"
+msgstr ""
+
+#: Imports.php:95 Mapping_Settings.php:85
+msgid "Category"
+msgstr ""
+
+#: Imports.php:96
+msgid "Google Sheet"
+msgstr ""
+
+#: Imports.php:97
+msgid "Status"
+msgstr ""
+
+#: Imports.php:98
+msgid "Next Scheduled"
+msgstr ""
+
+#: Imports.php:99 Mapping_Settings.php:90
+msgid "Actions"
+msgstr ""
+
+#: Imports.php:104
+msgid "No import rows yet. Add them in \"Import configuration\"."
+msgstr ""
+
+#: Imports.php:149
+msgid "Run now"
+msgstr ""
+
+#: Imports.php:151
+msgid "View log"
+msgstr ""
+
+#: Imports.php:153
+msgid "Schedule"
+msgstr ""
+
+#: Imports.php:157
+msgid "Cancel the running job?"
+msgstr ""
+
+#: Imports.php:158
+msgid "Cancel"
+msgstr ""
+
+#: Imports.php:167 Imports.php:267 Logs.php:147 Logs.php:161 Logs.php:180
+#: OpenAI.php:93
+msgid "Unauthorized"
+msgstr ""
+
+#: Imports.php:171 Imports.php:271
+msgid "Bad request"
+msgstr ""
+
+#: Imports.php:185
+msgid "Cancelled"
+msgstr ""
+
+#: Imports.php:191
+msgid "Job cancelled."
+msgstr ""
+
+#: Imports.php:209
+msgid "(WooCommerce missing)"
+msgstr ""
+
+#: Imports.php:282
+msgid "Import row not found."
+msgstr ""
+
+#: Imports.php:291
+#, php-format
+msgid "Queued manually by %s"
+msgstr ""
+
+#: Imports.php:300
+msgid "Import queued."
+msgstr ""
+
+#: Imports.php:314
+msgid "Already running."
+msgstr ""
+
+#: Imports.php:322
+msgid "Starting queue..."
+msgstr ""
+
+#: Logs.php:88 Logs.php:154
+msgid "No logs yet."
+msgstr ""
+
+#: Logs.php:97
+msgid "Filter by import row"
+msgstr ""
+
+#: Logs.php:100
+msgid "— All rows —"
+msgstr ""
+
+#: Logs.php:109
+msgid "Shows only lines containing this row id."
+msgstr ""
+
+#: Logs.php:113
+msgid "Lines to show"
+msgstr ""
+
+#: Logs.php:116
+msgid "Apply"
+msgstr ""
+
+#: Logs.php:117
+msgid "Refresh"
+msgstr ""
+
+#: Logs.php:118
+msgid "Auto refresh every 3s"
+msgstr ""
+
+#: Logs.php:129
+msgid "Download full log"
+msgstr ""
+
+#: Logs.php:130
+msgid "Clear the log file?"
+msgstr ""
+
+#: Logs.php:130
+msgid "Clear log"
+msgstr ""
+
+#: Logs.php:131
+msgid "Max size: 5 MB (auto-rotates)."
+msgstr ""
+
+#: Logs.php:166
+msgid "No log file found."
+msgstr ""
+
+#: Logs.php:203
+msgid "(no category)"
+msgstr ""
+
+#: Logs.php:250
+msgid "No matching lines."
+msgstr ""
+
+#: Mapping_Settings.php:79
+msgid "Configure import files. Column indexes are 1-based (first column is 1)."
+msgstr ""
+
+#: Mapping_Settings.php:86
+msgid "Google Sheet URL"
+msgstr ""
+
+#: Mapping_Settings.php:87
+msgid "Start row"
+msgstr ""
+
+#: Mapping_Settings.php:88
+msgid "Columns"
+msgstr ""
+
+#: Mapping_Settings.php:89
+msgid "Options"
+msgstr ""
+
+#: Mapping_Settings.php:101 Mapping_Settings.php:242
+msgid "WooCommerce product category for imported items."
+msgstr ""
+
+#: Mapping_Settings.php:105 Mapping_Settings.php:246
+msgid "Link to Google Sheet or CSV file."
+msgstr ""
+
+#: Mapping_Settings.php:109 Mapping_Settings.php:250
+msgid "Row number to start from (1-based)."
+msgstr ""
+
+#: Mapping_Settings.php:113 Mapping_Settings.php:254
+msgid "Status col"
+msgstr ""
+
+#: Mapping_Settings.php:116 Mapping_Settings.php:257
+msgid ""
+"Status col: number of the column containing textual product status (e.g., "
+"\"In stock\", \"Sale\")."
+msgstr ""
+
+#: Mapping_Settings.php:118 Mapping_Settings.php:259
+msgid "SKU col"
+msgstr ""
+
+#: Mapping_Settings.php:122 Mapping_Settings.php:263
+msgid "Title col"
+msgstr ""
+
+#: Mapping_Settings.php:126 Mapping_Settings.php:267
+msgid "Description col"
+msgstr ""
+
+#: Mapping_Settings.php:130 Mapping_Settings.php:271
+msgid "Price col"
+msgstr ""
+
+#: Mapping_Settings.php:140 Mapping_Settings.php:277
+msgid "Sizes"
+msgstr ""
+
+#: Mapping_Settings.php:142 Mapping_Settings.php:279
+msgid "Provide columns with size names. If multiple, product becomes variable."
+msgstr ""
+
+#: Mapping_Settings.php:145 Mapping_Settings.php:282
+msgid "Count"
+msgstr ""
+
+#: Mapping_Settings.php:159 Mapping_Settings.php:286
+msgid ""
+"Only the column with size name is required (status may be embedded in size "
+"text)."
+msgstr ""
+
+#: Mapping_Settings.php:166 Mapping_Settings.php:292
+msgid "Markup"
+msgstr ""
+
+#: Mapping_Settings.php:168 Mapping_Settings.php:174 Mapping_Settings.php:294
+#: Mapping_Settings.php:300
+msgid ""
+"Markup: multiplier > 1.0. Example: 1.15 adds 15% to the base price before "
+"RRP constraints."
+msgstr ""
+
+#: Mapping_Settings.php:171 Mapping_Settings.php:297
+msgid "Markup value"
+msgstr ""
+
+#: Mapping_Settings.php:176 Mapping_Settings.php:302
+msgid "RRP col"
+msgstr ""
+
+#: Mapping_Settings.php:179
+msgid "RRP col: may contain a single value \"199.99\" or a range \"180-220\"."
+msgstr ""
+
+#: Mapping_Settings.php:188 Mapping_Settings.php:309
+msgid "Images"
+msgstr ""
+
+#: Mapping_Settings.php:193 Mapping_Settings.php:312
+msgid ""
+"Images: Google Drive folder must be shared publicly or with the Service "
+"Account email."
+msgstr ""
+
+#: Mapping_Settings.php:197 Mapping_Settings.php:316
+msgid "Folder col"
+msgstr ""
+
+#: Mapping_Settings.php:208 Mapping_Settings.php:323
+msgid "AI integration"
+msgstr ""
+
+#: Mapping_Settings.php:213 Mapping_Settings.php:326
+msgid ""
+"Generates Title / Short / Full from prompts during updates according to "
+"OpenAI settings."
+msgstr ""
+
+#: Mapping_Settings.php:220 Mapping_Settings.php:330
+msgid "Remove"
+msgstr ""
+
+#: Mapping_Settings.php:340
+msgid "WooCommerce not active"
+msgstr ""
+
+#: Mapping_Settings.php:343
+msgid "— Select —"
+msgstr ""
+
+#: Mapping_Settings.php:379
+#, php-format
+msgid "Row %d: Category is required."
+msgstr ""
+
+#: Mapping_Settings.php:383
+#, php-format
+msgid "Row %d: Google Sheet URL is required."
+msgstr ""
+
+#: Mapping_Settings.php:388
+#, php-format
+msgid "Row %d: %s must be a positive column index."
+msgstr ""
+
+#: Mapping_Settings.php:411
+#, php-format
+msgid "Row %d: Size col #%d is invalid."
+msgstr ""
+
+#: Mapping_Settings.php:490
+msgid "Disabled: please accept Google Drive consent in Settings → Google API."
+msgstr ""
+
+#: Mapping_Settings.php:493
+msgid "Disabled: please provide Service Account JSON in Settings → Google API."
+msgstr ""
+
+#: Mapping_Settings.php:502
+msgid "Disabled: please accept OpenAI consent in Settings → OpenAI."
+msgstr ""
+
+#: Mapping_Settings.php:505
+msgid "Disabled: please provide OpenAI API key in Settings → OpenAI."
+msgstr ""
+
+#: Mapping_Settings.php:508
+msgid "Disabled: please select OpenAI model in Settings → OpenAI."
+msgstr ""
+
+#: OpenAI.php:100
+msgid "OpenAI test passed."
+msgstr ""
+
+#: OpenAI.php:102
+#, php-format
+msgid "OpenAI test failed: %s"
+msgstr ""
+
+#. translators: Keep {{language}} variable and JSON keys exactly: "title", "short", "full".
+#: OpenAI.php:198
+msgid ""
+"You are a product copywriter for an online store. Output must be compact, "
+"skimmable, and conversion-oriented.\n"
+"Write in the same language as the input ({{language}}).\n"
+"STRICTLY return only valid JSON with keys: \"title\", \"short\", \"full\". "
+"No explanations."
+msgstr ""
+
+#. translators: Keep all {{variables}} intact and JSON keys exactly: title/short/full.
+#: OpenAI.php:209
+msgid ""
+"Input:\n"
+"- Title: {{title}}\n"
+"- Description: {{description}}\n"
+"- Status: {{status}} (prev: {{prev_status}})\n"
+"- Is sale: {{is_sale}} (sale_percent={{sale_percent}})\n"
+"- Sizes: has={{has_sizes}} count={{sizes_count}} list={{sizes_list}}\n"
+"- Price/RRP: {{rrp_text}}\n"
+"- Category: {{category_name}}\n"
+"\n"
+"Task:\n"
+"1) Create a concise SEO title (40–60 chars) — include size or sale info if "
+"useful.\n"
+"2) Create a short description (100–150 chars) — benefits & key features; "
+"mention sale if {{is_sale}}.\n"
+"3) Create a full description (500–900 chars) — bullet-style paragraphs, "
+"specs hints, care/use tips; adapt if status is waiting/sold.\n"
+"\n"
+"Return STRICT JSON: {\"title\":\"...\",\"short\":\"...\",\"full\":\"...\"}"
+msgstr ""
+
+#: OpenAI.php:314
+msgid "OpenAI API key is empty."
+msgstr ""
+
+#: OpenAI.php:342
+#, php-format
+msgid "OpenAI API error (%d): %s"
+msgstr ""
+
+#: OpenAI.php:349
+msgid "OpenAI connected. API key is valid."
+msgstr ""
+
+#: OpenAI.php:387
+#, php-format
+msgid "Model test failed (%1$s): %2$s"
+msgstr ""
+
+#: OpenAI.php:395
+#, php-format
+msgid "OpenAI connected. Model \"%s\" is accessible."
+msgstr ""
+
+#: Settings.php:66
+msgid "Configure API key, model and prompts. You can test connectivity later."
+msgstr ""
+
+#: Settings.php:73
+msgid "OpenAI API Key"
+msgstr ""
+
+#: Settings.php:81
+msgid "Select AI model"
+msgstr ""
+
+#: Settings.php:89
+msgid "System prompt"
+msgstr ""
+
+#: Settings.php:97
+msgid "Prompt"
+msgstr ""
+
+#: Settings.php:104
+msgid "Force text regeneration on update"
+msgstr ""
+
+#: Settings.php:111 Settings.php:397
+msgid "Consent (required)"
+msgstr ""
+
+#: Settings.php:141
+msgid "OpenAI consent is required to enable AI content generation."
+msgstr ""
+
+#: Settings.php:173
+msgid "Enter new key to replace (leave empty to keep current)"
+msgstr ""
+
+#: Settings.php:177
+msgid "Required to enable AI content generation."
+msgstr ""
+
+#: Settings.php:181
+#, php-format
+msgid ""
+"Status: saved (…%s). The key is hidden and never printed in page source."
+msgstr ""
+
+#: Settings.php:184 Settings.php:486
+msgid "Status: not set."
+msgstr ""
+
+#: Settings.php:196
+msgid "Test OpenAI API"
+msgstr ""
+
+#: Settings.php:209
+msgid "-- Select --"
+msgstr ""
+
+#: Settings.php:243
+msgid ""
+"Leave empty to use the default prompt (translated to your current WP "
+"language)."
+msgstr ""
+
+#: Settings.php:263
+msgid ""
+"Use variables like {{title}}, {{description}}, {{status}}, {{sale_percent}}."
+msgstr ""
+
+#: Settings.php:277
+msgid ""
+"Regenerate AI title, short description, and full description on every "
+"product update, even if the stock status did not change."
+msgstr ""
+
+#: Settings.php:284
+msgid ""
+"Useful when you want imports to refresh existing texts together with price "
+"or availability changes."
+msgstr ""
+
+#: Settings.php:302
+msgid "I consent to sending data to OpenAI for content generation."
+msgstr ""
+
+#: Settings.php:304
+msgid ""
+"When AI generation is used, the plugin may send selected product fields (e."
+"g. title, description, attributes, categories, status, pricing context) to "
+"OpenAI servers to generate text."
+msgstr ""
+
+#: Settings.php:310
+msgid "Consent is required to enable OpenAI features (including API test)."
+msgstr ""
+
+#: Settings.php:325
+msgid "Consent is required to test OpenAI API."
+msgstr ""
+
+#: Settings.php:359
+msgid ""
+"Provide a service account JSON for Google Drive access. Images must be in a "
+"shared/accessible folder."
+msgstr ""
+
+#: Settings.php:366
+msgid "Service account JSON"
+msgstr ""
+
+#: Settings.php:374
+msgid "Count image"
+msgstr ""
+
+#: Settings.php:382
+msgid "Max file size (MB)"
+msgstr ""
+
+#: Settings.php:390
+msgid "Allowed image formats"
+msgstr ""
+
+#: Settings.php:418
+msgid "Google Drive consent is required to enable external image import."
+msgstr ""
+
+#: Settings.php:465
+msgid "Paste new service account JSON to replace (leave empty to keep current)"
+msgstr ""
+
+#: Settings.php:479
+msgid "Service account JSON is hidden and never printed in page source."
+msgstr ""
+
+#: Settings.php:483
+#, php-format
+msgid "Status: saved. client_email: %s"
+msgstr ""
+
+#: Settings.php:484
+msgid "Status: saved."
+msgstr ""
+
+#: Settings.php:497
+msgid "Test Google API"
+msgstr ""
+
+#: Settings.php:512
+msgid "How many images to fetch per product."
+msgstr ""
+
+#: Settings.php:526
+msgid ""
+"Maximum image file size (in megabytes) to download. Larger files will be "
+"skipped. Set 0 for no limit."
+msgstr ""
+
+#: Settings.php:540
+msgid ""
+"Comma-separated list of allowed image extensions. Default: png, jpg, webp. "
+"Others will be ignored."
+msgstr ""
+
+#: Settings.php:555
+msgid ""
+"I consent to accessing Google Drive sources and downloading content for "
+"import."
+msgstr ""
+
+#: Settings.php:557
+msgid ""
+"When Google Drive import is used, the plugin may request and download images/"
+"files from Google Drive as an external source (shared folders/files you "
+"provide access to)."
+msgstr ""
+
+#: Settings.php:563
+msgid ""
+"Consent is required to enable Google Drive import features (including API "
+"test)."
+msgstr ""
+
+#: Settings.php:582
+msgid "Consent is required to test Google API."
+msgstr ""
+
+#: Settings.php:600
+#, php-format
+msgid "Google Drive connected as %s"
+msgstr ""
+
+#: Settings.php:601
+msgid "Google Drive connected"
+msgstr ""
+
+#: Settings.php:622
+msgid "Comma-separated synonyms for each status in your feed language."
+msgstr ""
+
+#: Settings.php:629
+msgid "In stock"
+msgstr ""
+
+#: Settings.php:637
+msgid "Sale"
+msgstr ""
+
+#: Settings.php:645
+msgid "Sale percent"
+msgstr ""
+
+#: Settings.php:653
+msgid "Waiting"
+msgstr ""
+
+#: Settings.php:661
+msgid "Sold"
+msgstr ""
+
+#: Settings.php:689
+msgid "Comma-separated values, e.g. \"В наличии, in stock, на складе\"."
+msgstr ""
+
+#: Settings.php:710
+msgid ""
+"Percent to increase the crossed-out regular price when status is \"Sale\"."
+msgstr ""
+
+#: Cron.php:117
+msgid ""
+"Choose frequency and parameters for each import row. The plugin schedules "
+"the next single event; after it runs, the subsequent one is scheduled "
+"automatically."
+msgstr ""
+
+#: Cron.php:122
+msgid "When"
+msgstr ""
+
+#: Cron.php:123
+msgid "Params"
+msgstr ""
+
+#: Cron.php:124
+msgid "Next run"
+msgstr ""
+
+#: Cron.php:165
+msgid "Time (24h)"
+msgstr ""
+
+#: Cron.php:171
+msgid "Weekday"
+msgstr ""
+
+#: Cron.php:173
+msgid "Monday"
+msgstr ""
+
+#: Cron.php:173
+msgid "Tuesday"
+msgstr ""
+
+#: Cron.php:173
+msgid "Wednesday"
+msgstr ""
+
+#: Cron.php:173
+msgid "Thursday"
+msgstr ""
+
+#: Cron.php:173
+msgid "Friday"
+msgstr ""
+
+#: Cron.php:173
+msgid "Saturday"
+msgstr ""
+
+#: Cron.php:173
+msgid "Sunday"
+msgstr ""
+
+#: Cron.php:180
+msgid "Day of month"
+msgstr ""
+
+#: Cron.php:222
+msgid ""
+"Cron scheduler is available only in PRO version. Activate your license first."
+msgstr ""
+
+#: Cron.php:266
+msgid "Cron rule saved."
+msgstr ""
+
+#: Cron.php:414
+msgid "Detected duplicate import IDs and made them unique automatically."
+msgstr ""
+
+#: Cron.php:558
+msgid ""
+"Cron Scheduler requires an active PRO license. Activate your license to "
+"enable scheduling."
+msgstr ""
+
+#: Cron.php:566 hooks-pro.php:18 Settings_License.php:154
+msgid "Activate license"
+msgstr ""
+
+#: Cron.php:569 hooks-pro.php:20
+msgid "Buy PRO"
+msgstr ""
+
+#: Cron.php:574
+msgid ""
+"Note: scheduled cron events will not be created or rescheduled while the "
+"license is inactive."
+msgstr ""
+
+#: hooks-pro.php:27
+msgid "Add row"
+msgstr ""
+
+#: License.php:113
+msgid "Free version allows 1 line for import. Extra rows were removed."
+msgstr ""
+
+#: License.php:134
+msgid "Empty license key."
+msgstr ""
+
+#: License.php:177
+msgid "Unknown error"
+msgstr ""
+
+#: License.php:329
+msgid ""
+"GSW Importer: license is invalid or expired. Some features are disabled."
+msgstr ""
+
+#: License.php:336
+#, php-format
+msgid "GSW Importer: license expires on %s."
+msgstr ""
+
+#: Settings_License.php:54 Settings_License.php:93
+msgid "License"
+msgstr ""
+
+#: Settings_License.php:95
+msgid "Enter your PRO license key to unlock all features."
+msgstr ""
+
+#: Settings_License.php:102
+msgid "License Key"
+msgstr ""
+
+#: Settings_License.php:123
+msgid "Status:"
+msgstr ""
+
+#: Settings_License.php:126
+msgid "Active (PRO enabled)"
+msgstr ""
+
+#: Settings_License.php:128
+msgid "Inactive"
+msgstr ""
+
+#: Settings_License.php:134
+msgid "Expires"
+msgstr ""
+
+#: Settings_License.php:157
+msgid "Your license key is already activated on this site."
+msgstr ""
+
+#: Settings_License.php:162
+msgid "Deactivate license"
+msgstr ""
+
+#: Settings_License.php:168
+msgid ""
+"Enter your license key, save the settings and then click \"Activate "
+"license\". Free version: 1 line for import, no cron scheduler."
+msgstr ""
+
+#. Plugin Name of the plugin
+#: import-products-from-google-sheets-for-woocommerce.php
+msgid "AI Import Products from Google Sheets for WooCommerce"
+msgstr ""
+
+#. Description of the plugin
+#: import-products-from-google-sheets-for-woocommerce.php
+msgid ""
+"Import WooCommerce products from Google Sheets or CSV with flexible field "
+"mapping, safe batch processing, optional image sync, and AI-powered content "
+"generation."
+msgstr ""
+
+#. Author of the plugin
+#: import-products-from-google-sheets-for-woocommerce.php
+msgid "Dits"
+msgstr ""
+
+#: import-products-from-google-sheets-for-woocommerce.php:44
+msgid "PRO version is active. Free plugin is disabled to avoid conflicts."
+msgstr ""
+
+#. Plugin Name of the plugin
+#: import-products-from-google-sheets-for-woocommerce-pro.php
+msgid "AI Import Products from Google Sheets for WooCommerce PRO"
+msgstr ""
+
+#. Author URI of the plugin
+#: import-products-from-google-sheets-for-woocommerce-pro.php
+msgid "https://dits.agency/"
+msgstr ""
+
+#: import-products-from-google-sheets-for-woocommerce-pro.php:72
+msgid "PRO is active. The Free plugin has been deactivated to avoid conflicts."
+msgstr ""
+
+#: import-products-from-google-sheets-for-woocommerce-pro.php:107
+msgid ""
+"AI Import Products from Google Sheets for WooCommerce PRO requires the free "
+"plugin to be active."
+msgstr ""

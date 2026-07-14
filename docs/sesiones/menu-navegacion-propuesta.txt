@@ -1,0 +1,156 @@
+Me parece una buena dirección. Además haría un cambio importante: **Clientum no debería navegar por "funciones", sino por "problemas de negocio"**. Las funciones (IA, automatización, integraciones, portal) pueden vivir dentro de cada solución.
+
+## Menú principal
+
+```
+INICIO
+
+SOLUCIONES
+├── 💬 Chatbot WhatsApp
+├── 📋 CRM Inteligente
+├── 🧾 Facturación AFIP
+├── 💳 Suscripciones Mercado Pago
+├── 🎯 Prospección de Leads
+└── 📢 Broadcast & Automatización
+
+INDUSTRIAS
+├── Comercios
+├── Salud
+├── Gastronomía
+├── Servicios
+├── Distribuidoras
+├── Educación
+└── Ver todas
+
+CASOS DE ÉXITO
+
+RECURSOS
+├── Blog
+├── Academia Clientum
+├── Centro de Ayuda
+├── Documentación API
+└── FAQ
+
+PRECIOS
+
+EMPRESA
+├── Sobre Clientum
+├── Clientes
+├── Partners
+├── Trabajá con Nosotros
+└── Contacto
+```
+
+---
+
+# Footer
+
+## Soluciones
+
+* Chatbot WhatsApp
+* CRM Inteligente
+* Facturación AFIP
+* Suscripciones Mercado Pago
+* Prospección de Leads
+* Broadcast & Automatización
+
+---
+
+## Industrias
+
+* Comercios
+* Salud
+* Gastronomía
+* Distribuidoras
+* Educación
+* Servicios
+
+---
+
+## Recursos
+
+* Blog
+* Academia
+* Casos de Éxito
+* Centro de Ayuda
+* Documentación
+
+---
+
+## Empresa
+
+* Nosotros
+* Clientes
+* Partners
+* Contacto
+* Política de Privacidad
+* Términos y Condiciones
+
+---
+
+## Eliminar duplicados
+
+Quitaría por completo:
+
+❌ Casos de Éxito de Empresa
+
+❌ Partners de Recursos
+
+❌ Partners de Soporte
+
+❌ Planes & Precios de Soluciones
+
+❌ Blog & Recursos de Empresa
+
+❌ Academia duplicada
+
+❌ Portal del Cliente como solución
+
+❌ Asistente IA como solución
+
+❌ Integraciones como solución
+
+❌ Desarrollo Web como solución
+
+Todos esos pasan a ser **características** o páginas de apoyo, no productos principales.
+
+---
+
+# Arquitectura recomendada
+
+```
+Home
+│
+├── Soluciones
+│     ├── Chatbot WhatsApp
+│     ├── CRM
+│     ├── AFIP
+│     ├── Suscripciones
+│     ├── Leads
+│     └── Automatización
+│
+├── Industrias
+│
+├── Casos de éxito
+│
+├── Recursos
+│
+├── Precios
+│
+└── Empresa
+```
+
+Esta estructura es más escalable: si mañana agregás una nueva integración (por ejemplo, Dolibarr, ERPNext, Shopify o Mercado Libre), no necesitás crear otro ítem en el menú; simplemente la incorporás dentro de la solución correspondiente.
+
+## Recomendación adicional para Clientum
+
+Dado el enfoque que venís desarrollando con IA, automatización y SaaS para PyMEs, reorganizaría las soluciones para que comuniquen mejor el valor comercial:
+
+1. 💬 Chatbot IA para WhatsApp
+2. 👥 CRM Inteligente
+3. ⚙️ Automatización de Procesos
+4. 📈 Marketing y Prospección
+5. 💰 Cobros, Suscripciones y AFIP
+6. 🔗 Integraciones Empresariales
+
+De esa manera el menú habla del **resultado que obtiene el cliente**, mientras que tecnologías como IA, Portal del Cliente, API, ERP, integraciones o desarrollo web quedan explicadas dentro de cada solución, evitando que la navegación crezca de forma desordenada a medida que Clientum incorpore nuevos servicios.

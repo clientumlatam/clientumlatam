@@ -1,0 +1,17 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+
+# Sensitive docs — never commit real keys
+SECRETS.md
+
+# Transient / private data folders
+attached_assets/
+docs/assets/
+docs/screens/
+docs/exports/
