@@ -1,0 +1,74 @@
+modules = ["nodejs-24", "python-base-3.13", "php-8.2", "postgresql-16"]
+[nix]
+channel = "stable-25_05"
+
+[agent]
+expertMode = true
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
+
+[[workflows.workflow]]
+name = "Start application"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"
+waitForPort = 5000
+
+[[ports]]
+localPort = 5000
+externalPort = 5000
+
+[[ports]]
+localPort = 8080
+externalPort = 8080
+
+[[ports]]
+localPort = 8081
+externalPort = 8081
+
+[[ports]]
+localPort = 21496
+externalPort = 3000
+
+[[ports]]
+localPort = 23636
+externalPort = 3001
+
+[[ports]]
+localPort = 24678
+externalPort = 80
+
+[deployment]
+deploymentTarget = "cloudrun"
+build = ["npm", "run", "build"]
+run = ["npm", "run", "start"]
+
+[userenv]
+
+[userenv.production]
+GEMINI_API_KEY = "GEMINI_KEY_REMOVED"
+GOOGLE_MAPS_PLATFORM_KEY = "AIzaSyDnoQFe18QKyyTmGNl9qJ3VfxVulbG3KUY"
+HUNTER_API_KEY = "0711d0e54b9d37e59e30e8f15e6b62574675bb50"
+SANTI_API_KEY = "5440b3f62c3d7e5950572ab45cc2a721e27e1b5abec0b9b6ccff194cef627849"
+SESSION_SECRET = "LnANXN2ztZLQ0OyKSr+2crMuuiskErUk+Q6NKJb+Qmz9HvkQQqTKjKRsFdm22RDROrfWcM4rwrfPrk/anf6xwQ=="
+
+[userenv.shared]
+APIFY_API_TOKEN = "apify_api_IhjB4U6ajM8gfFy1iXba7MkVYngc1u1UQ0GB"
+
+[objectStorage]
+defaultBucketID = "replit-objstore-ee52125a-7ef9-4c14-a221-3b1abc6ac4b1"

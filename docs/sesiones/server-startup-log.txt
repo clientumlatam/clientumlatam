@@ -1,0 +1,1134 @@
+
+> react-example@0.0.0 dev
+> tsx server.ts
+
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+[Chatbot Leads] Tabla chatbot_leads lista.
+[Santi] Tablas santi_leads / santi_brochures / santi_notes listas.
+[Clientum Server] Servidor corriendo en http://localhost:5000
+10:45:44 AM [vite] (client) Pre-transform error: Failed to resolve import "@/lib/utils" from "src/components/ui/card.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/card.tsx:2:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import * as React from "react";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const Card = React.forwardRef(
+  5  |    _c = ({ className, ...props }, ref) => /* @__PURE__ */ jsxDEV("div", { ref, className: cn("rounded-xl border bg-card text-card-foreground shadow", className), ...props }, void 0, false, {
+10:45:44 AM [vite] (client) Pre-transform error: Failed to resolve import "@/lib/utils" from "src/components/ui/card.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/card.tsx:2:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import * as React from "react";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const Card = React.forwardRef(
+  5  |    _c = ({ className, ...props }, ref) => /* @__PURE__ */ jsxDEV("div", { ref, className: cn("rounded-xl border bg-card text-card-foreground shadow", className), ...props }, void 0, false, { (x2)
+10:45:44 AM [vite] (client) Pre-transform error: Failed to resolve import "@/lib/utils" from "src/components/ui/card.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/card.tsx:2:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import * as React from "react";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const Card = React.forwardRef(
+  5  |    _c = ({ className, ...props }, ref) => /* @__PURE__ */ jsxDEV("div", { ref, className: cn("rounded-xl border bg-card text-card-foreground shadow", className), ...props }, void 0, false, { (x3)
+10:45:44 AM [vite] (client) Pre-transform error: Failed to resolve import "@/lib/utils" from "src/components/ui/card.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/card.tsx:2:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import * as React from "react";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const Card = React.forwardRef(
+  5  |    _c = ({ className, ...props }, ref) => /* @__PURE__ */ jsxDEV("div", { ref, className: cn("rounded-xl border bg-card text-card-foreground shadow", className), ...props }, void 0, false, { (x4)
+10:45:44 AM [vite] (client) Pre-transform error: Failed to resolve import "@/lib/utils" from "src/components/ui/card.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/card.tsx:2:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import * as React from "react";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const Card = React.forwardRef(
+  5  |    _c = ({ className, ...props }, ref) => /* @__PURE__ */ jsxDEV("div", { ref, className: cn("rounded-xl border bg-card text-card-foreground shadow", className), ...props }, void 0, false, { (x5)
+10:45:44 AM [vite] (client) Pre-transform error: Failed to resolve import "@/lib/utils" from "src/components/ui/card.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/card.tsx:2:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import * as React from "react";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const Card = React.forwardRef(
+  5  |    _c = ({ className, ...props }, ref) => /* @__PURE__ */ jsxDEV("div", { ref, className: cn("rounded-xl border bg-card text-card-foreground shadow", className), ...props }, void 0, false, { (x6)
+10:45:44 AM [vite] (client) Pre-transform error: Failed to resolve import "@/lib/utils" from "src/components/ui/input.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/input.tsx:2:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import * as React from "react";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const Input = React.forwardRef(
+  5  |    _c = ({ className, type, ...props }, ref) => {
+10:45:44 AM [vite] (client) Pre-transform error: Failed to resolve import "@/lib/utils" from "src/components/ui/input.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/input.tsx:2:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import * as React from "react";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const Input = React.forwardRef(
+  5  |    _c = ({ className, type, ...props }, ref) => { (x2)
+10:45:44 AM [vite] (client) Pre-transform error: Failed to resolve import "@/lib/utils" from "src/components/ui/button.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/button.tsx:4:19
+  3  |  import { Slot } from "@radix-ui/react-slot";
+  4  |  import { cva } from "class-variance-authority";
+  5  |  import { cn } from "@/lib/utils";
+     |                      ^
+  6  |  const buttonVariants = cva(
+  7  |    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+10:45:44 AM [vite] (client) Pre-transform error: Failed to resolve import "@/lib/utils" from "src/components/ui/button.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/button.tsx:4:19
+  3  |  import { Slot } from "@radix-ui/react-slot";
+  4  |  import { cva } from "class-variance-authority";
+  5  |  import { cn } from "@/lib/utils";
+     |                      ^
+  6  |  const buttonVariants = cva(
+  7  |    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0", (x2)
+10:45:44 AM [vite] (client) Pre-transform error: Failed to resolve import "@/lib/utils" from "src/components/ui/button.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/button.tsx:4:19
+  3  |  import { Slot } from "@radix-ui/react-slot";
+  4  |  import { cva } from "class-variance-authority";
+  5  |  import { cn } from "@/lib/utils";
+     |                      ^
+  6  |  const buttonVariants = cva(
+  7  |    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0", (x3)
+10:45:44 AM [vite] (client) Pre-transform error: Failed to resolve import "@/lib/utils" from "src/components/ui/button.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/button.tsx:4:19
+  3  |  import { Slot } from "@radix-ui/react-slot";
+  4  |  import { cva } from "class-variance-authority";
+  5  |  import { cn } from "@/lib/utils";
+     |                      ^
+  6  |  const buttonVariants = cva(
+  7  |    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0", (x4)
+10:45:44 AM [vite] (client) Pre-transform error: Failed to resolve import "@/lib/utils" from "src/components/ui/badge.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/badge.tsx:3:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import { cva } from "class-variance-authority";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const badgeVariants = cva(
+  5  |    "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+10:45:44 AM [vite] (client) Pre-transform error: Failed to resolve import "@/lib/utils" from "src/components/ui/badge.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/badge.tsx:3:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import { cva } from "class-variance-authority";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const badgeVariants = cva(
+  5  |    "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2", (x2)
+10:45:44 AM [vite] (client) Pre-transform error: Failed to resolve import "@/lib/utils" from "src/components/ui/badge.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/badge.tsx:3:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import { cva } from "class-variance-authority";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const badgeVariants = cva(
+  5  |    "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2", (x3)
+10:45:44 AM [vite] (client) Pre-transform error: Failed to resolve import "@/lib/utils" from "src/components/ui/badge.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/badge.tsx:3:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import { cva } from "class-variance-authority";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const badgeVariants = cva(
+  5  |    "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2", (x4)
+10:45:44 AM [vite] (client) Pre-transform error: Failed to resolve import "@/lib/utils" from "src/components/ui/input.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/input.tsx:2:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import * as React from "react";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const Input = React.forwardRef(
+  5  |    _c = ({ className, type, ...props }, ref) => {
+10:45:44 AM [vite] (client) Pre-transform error: Failed to resolve import "@/lib/utils" from "src/components/ui/button.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/button.tsx:4:19
+  3  |  import { Slot } from "@radix-ui/react-slot";
+  4  |  import { cva } from "class-variance-authority";
+  5  |  import { cn } from "@/lib/utils";
+     |                      ^
+  6  |  const buttonVariants = cva(
+  7  |    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+10:45:44 AM [vite] (client) Pre-transform error: Failed to resolve import "@/lib/utils" from "src/components/ui/badge.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/badge.tsx:3:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import { cva } from "class-variance-authority";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const badgeVariants = cva(
+  5  |    "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+10:45:44 AM [vite] (client) Pre-transform error: Failed to resolve import "@/lib/utils" from "src/components/ui/select.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/select.tsx:6:19
+  4  |  import * as SelectPrimitive from "@radix-ui/react-select";
+  5  |  import { Check, ChevronDown, ChevronUp } from "lucide-react";
+  6  |  import { cn } from "@/lib/utils";
+     |                      ^
+  7  |  const Select = SelectPrimitive.Root;
+  8  |  const SelectGroup = SelectPrimitive.Group;
+10:45:44 AM [vite] (client) page reload .local/state/workflow-logs/jLgZtSho1bYQGLquU1spT/start_application.shell.exec.0
+10:45:44 AM [vite] (client) page reload .local/state/workflow-logs/jLgZtSho1bYQGLquU1spT/start_application.shell.exec.0 (x2)
+10:45:50 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/card.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/card.tsx:2:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import * as React from "react";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const Card = React.forwardRef(
+  5  |    _c = ({ className, ...props }, ref) => /* @__PURE__ */ jsxDEV("div", { ref, className: cn("rounded-xl border bg-card text-card-foreground shadow", className), ...props }, void 0, false, {
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:45:50 AM [vite] (client) page reload .local/state/workflow-logs/jLgZtSho1bYQGLquU1spT/start_application.shell.exec.0
+10:45:50 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/badge.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/badge.tsx:3:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import { cva } from "class-variance-authority";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const badgeVariants = cva(
+  5  |    "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:45:51 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/button.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/button.tsx:4:19
+  3  |  import { Slot } from "@radix-ui/react-slot";
+  4  |  import { cva } from "class-variance-authority";
+  5  |  import { cn } from "@/lib/utils";
+     |                      ^
+  6  |  const buttonVariants = cva(
+  7  |    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 4)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:45:51 AM [vite] (client) page reload .local/state/workflow-logs/jLgZtSho1bYQGLquU1spT/start_application.shell.exec.0
+10:45:51 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/select.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/select.tsx:6:19
+  4  |  import * as SelectPrimitive from "@radix-ui/react-select";
+  5  |  import { Check, ChevronDown, ChevronUp } from "lucide-react";
+  6  |  import { cn } from "@/lib/utils";
+     |                      ^
+  7  |  const Select = SelectPrimitive.Root;
+  8  |  const SelectGroup = SelectPrimitive.Group;
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 4)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:45:51 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/input.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/input.tsx:2:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import * as React from "react";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const Input = React.forwardRef(
+  5  |    _c = ({ className, type, ...props }, ref) => {
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:45:51 AM [vite] (client) page reload .local/state/workflow-logs/jLgZtSho1bYQGLquU1spT/start_application.shell.exec.0
+10:46:03 AM [vite] (client) page reload replit.md
+10:46:03 AM [vite] (client) page reload .local/state/workflow-logs/jLgZtSho1bYQGLquU1spT/start_application.shell.exec.0
+10:46:09 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/button.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/button.tsx:4:19
+  3  |  import { Slot } from "@radix-ui/react-slot";
+  4  |  import { cva } from "class-variance-authority";
+  5  |  import { cn } from "@/lib/utils";
+     |                      ^
+  6  |  const buttonVariants = cva(
+  7  |    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 4)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:09 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/card.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/card.tsx:2:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import * as React from "react";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const Card = React.forwardRef(
+  5  |    _c = ({ className, ...props }, ref) => /* @__PURE__ */ jsxDEV("div", { ref, className: cn("rounded-xl border bg-card text-card-foreground shadow", className), ...props }, void 0, false, {
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:09 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/input.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/input.tsx:2:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import * as React from "react";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const Input = React.forwardRef(
+  5  |    _c = ({ className, type, ...props }, ref) => {
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:09 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/select.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/select.tsx:6:19
+  4  |  import * as SelectPrimitive from "@radix-ui/react-select";
+  5  |  import { Check, ChevronDown, ChevronUp } from "lucide-react";
+  6  |  import { cn } from "@/lib/utils";
+     |                      ^
+  7  |  const Select = SelectPrimitive.Root;
+  8  |  const SelectGroup = SelectPrimitive.Group;
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 4)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:09 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/badge.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/badge.tsx:3:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import { cva } from "class-variance-authority";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const badgeVariants = cva(
+  5  |    "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:09 AM [vite] (client) page reload .local/state/workflow-logs/jLgZtSho1bYQGLquU1spT/start_application.shell.exec.0
+10:46:10 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/card.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/card.tsx:2:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import * as React from "react";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const Card = React.forwardRef(
+  5  |    _c = ({ className, ...props }, ref) => /* @__PURE__ */ jsxDEV("div", { ref, className: cn("rounded-xl border bg-card text-card-foreground shadow", className), ...props }, void 0, false, {
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:10 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/badge.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/badge.tsx:3:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import { cva } from "class-variance-authority";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const badgeVariants = cva(
+  5  |    "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:10 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/input.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/input.tsx:2:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import * as React from "react";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const Input = React.forwardRef(
+  5  |    _c = ({ className, type, ...props }, ref) => {
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:10 AM [vite] (client) page reload .local/state/workflow-logs/jLgZtSho1bYQGLquU1spT/start_application.shell.exec.0
+10:46:10 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/button.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/button.tsx:4:19
+  3  |  import { Slot } from "@radix-ui/react-slot";
+  4  |  import { cva } from "class-variance-authority";
+  5  |  import { cn } from "@/lib/utils";
+     |                      ^
+  6  |  const buttonVariants = cva(
+  7  |    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 4)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:10 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/select.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/select.tsx:6:19
+  4  |  import * as SelectPrimitive from "@radix-ui/react-select";
+  5  |  import { Check, ChevronDown, ChevronUp } from "lucide-react";
+  6  |  import { cn } from "@/lib/utils";
+     |                      ^
+  7  |  const Select = SelectPrimitive.Root;
+  8  |  const SelectGroup = SelectPrimitive.Group;
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 4)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:10 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/card.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/card.tsx:2:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import * as React from "react";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const Card = React.forwardRef(
+  5  |    _c = ({ className, ...props }, ref) => /* @__PURE__ */ jsxDEV("div", { ref, className: cn("rounded-xl border bg-card text-card-foreground shadow", className), ...props }, void 0, false, {
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:10 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/badge.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/badge.tsx:3:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import { cva } from "class-variance-authority";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const badgeVariants = cva(
+  5  |    "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:10 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/input.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/input.tsx:2:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import * as React from "react";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const Input = React.forwardRef(
+  5  |    _c = ({ className, type, ...props }, ref) => {
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:10 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/button.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/button.tsx:4:19
+  3  |  import { Slot } from "@radix-ui/react-slot";
+  4  |  import { cva } from "class-variance-authority";
+  5  |  import { cn } from "@/lib/utils";
+     |                      ^
+  6  |  const buttonVariants = cva(
+  7  |    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 4)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:10 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/select.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/select.tsx:6:19
+  4  |  import * as SelectPrimitive from "@radix-ui/react-select";
+  5  |  import { Check, ChevronDown, ChevronUp } from "lucide-react";
+  6  |  import { cn } from "@/lib/utils";
+     |                      ^
+  7  |  const Select = SelectPrimitive.Root;
+  8  |  const SelectGroup = SelectPrimitive.Group;
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 4)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:10 AM [vite] (client) page reload .local/state/workflow-logs/jLgZtSho1bYQGLquU1spT/start_application.shell.exec.0
+10:46:11 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/select.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/select.tsx:6:19
+  4  |  import * as SelectPrimitive from "@radix-ui/react-select";
+  5  |  import { Check, ChevronDown, ChevronUp } from "lucide-react";
+  6  |  import { cn } from "@/lib/utils";
+     |                      ^
+  7  |  const Select = SelectPrimitive.Root;
+  8  |  const SelectGroup = SelectPrimitive.Group;
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 4)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:11 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/card.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/card.tsx:2:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import * as React from "react";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const Card = React.forwardRef(
+  5  |    _c = ({ className, ...props }, ref) => /* @__PURE__ */ jsxDEV("div", { ref, className: cn("rounded-xl border bg-card text-card-foreground shadow", className), ...props }, void 0, false, {
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:11 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/badge.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/badge.tsx:3:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import { cva } from "class-variance-authority";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const badgeVariants = cva(
+  5  |    "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:11 AM [vite] (client) page reload .local/state/workflow-logs/jLgZtSho1bYQGLquU1spT/start_application.shell.exec.0
+10:46:11 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/input.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/input.tsx:2:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import * as React from "react";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const Input = React.forwardRef(
+  5  |    _c = ({ className, type, ...props }, ref) => {
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:11 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/button.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/button.tsx:4:19
+  3  |  import { Slot } from "@radix-ui/react-slot";
+  4  |  import { cva } from "class-variance-authority";
+  5  |  import { cn } from "@/lib/utils";
+     |                      ^
+  6  |  const buttonVariants = cva(
+  7  |    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 4)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:11 AM [vite] (client) page reload .local/state/workflow-logs/jLgZtSho1bYQGLquU1spT/start_application.shell.exec.0
+10:46:11 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/card.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/card.tsx:2:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import * as React from "react";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const Card = React.forwardRef(
+  5  |    _c = ({ className, ...props }, ref) => /* @__PURE__ */ jsxDEV("div", { ref, className: cn("rounded-xl border bg-card text-card-foreground shadow", className), ...props }, void 0, false, {
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:11 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/input.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/input.tsx:2:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import * as React from "react";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const Input = React.forwardRef(
+  5  |    _c = ({ className, type, ...props }, ref) => {
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:11 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/button.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/button.tsx:4:19
+  3  |  import { Slot } from "@radix-ui/react-slot";
+  4  |  import { cva } from "class-variance-authority";
+  5  |  import { cn } from "@/lib/utils";
+     |                      ^
+  6  |  const buttonVariants = cva(
+  7  |    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 4)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:11 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/select.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/select.tsx:6:19
+  4  |  import * as SelectPrimitive from "@radix-ui/react-select";
+  5  |  import { Check, ChevronDown, ChevronUp } from "lucide-react";
+  6  |  import { cn } from "@/lib/utils";
+     |                      ^
+  7  |  const Select = SelectPrimitive.Root;
+  8  |  const SelectGroup = SelectPrimitive.Group;
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 4)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:11 AM [vite] (client) page reload .local/state/workflow-logs/jLgZtSho1bYQGLquU1spT/start_application.shell.exec.0
+10:46:12 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/badge.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/badge.tsx:3:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import { cva } from "class-variance-authority";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const badgeVariants = cva(
+  5  |    "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:12 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/card.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/card.tsx:2:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import * as React from "react";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const Card = React.forwardRef(
+  5  |    _c = ({ className, ...props }, ref) => /* @__PURE__ */ jsxDEV("div", { ref, className: cn("rounded-xl border bg-card text-card-foreground shadow", className), ...props }, void 0, false, {
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:12 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/badge.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/badge.tsx:3:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import { cva } from "class-variance-authority";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const badgeVariants = cva(
+  5  |    "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:12 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/input.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/input.tsx:2:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import * as React from "react";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const Input = React.forwardRef(
+  5  |    _c = ({ className, type, ...props }, ref) => {
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:12 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/button.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/button.tsx:4:19
+  3  |  import { Slot } from "@radix-ui/react-slot";
+  4  |  import { cva } from "class-variance-authority";
+  5  |  import { cn } from "@/lib/utils";
+     |                      ^
+  6  |  const buttonVariants = cva(
+  7  |    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 4)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:12 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/select.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/select.tsx:6:19
+  4  |  import * as SelectPrimitive from "@radix-ui/react-select";
+  5  |  import { Check, ChevronDown, ChevronUp } from "lucide-react";
+  6  |  import { cn } from "@/lib/utils";
+     |                      ^
+  7  |  const Select = SelectPrimitive.Root;
+  8  |  const SelectGroup = SelectPrimitive.Group;
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 4)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:12 AM [vite] (client) page reload .local/state/workflow-logs/jLgZtSho1bYQGLquU1spT/start_application.shell.exec.0
+10:46:12 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/card.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/card.tsx:2:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import * as React from "react";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const Card = React.forwardRef(
+  5  |    _c = ({ className, ...props }, ref) => /* @__PURE__ */ jsxDEV("div", { ref, className: cn("rounded-xl border bg-card text-card-foreground shadow", className), ...props }, void 0, false, {
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:12 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/badge.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/badge.tsx:3:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import { cva } from "class-variance-authority";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const badgeVariants = cva(
+  5  |    "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:12 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/input.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/input.tsx:2:19
+  1  |  import { jsxDEV } from "react/jsx-dev-runtime";
+  2  |  import * as React from "react";
+  3  |  import { cn } from "@/lib/utils";
+     |                      ^
+  4  |  const Input = React.forwardRef(
+  5  |    _c = ({ className, type, ...props }, ref) => {
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 2)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:12 AM [vite] (client) page reload .local/state/workflow-logs/jLgZtSho1bYQGLquU1spT/start_application.shell.exec.0
+10:46:12 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/button.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/button.tsx:4:19
+  3  |  import { Slot } from "@radix-ui/react-slot";
+  4  |  import { cva } from "class-variance-authority";
+  5  |  import { cn } from "@/lib/utils";
+     |                      ^
+  6  |  const buttonVariants = cva(
+  7  |    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 4)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:12 AM [vite] Internal server error: Failed to resolve import "@/lib/utils" from "src/components/ui/select.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /home/runner/workspace/src/components/ui/select.tsx:6:19
+  4  |  import * as SelectPrimitive from "@radix-ui/react-select";
+  5  |  import { Check, ChevronDown, ChevronUp } from "lucide-react";
+  6  |  import { cn } from "@/lib/utils";
+     |                      ^
+  7  |  const Select = SelectPrimitive.Root;
+  8  |  const SelectGroup = SelectPrimitive.Group;
+      at TransformPluginContext._formatLog (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42658:41)
+      at TransformPluginContext.error (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42655:16)
+      at normalizeUrl (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40634:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async <anonymous> (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40753:37)
+      at async Promise.all (index 4)
+      at async TransformPluginContext.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:40680:7)
+      at async EnvironmentPluginContainer.transform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:42453:18)
+      at async loadAndTransform (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:35845:27)
+      at async viteTransformMiddleware (/home/runner/workspace/node_modules/vite/dist/node/chunks/dep-Dm0c1Wj2.js:37369:24)
+10:46:39 AM [vite] (client) hmr update /src/components/crm-full/CrmFullPipeline.tsx, /src/index.css, /src/components/crm-full/CrmFullSellers.tsx, /src/components/crm-full/CrmFullConversations.tsx, /src/components/crm-full/CrmFullBranches.tsx, /src/components/crm-full/CrmFullBotConfig.tsx, /src/components/crm-full/CrmFullLeads.tsx, /src/components/crm-full/CrmFullProducts.tsx, /src/components/crm-full/CrmConversationDetail.tsx
+10:46:39 AM [vite] (client) page reload .local/state/workflow-logs/jLgZtSho1bYQGLquU1spT/start_application.shell.exec.0
+Error en /api/auth/login: error: relation "users" does not exist
+    at /home/runner/workspace/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async <anonymous> (/home/runner/workspace/server.ts:162:20) {
+  length: 104,
+  severity: 'ERROR',
+  code: '42P01',
+  detail: undefined,
+  hint: undefined,
+  position: '47',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '1452',
+  routine: 'parserOpenTable'
+}
+10:49:08 AM [vite] (client) page reload .local/state/workflow-logs/jLgZtSho1bYQGLquU1spT/start_application.shell.exec.0 (x2)
+10:49:20 AM [vite] (client) hmr update /src/components/PublicWebsite.tsx, /src/index.css
+10:49:20 AM [vite] (client) page reload .local/state/workflow-logs/jLgZtSho1bYQGLquU1spT/start_application.shell.exec.0
+10:49:24 AM [vite] (client) hmr update /src/components/PublicWebsite.tsx, /src/index.css
+10:49:24 AM [vite] (client) page reload .local/state/workflow-logs/jLgZtSho1bYQGLquU1spT/start_application.shell.exec.0
+Error en /api/auth/login: error: relation "users" does not exist
+    at /home/runner/workspace/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async <anonymous> (/home/runner/workspace/server.ts:162:20) {
+  length: 104,
+  severity: 'ERROR',
+  code: '42P01',
+  detail: undefined,
+  hint: undefined,
+  position: '47',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '1452',
+  routine: 'parserOpenTable'
+}
+10:49:36 AM [vite] (client) page reload .local/state/workflow-logs/jLgZtSho1bYQGLquU1spT/start_application.shell.exec.0 (x2)
+Error en /api/auth/login: error: relation "users" does not exist
+    at /home/runner/workspace/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async <anonymous> (/home/runner/workspace/server.ts:162:20) {
+  length: 104,
+  severity: 'ERROR',
+  code: '42P01',
+  detail: undefined,
+  hint: undefined,
+  position: '47',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '1452',
+  routine: 'parserOpenTable'
+}
+10:49:36 AM [vite] (client) page reload .local/state/workflow-logs/jLgZtSho1bYQGLquU1spT/start_application.shell.exec.0 (x3)
+Error en /api/auth/login: error: relation "users" does not exist
+    at /home/runner/workspace/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async <anonymous> (/home/runner/workspace/server.ts:162:20) {
+  length: 104,
+  severity: 'ERROR',
+  code: '42P01',
+  detail: undefined,
+  hint: undefined,
+  position: '47',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '1452',
+  routine: 'parserOpenTable'
+}
+10:50:16 AM [vite] (client) page reload .local/state/workflow-logs/jLgZtSho1bYQGLquU1spT/start_application.shell.exec.0 (x4)
+Error en /api/auth/register: error: relation "users" does not exist
+    at /home/runner/workspace/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async <anonymous> (/home/runner/workspace/server.ts:103:22) {
+  length: 104,
+  severity: 'ERROR',
+  code: '42P01',
+  detail: undefined,
+  hint: undefined,
+  position: '16',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '1452',
+  routine: 'parserOpenTable'
+}
+10:50:45 AM [vite] (client) page reload .local/state/workflow-logs/jLgZtSho1bYQGLquU1spT/start_application.shell.exec.0 (x5)
+Error en /api/auth/login: error: relation "users" does not exist
+    at /home/runner/workspace/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async <anonymous> (/home/runner/workspace/server.ts:162:20) {
+  length: 104,
+  severity: 'ERROR',
+  code: '42P01',
+  detail: undefined,
+  hint: undefined,
+  position: '47',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '1452',
+  routine: 'parserOpenTable'
+}
+10:51:11 AM [vite] (client) page reload .local/state/workflow-logs/jLgZtSho1bYQGLquU1spT/start_application.shell.exec.0 (x6)
+Error en /api/auth/register: error: relation "users" does not exist
+    at /home/runner/workspace/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async <anonymous> (/home/runner/workspace/server.ts:103:22) {
+  length: 104,
+  severity: 'ERROR',
+  code: '42P01',
+  detail: undefined,
+  hint: undefined,
+  position: '16',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '1452',
+  routine: 'parserOpenTable'
+}
+10:51:27 AM [vite] (client) page reload .local/state/workflow-logs/jLgZtSho1bYQGLquU1spT/start_application.shell.exec.0 (x7)
+
+
+
+
