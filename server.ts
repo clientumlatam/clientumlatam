@@ -1525,6 +1525,26 @@ IMPORTANTE: Devuelve exclusivamente el objeto JSON sin markdown.`;
       }
     }
 
+    if (action === "assistantChat") {
+      const { message, history, contextNote, brochureData: bd } = payload;
+      const industryHint = bd?.industry ? ` El prospecto/rubro activo es "${bd.industry}".` : "";
+      const companyHint  = bd?.company  ? ` La empresa del brochure es "${bd.company}".` : "";
+      const sloganHint   = bd?.slogan   ? ` El slogan actual es "${bd.slogan}".` : "";
+      const ctxHint      = contextNote  ? ` ${contextNote}` : "";
+      const systemPrompt = `Eres el Asistente IA interno de Clientum, un CRM B2B argentino para PyMEs patagónicas.
+Ayudás al equipo comercial con: pipeline de ventas, calificación MEDDIC de leads, redacción de emails y mensajes de WhatsApp, estrategias de prospección, tips para cerrar negocios y cualquier consulta sobre el uso de Clientum.${ctxHint}${industryHint}${companyHint}${sloganHint}
+Respondé de manera concisa (máximo 4 párrafos), práctica y con voseo argentino (español rioplatense). Usá bullet points o numeración cuando ayude a la claridad. Sé directo, amigable y orientado a resultados comerciales concretos.
+Historial de conversación: ${JSON.stringify(history || [])}
+Consulta del usuario: "${message}"`;
+
+      try {
+        const response = await generateContentWithFallback(ai, { contents: systemPrompt });
+        return res.json({ result: response.text?.trim() });
+      } catch (err: any) {
+        return res.json({ result: "¡Hola! Estoy en modo offline por alta demanda. Escribime tu consulta de nuevo en un momento." });
+      }
+    }
+
     if (action === "chatbotAnswer") {
       const { brochureData, message, history } = payload;
       const prompt = `Actúas como un asesor comercial y consultor de automatización de Clientum 2026. Tu objetivo es vender los servicios de Clientum y responder dudas sobre el brochure corporativo personalizado de Clientum para el rubro del prospecto.
