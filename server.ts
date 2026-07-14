@@ -12,6 +12,19 @@ dotenv.config();
 const app = express();
 app.use(express.json({ limit: "10mb" }));
 
+// This app only ever serves /api/* on Vercel (see vercel.json routes) — the
+// SPA itself is served straight from the filesystem/CDN. Without this,
+// Vercel's default "public, max-age=0, must-revalidate" caching header on
+// serverless function responses lets its edge CDN treat auth responses as
+// cacheable, which strips the Set-Cookie header before it reaches the
+// browser. That silently breaks login/register in production (the session
+// cookie never gets set) while working fine in local/dev. Force no-store on
+// every API response so cookies always reach the client.
+app.use((req, res, next) => {
+  res.setHeader("Cache-Control", "no-store");
+  next();
+});
+
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 5000;
 
 // --- Auth: database pool, session store, and user routes ---
