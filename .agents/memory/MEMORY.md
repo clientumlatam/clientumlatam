@@ -3,3 +3,4 @@
 - [Clientum services catalog source](clientum-services-catalog-source.md) — raw master catalog (2147 rows) lives in the `nzip2` GitHub repo; app's JSON is a curated derivative, re-derive from source rather than hand-editing.
 - [Vercel external DB/secrets gap](vercel-external-db-secrets.md) — this project also deploys to Vercel (clientum.com.ar); DATABASE_URL is Replit's internal host and secrets don't propagate there, breaking auth.
 - [Vercel cookie cache stripping](vercel-cookie-cache-stripping.md) — Vercel's default Cache-Control lets its edge CDN strip Set-Cookie; API responses must force `Cache-Control: no-store`.
+- [Clientum arquitectura completa](clientum-architecture.md) — stack, rutas, DB schema, env vars, flujo dev→Vercel; ver docs/ARCHITECTURE.md en el repo.
