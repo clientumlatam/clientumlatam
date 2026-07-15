@@ -12,4 +12,9 @@ SECRETS.md
 
 # Transient / private data folders
 attached_assets/
-docs/
+
+# Ignorar contenido privado de docs (capturas, sesiones, exports)
+# pero trackear la documentación técnica del proyecto
+docs/**
+!docs/ARCHITECTURE.md
+!docs/SANTI-SDR.md
