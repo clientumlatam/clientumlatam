@@ -57,10 +57,20 @@ async function resolveDatabaseUrl(): Promise<string> {
 }
 
 const databaseUrl = await resolveDatabaseUrl();
-const pgPool = new Pool({
-  connectionString: databaseUrl,
-  ssl: /sslmode=disable/i.test(databaseUrl) ? false : { rejectUnauthorized: false },
-});
+// When no connection string is resolved (e.g. DATABASE_URL/Neon secrets not
+// set), `pg` falls back to PGHOST/PGUSER/PGPASSWORD/PGDATABASE/PGPORT, which
+// point at Replit's own built-in Postgres for local development. That
+// instance does not support SSL, so SSL must only be forced when we actually
+// have an external (Neon) connection string that doesn't opt out via
+// sslmode=disable.
+const pgPool = new Pool(
+  databaseUrl
+    ? {
+        connectionString: databaseUrl,
+        ssl: /sslmode=disable/i.test(databaseUrl) ? false : { rejectUnauthorized: false },
+      }
+    : {}
+);
 const PgSession = connectPgSimple(session);
 
 declare module "express-session" {
