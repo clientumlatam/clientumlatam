@@ -542,7 +542,7 @@ export default function SalesProspectorDashboard({
           payload: { 
             city: searchCity, 
             industry: selectedInd,
-            googleMapsPlatformKey: customApiKey 
+            googleMapsPlatformKey: customApiKey || API_KEY 
           }
         })
       });
@@ -1800,23 +1800,26 @@ export default function SalesProspectorDashboard({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5 font-bold text-emerald-700">
                       <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
-                      <span>Buscador Google Maps Activo </span>
+                      <span>Buscador Google Maps Activo</span>
                     </div>
-                    <button
-                      onClick={() => {
-                        setValidationError(null);
-                        setValidationSuccess(false);
-                        setModalKeyInput(customApiKey);
-                        setShowKeyModal(true);
-                      }}
-                      className="text-slate-400 hover:text-slate-600 transition cursor-pointer"
-                      title="Configurar Clave"
-                    >
-                      <Settings className="w-3.5 h-3.5" />
-                    </button>
+                    {!hasValidKey && (
+                      <button
+                        onClick={() => {
+                          setValidationError(null);
+                          setValidationSuccess(false);
+                          setModalKeyInput(customApiKey);
+                          setShowKeyModal(true);
+                        }}
+                        className="text-slate-400 hover:text-slate-600 transition cursor-pointer"
+                        title="Configurar Clave"
+                      >
+                        <Settings className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                   <span>
-                    Conexión establecida con la API oficial de Google Places para obtener datos 100% reales en tiempo real. {customApiKey ? "(Clave personalizada guardada localmente)" : ""}
+                    Conexión establecida con la API oficial de Google Places para obtener datos 100% reales en tiempo real.{" "}
+                    {hasValidKey ? "(Clave del servidor activa para todos los usuarios)" : customApiKey ? "(Clave personalizada guardada localmente)" : ""}
                   </span>
                 </div>
               ) : (
@@ -2285,7 +2288,7 @@ export default function SalesProspectorDashboard({
                         </span>
                       </div>
                       <span className="bg-slate-800 text-emerald-400 border border-emerald-500/20 text-[9px] font-bold font-mono px-2 py-0.5 rounded">
-                        {customApiKey ? "Google Maps API" : "Simulador Local"}
+                        {hasActiveValidKey ? "Google Maps API" : "Simulador Local"}
                       </span>
                     </div>
 
@@ -2422,7 +2425,7 @@ export default function SalesProspectorDashboard({
                     {/* Map Footer status */}
                     <div className="bg-slate-50 border-t border-slate-200 p-2.5 text-[10px] text-slate-400 flex items-center justify-between shrink-0 font-mono">
                       <span>Ubicación: {searchCity}, Patagonia</span>
-                      {customApiKey ? (
+                      {hasActiveValidKey ? (
                         <span className="text-emerald-600 font-bold">● ONLINE (Google)</span>
                       ) : (
                         <span className="text-amber-500 font-bold">● MODO SIMULADO</span>
