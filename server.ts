@@ -728,8 +728,23 @@ app.post("/api/auth/neon-login", async (req, res) => {
       if (!neonRes.ok) {
         const isEmailNotVerified = neonRes.status === 403 && rawText.includes("EMAIL_NOT_VERIFIED");
         if (isEmailNotVerified) {
+          // The user exists in Neon Auth but their email isn't verified.
+          // If they exist in our local DB we trust them — save the bcrypt hash
+          // so future logins go through the fast local path and bypass Neon Auth.
+          const existingRow = await pgPool.query(
+            "SELECT id, username, role FROM users WHERE email = $1 LIMIT 1",
+            [emailLower]
+          );
+          if ((existingRow.rowCount ?? 0) > 0) {
+            const localUser = existingRow.rows[0];
+            const newHash = await bcrypt.hash(password, 12);
+            await pgPool.query("UPDATE users SET password_hash = $1 WHERE id = $2", [newHash, localUser.id]);
+            console.log("[Auth] EMAIL_NOT_VERIFIED — hash local guardado, sesión creada para", emailLower);
+            return createSession(req, res, { id: localUser.id, username: localUser.username, role: localUser.role }, 200);
+          }
+          // User not in our DB at all — they need to register
           return res.status(403).json({
-            error: "Registrate primero con el botón 'Registrarse' para sincronizar el acceso.",
+            error: "Tu email no está verificado. Usá '¿Olvidaste tu contraseña?' para configurar el acceso.",
           });
         }
         const msg = neonData?.message || neonData?.error || rawText.slice(0, 200) || "Email o contraseña incorrectos.";
