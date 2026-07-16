@@ -958,7 +958,27 @@ async function generateContentWithFallback(
 }
 
 // ── Free AI fallback: Groq → OpenRouter (used when Gemini quota is exhausted) ─
-async function tryFreeAI(prompt: string): Promise<string | null> {
+
+/**
+ * Strip markdown code fences and extract raw JSON from a model response.
+ * Models often wrap JSON in ```json ... ``` even when asked not to.
+ */
+function extractJSON(text: string): string {
+  // Remove ```json ... ``` or ``` ... ``` fences
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (fenced) return fenced[1].trim();
+  // Try to find the first { or [ and return from there
+  const start = text.search(/[\[{]/);
+  if (start !== -1) return text.slice(start);
+  return text.trim();
+}
+
+async function tryFreeAI(prompt: string, opts?: { jsonMode?: boolean }): Promise<string | null> {
+  const jsonMode = opts?.jsonMode ?? false;
+  const systemMsg = jsonMode
+    ? "Respondé SOLO con JSON válido, sin texto adicional, sin markdown, sin explicaciones. Solo el objeto JSON."
+    : "Respondé en español rioplatense (voseo argentino), de forma concisa y directa.";
+
   // 1. Groq — fastest, generous free tier
   const groqKey = process.env.GROQ_API_KEY;
   if (groqKey) {
@@ -969,9 +989,13 @@ async function tryFreeAI(prompt: string): Promise<string | null> {
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${groqKey}` },
         body: JSON.stringify({
           model: "llama-3.3-70b-versatile",
-          messages: [{ role: "user", content: prompt }],
+          messages: [
+            { role: "system", content: systemMsg },
+            { role: "user", content: prompt },
+          ],
           temperature: 0.7,
           max_tokens: 4096,
+          ...(jsonMode ? { response_format: { type: "json_object" } } : {}),
         }),
       });
       if (gr.ok) {
@@ -989,8 +1013,8 @@ async function tryFreeAI(prompt: string): Promise<string | null> {
   if (orKey) {
     const orModels = [
       "meta-llama/llama-3.3-70b-instruct:free",
-      "deepseek/deepseek-r1:free",
       "google/gemini-2.0-flash-exp:free",
+      "deepseek/deepseek-r1:free",
     ];
     for (const model of orModels) {
       try {
@@ -1003,7 +1027,14 @@ async function tryFreeAI(prompt: string): Promise<string | null> {
             "HTTP-Referer": "https://clientum.com.ar",
             "X-Title": "Clientum CRM",
           },
-          body: JSON.stringify({ model, messages: [{ role: "user", content: prompt }], max_tokens: 4096 }),
+          body: JSON.stringify({
+            model,
+            messages: [
+              { role: "system", content: systemMsg },
+              { role: "user", content: prompt },
+            ],
+            max_tokens: 4096,
+          }),
         });
         if (or.ok) {
           const d = await or.json();
@@ -2217,9 +2248,9 @@ IMPORTANTE: Devuelve exclusivamente el objeto JSON sin markdown.`;
         return res.json({ result: JSON.parse(response.text || "{}") });
       } catch (geminiError: any) {
         console.warn("[Gemini Fallback] Quota exhaustion / error generating copy. Trying free AI...");
-        const freeText = await tryFreeAI(prompt);
+        const freeText = await tryFreeAI(prompt, { jsonMode: true });
         if (freeText) {
-          try { return res.json({ result: JSON.parse(freeText) }); } catch { /* not valid JSON */ }
+          try { return res.json({ result: JSON.parse(extractJSON(freeText)) }); } catch { /* not valid JSON */ }
         }
         console.warn("[FreeAI] También falló. Usando plantilla local para rubro:", industry);
         const fallbackData = getMockIndustryCopy(industry);
@@ -2325,9 +2356,9 @@ Devuelve únicamente el objeto JSON con las traducciones mapeadas con las mismas
         return res.json({ result: JSON.parse(response.text || "{}") });
       } catch (geminiError: any) {
         console.warn("[Gemini Fallback] Quota exhaustion / error in translateBrochure. Trying free AI...");
-        const freeText = await tryFreeAI(prompt);
+        const freeText = await tryFreeAI(prompt, { jsonMode: true });
         if (freeText) {
-          try { return res.json({ result: JSON.parse(freeText) }); } catch { /* not valid JSON */ }
+          try { return res.json({ result: JSON.parse(extractJSON(freeText)) }); } catch { /* not valid JSON */ }
         }
         const fallbackAnswer = getMockTranslateBrochure(texts, targetLanguage);
         return res.json({ result: fallbackAnswer, isFallback: true });
@@ -2516,9 +2547,9 @@ IMPORTANTE: Devuelve exclusivamente el objeto JSON sin markdown.`;
         return res.json({ result: JSON.parse(response.text || "{}") });
       } catch (geminiError: any) {
         console.warn("[Gemini Fallback] Quota exhaustion / error in buildICP. Trying free AI...");
-        const freeText = await tryFreeAI(prompt);
+        const freeText = await tryFreeAI(prompt, { jsonMode: true });
         if (freeText) {
-          try { return res.json({ result: JSON.parse(freeText) }); } catch { /* not valid JSON */ }
+          try { return res.json({ result: JSON.parse(extractJSON(freeText)) }); } catch { /* not valid JSON */ }
         }
         const fallbackAnswer = getMockICP(industry, acv);
         return res.json({ result: fallbackAnswer, isFallback: true });
@@ -2598,9 +2629,9 @@ IMPORTANTE: Devuelve exclusivamente el objeto JSON sin markdown.`;
         return res.json({ result: JSON.parse(response.text || "{}") });
       } catch (geminiError: any) {
         console.warn("[Gemini Fallback] Quota exhaustion / error in researchProspect. Trying free AI...");
-        const freeText = await tryFreeAI(prompt);
+        const freeText = await tryFreeAI(prompt, { jsonMode: true });
         if (freeText) {
-          try { return res.json({ result: JSON.parse(freeText) }); } catch { /* not valid JSON */ }
+          try { return res.json({ result: JSON.parse(extractJSON(freeText)) }); } catch { /* not valid JSON */ }
         }
         const fallbackAnswer = getMockResearch(company, industry);
         return res.json({ result: fallbackAnswer, isFallback: true });
@@ -2661,9 +2692,9 @@ IMPORTANTE: Devuelve exclusivamente el objeto JSON sin markdown.`;
         return res.json({ result: JSON.parse(response.text || "{}") });
       } catch (geminiError: any) {
         console.warn("[Gemini Fallback] Quota exhaustion / error in generateOutreach. Trying free AI...");
-        const freeText = await tryFreeAI(prompt);
+        const freeText = await tryFreeAI(prompt, { jsonMode: true });
         if (freeText) {
-          try { return res.json({ result: JSON.parse(freeText) }); } catch { /* not valid JSON */ }
+          try { return res.json({ result: JSON.parse(extractJSON(freeText)) }); } catch { /* not valid JSON */ }
         }
         const fallbackAnswer = getMockOutreach(company, contact, title, industry, painPoint);
         return res.json({ result: fallbackAnswer, isFallback: true });
