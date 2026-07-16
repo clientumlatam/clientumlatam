@@ -20,7 +20,14 @@ export default defineConfig(() => {
         // nzip2 is a huge, separate WordPress/PHP repo copied for reference only —
         // it is not part of this app and watching its ~29k files exhausts the
         // OS file-watcher limit (ENOSPC), crashing the dev server.
-        ignored: ['**/nzip2/**', '**/clientum-exports/**', '**/.cache/**'],
+        ignored: [
+          '**/nzip2/**',
+          '**/clientum-exports/**',
+          '**/.cache/**',
+          '**/.local/**',
+          '**/.replit',
+          '**/attached_assets/**',
+        ],
       },
       // Allow Replit's proxied preview domain
       allowedHosts: true as true,
