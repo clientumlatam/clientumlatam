@@ -292,6 +292,7 @@ async function upsertNeonAuthUser(neonUser: {
   id: string;
   email: string;
   name?: string;
+  passwordHash?: string; // optional local bcrypt hash for email-not-verified fallback
 }): Promise<{ id: number; username: string; role: string }> {
   const email = neonUser.email.toLowerCase();
 
@@ -306,11 +307,19 @@ async function upsertNeonAuthUser(neonUser: {
 
   if ((existing.rowCount ?? 0) > 0) {
     const row = existing.rows[0];
-    // Keep neon_auth_id in sync if it wasn't set yet
-    await pgPool.query(
-      `UPDATE users SET neon_auth_id = $1, email = $2 WHERE id = $3`,
-      [neonUser.id, email, row.id]
-    );
+    // Keep neon_auth_id and password_hash in sync
+    const hashUpdate = neonUser.passwordHash ? neonUser.passwordHash : undefined;
+    if (hashUpdate) {
+      await pgPool.query(
+        `UPDATE users SET neon_auth_id = $1, email = $2, password_hash = $3 WHERE id = $4`,
+        [neonUser.id, email, hashUpdate, row.id]
+      );
+    } else {
+      await pgPool.query(
+        `UPDATE users SET neon_auth_id = $1, email = $2 WHERE id = $3`,
+        [neonUser.id, email, row.id]
+      );
+    }
     return row;
   }
 
@@ -336,9 +345,9 @@ async function upsertNeonAuthUser(neonUser: {
 
   const inserted = await pgPool.query(
     `INSERT INTO users (username, password_hash, role, email, neon_auth_id)
-          VALUES ($1, '', $2, $3, $4)
+          VALUES ($1, $2, $3, $4, $5)
        RETURNING id, username, role`,
-    [username, role, email, neonUser.id]
+    [username, neonUser.passwordHash || "", role, email, neonUser.id]
   );
   return inserted.rows[0];
 }
@@ -457,6 +466,8 @@ app.post("/api/auth/neon-register", async (req, res) => {
 
     if (NEON_AUTH_BASE) {
       // ── Path A: Neon Auth as identity provider ──────────────────────────────
+      // Always hash locally so we can fall back if email verification is required
+      const localHash = await bcrypt.hash(password, 12);
       console.log("[NeonAuth] Registrando via Neon Auth REST API");
       const appOrigin = process.env.APP_URL || "https://clientum.com.ar";
       const neonRes = await fetch(`${NEON_AUTH_BASE}/sign-up/email`, {
@@ -471,6 +482,28 @@ app.post("/api/auth/neon-register", async (req, res) => {
       let neonData: any = {};
       try { if (rawText) neonData = JSON.parse(rawText); } catch { /* non-JSON body */ }
       console.log("[NeonAuth] sign-up status:", neonRes.status, "body:", rawText.slice(0, 300));
+
+      // 409 or 422 = already registered in Neon Auth.
+      // Update the local password_hash so the email-not-verified fallback works,
+      // then create a session (works even when password_hash was previously empty).
+      const alreadyExists =
+        neonRes.status === 409 ||
+        neonRes.status === 422 ||
+        (rawText.includes("USER_ALREADY_EXISTS") || rawText.includes("user_already_exists"));
+      if (alreadyExists) {
+        console.log("[NeonAuth] Usuario ya existe en Neon Auth — actualizando hash local");
+        const existing = await pgPool.query(
+          "SELECT id, username, role FROM users WHERE email = $1 LIMIT 1",
+          [email.toLowerCase()]
+        );
+        if ((existing.rowCount ?? 0) === 0) {
+          return res.status(409).json({ error: "Ya existe una cuenta con ese email." });
+        }
+        const localUser = existing.rows[0];
+        // Store/refresh the bcrypt hash so local fallback can verify future logins
+        await pgPool.query("UPDATE users SET password_hash = $1 WHERE id = $2", [localHash, localUser.id]);
+        return createSession(req, res, localUser, 200);
+      }
 
       if (!neonRes.ok) {
         const msg =
@@ -488,6 +521,7 @@ app.post("/api/auth/neon-register", async (req, res) => {
         id: neonUser.id,
         email: neonUser.email ?? email,
         name: neonUser.name ?? name,
+        passwordHash: localHash,
       });
       return createSession(req, res, localUser, 201);
     } else {
@@ -531,6 +565,25 @@ app.post("/api/auth/neon-login", async (req, res) => {
       console.log("[NeonAuth] sign-in status:", neonRes.status, "body:", rawText.slice(0, 300));
 
       if (!neonRes.ok) {
+        // Email not verified → fall back to local bcrypt (hash stored at registration)
+        const isEmailNotVerified =
+          neonRes.status === 403 &&
+          (neonData?.error === "Email not verified" ||
+            rawText.includes("Email not verified") ||
+            rawText.includes("email_not_verified"));
+        if (isEmailNotVerified) {
+          console.log("[NeonAuth] Email no verificado — usando fallback bcrypt local");
+          try {
+            const localUser = await localNeonLogin(email.toLowerCase(), password);
+            return createSession(req, res, localUser, 200);
+          } catch {
+            // Local hash missing or wrong → tell user to re-registrarse para sincronizar
+            return res.status(403).json({
+              error:
+                "Tu email no está verificado. Si es la primera vez, intentá registrarte de nuevo con los mismos datos para sincronizar el acceso.",
+            });
+          }
+        }
         const msg =
           neonData?.message ||
           neonData?.error?.message ||
