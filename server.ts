@@ -1,3 +1,4 @@
+/// <reference lib="dom" />
 import express from "express";
 import path from "path";
 import dotenv from "dotenv";
@@ -6,10 +7,18 @@ import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import bcrypt from "bcryptjs";
 import { Pool } from "pg";
+import nodemailer from "nodemailer";
+import crypto from "crypto";
 
 dotenv.config();
 
 const app = express();
+// Trust Vercel's (and any other reverse proxy's) X-Forwarded-* headers so
+// that req.secure, req.ip, and cookie Secure/SameSite behaviour work
+// correctly in production. Without this, Express sees every request as HTTP
+// even though the actual browser connection is HTTPS, which prevents Secure
+// cookies from being set and silently breaks sessions behind Vercel's edge.
+app.set("trust proxy", 1);
 app.use(express.json({ limit: "10mb" }));
 
 // This app only ever serves /api/* on Vercel (see vercel.json routes) — the
@@ -105,6 +114,85 @@ app.use(
 );
 
 const USERNAME_RE = /^[a-zA-Z0-9_.-]{3,32}$/;
+
+// ---------------------------------------------------------------------------
+// Email — Gmail SMTP via nodemailer
+// ---------------------------------------------------------------------------
+function createMailTransport() {
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  if (!user || !pass) return null;
+  return nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false, // STARTTLS
+    auth: { user, pass },
+  });
+}
+
+async function sendPasswordResetEmail(toEmail: string, token: string): Promise<void> {
+  const transport = createMailTransport();
+  if (!transport) throw new Error("SMTP no configurado (SMTP_USER / SMTP_PASS faltantes).");
+
+  const baseUrl = process.env.APP_URL?.replace(/\/$/, "") || "https://clientum.com.ar";
+  const resetUrl = `${baseUrl}?reset_token=${token}`;
+
+  await transport.sendMail({
+    from: `"Clientum CRM" <${process.env.SMTP_USER}>`,
+    to: toEmail,
+    subject: "Restablecer contraseña — Clientum CRM",
+    html: `
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#0B131D;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0B131D;padding:48px 16px;">
+    <tr><td align="center">
+      <table width="480" cellpadding="0" cellspacing="0" style="background:#111C28;border:1px solid #1A2733;border-radius:16px;overflow:hidden;">
+        <tr>
+          <td style="background:#10B981;height:4px;"></td>
+        </tr>
+        <tr>
+          <td style="padding:40px 40px 32px;">
+            <p style="margin:0 0 8px;font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">Clientum CRM</p>
+            <p style="margin:0 0 28px;font-size:12px;color:#4B5563;font-family:monospace;letter-spacing:2px;text-transform:uppercase;">Restablecer contraseña</p>
+            <p style="margin:0 0 20px;font-size:15px;color:#9CA3AF;line-height:1.6;">
+              Recibimos una solicitud para restablecer la contraseña de tu cuenta.<br>
+              Hacé clic en el botón para crear una nueva contraseña. El enlace es válido por <strong style="color:#e5e7eb;">1 hora</strong>.
+            </p>
+            <table cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
+              <tr>
+                <td style="background:#10B981;border-radius:10px;">
+                  <a href="${resetUrl}" style="display:inline-block;padding:14px 32px;font-size:14px;font-weight:700;color:#ffffff;text-decoration:none;letter-spacing:0.3px;">
+                    Restablecer contraseña →
+                  </a>
+                </td>
+              </tr>
+            </table>
+            <p style="margin:0 0 8px;font-size:12px;color:#4B5563;">Si no podés hacer clic, copiá este enlace:</p>
+            <p style="margin:0 0 28px;font-size:12px;color:#6B7280;word-break:break-all;">${resetUrl}</p>
+            <hr style="border:none;border-top:1px solid #1A2733;margin:0 0 20px;">
+            <p style="margin:0;font-size:12px;color:#374151;line-height:1.6;">
+              Si no solicitaste restablecer tu contraseña, podés ignorar este correo. Tu contraseña actual sigue siendo válida.<br>
+              <strong style="color:#4B5563;">Este enlace expira en 1 hora.</strong>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:16px 40px;background:#0B131D;">
+            <p style="margin:0;font-size:11px;color:#374151;text-align:center;">
+              Clientum CRM · Patagonia, Argentina · <a href="https://clientum.com.ar" style="color:#4B5563;">clientum.com.ar</a>
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+    text: `Restablecer contraseña — Clientum CRM\n\nHacé clic en el siguiente enlace para crear una nueva contraseña (válido por 1 hora):\n\n${resetUrl}\n\nSi no solicitaste este cambio, podés ignorar este correo.`,
+  });
+}
 
 function requireAuth(req: express.Request, res: express.Response, next: express.NextFunction) {
   if (!req.session.userId) {
@@ -276,6 +364,42 @@ app.post("/api/auth/logout", (req, res) => {
     res.clearCookie("connect.sid");
     return res.json({ ok: true });
   });
+});
+
+// POST /api/auth/change-password — authenticated users only
+app.post("/api/auth/change-password", requireAuth, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body || {};
+    if (typeof currentPassword !== "string" || typeof newPassword !== "string") {
+      return res.status(400).json({ error: "Se requieren contraseña actual y nueva." });
+    }
+    if (newPassword.length < 8) {
+      return res.status(400).json({ error: "La nueva contraseña debe tener al menos 8 caracteres." });
+    }
+
+    const userId = req.session.userId!;
+    const result = await pgPool.query(
+      "SELECT password_hash FROM users WHERE id = $1",
+      [userId]
+    );
+    const user = result.rows[0];
+    if (!user) {
+      return res.status(404).json({ error: "Usuario no encontrado." });
+    }
+
+    const isValid = await bcrypt.compare(currentPassword, user.password_hash || "");
+    if (!isValid) {
+      return res.status(401).json({ error: "La contraseña actual es incorrecta." });
+    }
+
+    const newHash = await bcrypt.hash(newPassword, 12);
+    await pgPool.query("UPDATE users SET password_hash = $1 WHERE id = $2", [newHash, userId]);
+
+    return res.json({ ok: true });
+  } catch (error: any) {
+    console.error("[Auth] Error en change-password:", error.message);
+    return res.status(500).json({ error: "Ocurrió un error al cambiar la contraseña." });
+  }
 });
 
 // ─── NEON AUTH — email-based register / login ───────────────────────────────
@@ -611,8 +735,23 @@ app.post("/api/auth/neon-login", async (req, res) => {
       if (!neonRes.ok) {
         const isEmailNotVerified = neonRes.status === 403 && rawText.includes("EMAIL_NOT_VERIFIED");
         if (isEmailNotVerified) {
+          // The user exists in Neon Auth but their email isn't verified.
+          // If they exist in our local DB we trust them — save the bcrypt hash
+          // so future logins go through the fast local path and bypass Neon Auth.
+          const existingRow = await pgPool.query(
+            "SELECT id, username, role FROM users WHERE email = $1 LIMIT 1",
+            [emailLower]
+          );
+          if ((existingRow.rowCount ?? 0) > 0) {
+            const localUser = existingRow.rows[0];
+            const newHash = await bcrypt.hash(password, 12);
+            await pgPool.query("UPDATE users SET password_hash = $1 WHERE id = $2", [newHash, localUser.id]);
+            console.log("[Auth] EMAIL_NOT_VERIFIED — hash local guardado, sesión creada para", emailLower);
+            return createSession(req, res, { id: localUser.id, username: localUser.username, role: localUser.role }, 200);
+          }
+          // User not in our DB at all — they need to register
           return res.status(403).json({
-            error: "Registrate primero con el botón 'Registrarse' para sincronizar el acceso.",
+            error: "Tu email no está verificado. Usá '¿Olvidaste tu contraseña?' para configurar el acceso.",
           });
         }
         const msg = neonData?.message || neonData?.error || rawText.slice(0, 200) || "Email o contraseña incorrectos.";
@@ -631,6 +770,88 @@ app.post("/api/auth/neon-login", async (req, res) => {
     return res
       .status(status)
       .json({ error: error.message || "Ocurrió un error al iniciar sesión." });
+  }
+});
+
+// POST /api/auth/forgot-password
+// Body: { email }
+// Generates a secure reset token, stores a bcrypt hash, and sends an email.
+app.post("/api/auth/forgot-password", async (req, res) => {
+  const { email } = req.body ?? {};
+  if (typeof email !== "string" || !email.includes("@")) {
+    return res.status(400).json({ error: "Email inválido." });
+  }
+  try {
+    const userRes = await pgPool.query(
+      "SELECT id, email FROM users WHERE LOWER(email) = LOWER($1)",
+      [email.trim()]
+    );
+    // Always respond OK — never reveal if the email exists
+    if (!userRes.rows[0]) {
+      return res.json({ ok: true, message: "Si el email existe, recibirás un correo en breve." });
+    }
+    const userId = userRes.rows[0].id;
+
+    // Invalidate any previous unused tokens for this user
+    await pgPool.query(
+      "UPDATE password_reset_tokens SET used_at = NOW() WHERE user_id = $1 AND used_at IS NULL",
+      [userId]
+    );
+
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
+
+    await pgPool.query(
+      `INSERT INTO password_reset_tokens (user_id, token_hash, expires_at)
+       VALUES ($1, $2, NOW() + INTERVAL '1 hour')`,
+      [userId, tokenHash]
+    );
+
+    await sendPasswordResetEmail(email.trim(), rawToken);
+    console.log(`[Auth] Token de reseteo enviado a ${email}`);
+    return res.json({ ok: true, message: "Si el email existe, recibirás un correo en breve." });
+  } catch (err: any) {
+    console.error("[Auth] Error en forgot-password:", err.message);
+    return res.status(500).json({ error: "Error al procesar la solicitud. Intentá de nuevo." });
+  }
+});
+
+// POST /api/auth/reset-password
+// Body: { token, newPassword }
+app.post("/api/auth/reset-password", async (req, res) => {
+  const { token, newPassword } = req.body ?? {};
+  if (typeof token !== "string" || token.length < 32) {
+    return res.status(400).json({ error: "Token inválido." });
+  }
+  if (typeof newPassword !== "string" || newPassword.length < 8) {
+    return res.status(400).json({ error: "La contraseña debe tener al menos 8 caracteres." });
+  }
+  try {
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+    const tokenRes = await pgPool.query(
+      `SELECT id, user_id FROM password_reset_tokens
+       WHERE token_hash = $1 AND expires_at > NOW() AND used_at IS NULL`,
+      [tokenHash]
+    );
+    if (!tokenRes.rows[0]) {
+      return res.status(400).json({ error: "El enlace expiró o ya fue usado. Solicitá uno nuevo." });
+    }
+    const { id: tokenId, user_id: userId } = tokenRes.rows[0];
+
+    const hash = await bcrypt.hash(newPassword, 12);
+    await pgPool.query("UPDATE users SET password_hash = $1 WHERE id = $2", [hash, userId]);
+    await pgPool.query(
+      "UPDATE password_reset_tokens SET used_at = NOW() WHERE id = $1",
+      [tokenId]
+    );
+    // Destroy any active sessions for this user (force re-login with new password)
+    await pgPool.query("DELETE FROM session WHERE sess::text LIKE $1", [`%"userId":${userId}%`]);
+
+    console.log(`[Auth] Contraseña restablecida para user_id=${userId}`);
+    return res.json({ ok: true, message: "Contraseña actualizada. Ya podés iniciar sesión." });
+  } catch (err: any) {
+    console.error("[Auth] Error en reset-password:", err.message);
+    return res.status(500).json({ error: "Error al restablecer la contraseña." });
   }
 });
 
@@ -2639,6 +2860,22 @@ async function initUsersTable() {
   console.log("[Auth] Tabla users lista.");
 }
 
+async function initPasswordResetTokensTable() {
+  await pgPool.query(`
+    CREATE TABLE IF NOT EXISTS password_reset_tokens (
+      id          SERIAL PRIMARY KEY,
+      user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      token_hash  TEXT NOT NULL UNIQUE,
+      expires_at  TIMESTAMP NOT NULL,
+      used_at     TIMESTAMP,
+      created_at  TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_prt_token_hash ON password_reset_tokens(token_hash);
+    CREATE INDEX IF NOT EXISTS idx_prt_user_id    ON password_reset_tokens(user_id);
+  `);
+  console.log("[Auth] Tabla password_reset_tokens lista.");
+}
+
 // ---------------------------------------------------------------------------
 // Chatbot leads — captura real de leads desde el Asesor Comercial IA
 // (ChatbotSim), a diferencia de santi_leads que son prospectos generados
@@ -3098,6 +3335,7 @@ async function setupServer() {
 
   // Init DB tables after port is bound — failures here won't block responses.
   await initUsersTable();
+  await initPasswordResetTokensTable();
   await initChatbotLeadsTable();
   await initSantiTables();
 
