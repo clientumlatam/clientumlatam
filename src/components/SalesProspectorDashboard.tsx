@@ -6,6 +6,9 @@ import CrmFullApp from "./crm-full/CrmFullApp";
 import SidebarEditor from "./SidebarEditor";
 import AsistenteIA from "./AsistenteIA";
 import OrquestadorIA from "./OrquestadorIA";
+import WpSetup from "./wordpress/WpSetup";
+import WpModulos from "./wordpress/WpModulos";
+import CrmFullLeads from "./crm-full/CrmFullLeads";
 import BrochurePreview from "./BrochurePreview";
 import {
   Users,
@@ -186,7 +189,8 @@ export default function SalesProspectorDashboard({
     "pipeline" | "icp" | "research" | "meddic" | "outreach" |
     "products" | "sellers" | "branches" | "conversations" | "bot" |
     "brochure" | "config" | "pages" | "ai" | "activity" | "quickcreate" |
-    "orquestador"
+    "orquestador" |
+    "wp-leads" | "wp-setup" | "wp-modulos"
   >("config");
   // "CRM Completo" reorganizado: barra horizontal de categorías (arriba) + menú vertical (izquierda)
   // Single unified navigation, organized into task-based groups so every AI Client
@@ -243,6 +247,16 @@ export default function SalesProspectorDashboard({
         { id: "pages", label: "Contenido", icon: Edit3 },
         { id: "config", label: "Configuración", icon: Sliders },
         { id: "ai", label: "Copiloto IA", icon: Sparkles },
+      ],
+    },
+    {
+      id: "wordpress",
+      label: "WordPress",
+      icon: Globe,
+      items: [
+        { id: "wp-leads",   label: "Leads del Chatbot",   desc: "Leads capturados por el plugin", icon: MessageCircle },
+        { id: "wp-setup",   label: "Configuración",        desc: "Webhook y setup del plugin",     icon: Key },
+        { id: "wp-modulos", label: "Módulos del Plugin",   desc: "AI Marketing Expert v2",         icon: Globe },
       ],
     },
     {
@@ -3208,6 +3222,27 @@ export default function SalesProspectorDashboard({
           </div>
         </div>
       )}
+      {/* TAB: WORDPRESS — Leads del Chatbot */}
+      {activeTab === "wp-leads" && (
+        <div className="flex-1 overflow-y-auto">
+          <CrmFullLeads />
+        </div>
+      )}
+
+      {/* TAB: WORDPRESS — Configuración del Plugin */}
+      {activeTab === "wp-setup" && (
+        <div className="flex-1 overflow-y-auto">
+          <WpSetup />
+        </div>
+      )}
+
+      {/* TAB: WORDPRESS — Módulos del Plugin */}
+      {activeTab === "wp-modulos" && (
+        <div className="flex-1 overflow-y-auto">
+          <WpModulos />
+        </div>
+      )}
+
       {/* TAB: ORQUESTADOR IA */}
       {activeTab === "orquestador" && (
         <div className="flex-1 -m-6 flex flex-col overflow-hidden">
