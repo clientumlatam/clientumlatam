@@ -5,3 +5,4 @@
 - [Vercel cookie cache stripping](vercel-cookie-cache-stripping.md) — Vercel's default Cache-Control lets its edge CDN strip Set-Cookie; API responses must force `Cache-Control: no-store`.
 - [Clientum arquitectura completa](clientum-architecture.md) — stack, rutas, DB schema, env vars, flujo dev→Vercel; ver docs/ARCHITECTURE.md en el repo.
 - [Public repo secret leak](public-repo-secret-leak.md) — gitignored attached_assets isn't enough; tracked root files leaked real keys to the public GitHub origin.
+- [Neon Auth proxy integration](neon-auth-proxy.md) — SDK blocked by firewall; proxy via Express backend with Origin header required; fallback to local bcrypt if URL not set.
