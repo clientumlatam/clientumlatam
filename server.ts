@@ -13,6 +13,12 @@ import crypto from "crypto";
 dotenv.config();
 
 const app = express();
+// Trust Vercel's (and any other reverse proxy's) X-Forwarded-* headers so
+// that req.secure, req.ip, and cookie Secure/SameSite behaviour work
+// correctly in production. Without this, Express sees every request as HTTP
+// even though the actual browser connection is HTTPS, which prevents Secure
+// cookies from being set and silently breaks sessions behind Vercel's edge.
+app.set("trust proxy", 1);
 app.use(express.json({ limit: "10mb" }));
 
 // This app only ever serves /api/* on Vercel (see vercel.json routes) — the
