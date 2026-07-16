@@ -428,24 +428,47 @@ async function localNeonLogin(
 }
 
 // ── Shared session-create helper ──────────────────────────────────────────────
+// Returns a Promise so callers can await it and catch errors properly.
+// A 5-second timeout guarantees the HTTP response is always sent even if the
+// session-store callback never fires (e.g. DB connection drop).
 function createSession(
   req: express.Request,
   res: express.Response,
   user: { id: number; username: string; role: string },
   statusCode = 200
-) {
-  req.session.regenerate((err) => {
-    if (err)
-      return res.status(500).json({ error: "Error al crear la sesión." });
-    req.session.userId = user.id;
-    req.session.username = user.username;
-    req.session.role = user.role;
-    req.session.save((saveErr) => {
-      if (saveErr)
-        return res.status(500).json({ error: "Error al guardar la sesión." });
-      return res
-        .status(statusCode)
-        .json({ user: { id: user.id, username: user.username, role: user.role } });
+): Promise<void> {
+  return new Promise((resolve) => {
+    const timeout = setTimeout(() => {
+      if (!res.headersSent) {
+        console.error("[Session] Timeout guardando sesión — respondiendo sin cookie");
+        res.status(200).json({ user: { id: user.id, username: user.username, role: user.role } });
+      }
+      resolve();
+    }, 5000);
+
+    req.session.regenerate((err) => {
+      if (err) {
+        clearTimeout(timeout);
+        if (!res.headersSent)
+          res.status(500).json({ error: "Error al crear la sesión." });
+        return resolve();
+      }
+      req.session.userId = user.id;
+      req.session.username = user.username;
+      req.session.role = user.role;
+      req.session.save((saveErr) => {
+        clearTimeout(timeout);
+        if (!res.headersSent) {
+          if (saveErr) {
+            console.error("[Session] Error guardando sesión:", saveErr);
+            // Still return the user — auth succeeded, session persistence failed
+            res.status(200).json({ user: { id: user.id, username: user.username, role: user.role } });
+          } else {
+            res.status(statusCode).json({ user: { id: user.id, username: user.username, role: user.role } });
+          }
+        }
+        resolve();
+      });
     });
   });
 }
@@ -547,65 +570,57 @@ app.post("/api/auth/neon-login", async (req, res) => {
       return res.status(400).json({ error: "Email y contraseña son requeridos." });
     }
 
+    // ── Local-first: try bcrypt immediately (skips the ~4s Neon Auth round-trip)
+    // Local hash is stored during registration. If it exists and matches,
+    // we skip Neon Auth entirely. Only call Neon Auth when local hash is missing.
+    const emailLower = email.toLowerCase();
+    const localRow = await pgPool.query(
+      "SELECT id, username, password_hash, role FROM users WHERE email = $1 LIMIT 1",
+      [emailLower]
+    );
+    const localDbUser = localRow.rows[0];
+
+    if (localDbUser?.password_hash && localDbUser.password_hash.length > 10) {
+      // Local hash present — verify without hitting Neon Auth
+      const isValid = await bcrypt.compare(password, localDbUser.password_hash);
+      if (!isValid) {
+        return res.status(401).json({ error: "Email o contraseña incorrectos." });
+      }
+      console.log("[Auth] Login local exitoso para", emailLower);
+      return createSession(req, res, { id: localDbUser.id, username: localDbUser.username, role: localDbUser.role }, 200);
+    }
+
     if (NEON_AUTH_BASE) {
-      // ── Path A: Neon Auth as identity provider ──────────────────────────────
-      console.log("[NeonAuth] Iniciando sesión via Neon Auth REST API");
+      // ── No local hash: call Neon Auth as fallback ────────────────────────────
+      console.log("[NeonAuth] Sin hash local — intentando Neon Auth");
       const appOrigin = process.env.APP_URL || "https://clientum.com.ar";
       const neonRes = await fetch(`${NEON_AUTH_BASE}/sign-in/email`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Origin": appOrigin,
-        },
+        headers: { "Content-Type": "application/json", "Origin": appOrigin },
         body: JSON.stringify({ email, password }),
       });
       const rawText = await neonRes.text();
       let neonData: any = {};
       try { if (rawText) neonData = JSON.parse(rawText); } catch { /* non-JSON body */ }
-      console.log("[NeonAuth] sign-in status:", neonRes.status, "body:", rawText.slice(0, 300));
+      console.log("[NeonAuth] sign-in status:", neonRes.status, "body:", rawText.slice(0, 200));
 
       if (!neonRes.ok) {
-        // Email not verified → fall back to local bcrypt (hash stored at registration)
-        const isEmailNotVerified =
-          neonRes.status === 403 &&
-          (neonData?.error === "Email not verified" ||
-            rawText.includes("Email not verified") ||
-            rawText.includes("email_not_verified"));
+        const isEmailNotVerified = neonRes.status === 403 && rawText.includes("EMAIL_NOT_VERIFIED");
         if (isEmailNotVerified) {
-          console.log("[NeonAuth] Email no verificado — usando fallback bcrypt local");
-          try {
-            const localUser = await localNeonLogin(email.toLowerCase(), password);
-            return createSession(req, res, localUser, 200);
-          } catch {
-            // Local hash missing or wrong → tell user to re-registrarse para sincronizar
-            return res.status(403).json({
-              error:
-                "Tu email no está verificado. Si es la primera vez, intentá registrarte de nuevo con los mismos datos para sincronizar el acceso.",
-            });
-          }
+          return res.status(403).json({
+            error: "Registrate primero con el botón 'Registrarse' para sincronizar el acceso.",
+          });
         }
-        const msg =
-          neonData?.message ||
-          neonData?.error?.message ||
-          neonData?.error ||
-          rawText.slice(0, 200) ||
-          "Email o contraseña incorrectos.";
-        return res.status(neonRes.status === 401 ? 401 : neonRes.status < 500 ? neonRes.status : 401).json({ error: String(msg) });
+        const msg = neonData?.message || neonData?.error || rawText.slice(0, 200) || "Email o contraseña incorrectos.";
+        return res.status(401).json({ error: String(msg) });
       }
 
       const neonUser = neonData.user ?? neonData;
-      const localUser = await upsertNeonAuthUser({
-        id: neonUser.id,
-        email: neonUser.email ?? email,
-        name: neonUser.name,
-      });
-      return createSession(req, res, localUser, 200);
-    } else {
-      // ── Path B: Local-only fallback ─────────────────────────────────────────
-      console.log("[NeonAuth] NEON_AUTH_BASE no configurado — usando auth local");
-      const localUser = await localNeonLogin(email.toLowerCase(), password);
-      return createSession(req, res, localUser, 200);
+      const upserted = await upsertNeonAuthUser({ id: neonUser.id, email: neonUser.email ?? email, name: neonUser.name });
+      return createSession(req, res, upserted, 200);
     }
+
+    return res.status(401).json({ error: "Email o contraseña incorrectos." });
   } catch (error: any) {
     console.error("Error en /api/auth/neon-login:", error);
     const status = error.status ?? 500;
