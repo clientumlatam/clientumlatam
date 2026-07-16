@@ -359,6 +359,42 @@ app.post("/api/auth/logout", (req, res) => {
   });
 });
 
+// POST /api/auth/change-password — authenticated users only
+app.post("/api/auth/change-password", requireAuth, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body || {};
+    if (typeof currentPassword !== "string" || typeof newPassword !== "string") {
+      return res.status(400).json({ error: "Se requieren contraseña actual y nueva." });
+    }
+    if (newPassword.length < 8) {
+      return res.status(400).json({ error: "La nueva contraseña debe tener al menos 8 caracteres." });
+    }
+
+    const userId = req.session.userId!;
+    const result = await pgPool.query(
+      "SELECT password_hash FROM users WHERE id = $1",
+      [userId]
+    );
+    const user = result.rows[0];
+    if (!user) {
+      return res.status(404).json({ error: "Usuario no encontrado." });
+    }
+
+    const isValid = await bcrypt.compare(currentPassword, user.password_hash || "");
+    if (!isValid) {
+      return res.status(401).json({ error: "La contraseña actual es incorrecta." });
+    }
+
+    const newHash = await bcrypt.hash(newPassword, 12);
+    await pgPool.query("UPDATE users SET password_hash = $1 WHERE id = $2", [newHash, userId]);
+
+    return res.json({ ok: true });
+  } catch (error: any) {
+    console.error("[Auth] Error en change-password:", error.message);
+    return res.status(500).json({ error: "Ocurrió un error al cambiar la contraseña." });
+  }
+});
+
 // ─── NEON AUTH — email-based register / login ───────────────────────────────
 // These endpoints proxy sign-up / sign-in to the actual Neon Auth (Better Auth)
 // REST API server-side (avoids CORS, no SDK needed), then upsert the identity

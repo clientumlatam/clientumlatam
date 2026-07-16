@@ -1,13 +1,41 @@
 import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import PublicWebsite from "./components/PublicWebsite";
 import SalesProspectorDashboard from "./components/SalesProspectorDashboard";
 import NeonAuthGate from "./components/NeonAuthGate";
+import AccountView from "./components/AccountView";
 import { DEFAULT_BROCHURE_DATA, INDUSTRY_PRESETS } from "./data";
 import { BrochureData, CustomTemplate } from "./types";
 import { exportBrochureToPDF } from "./utils/pdfGenerator";
 
 export default function App() {
-  const [viewMode, setViewMode] = useState<"website" | "prospector">("website");
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Derive viewMode from URL: /auth → auth gate, /account → account view, rest → website
+  const pathToMode = (p: string): "website" | "prospector" | "account" | "auth" => {
+    if (p === "/auth") return "auth";
+    if (p === "/account") return "account";
+    if (p.startsWith("/prospector") || p.startsWith("/crm")) return "prospector";
+    return "website";
+  };
+
+  const [viewMode, setViewMode] = useState<"website" | "prospector" | "account" | "auth">(
+    () => pathToMode(location.pathname)
+  );
+
+  // Keep URL in sync when viewMode is changed programmatically
+  const goTo = (mode: "website" | "prospector" | "account" | "auth") => {
+    setViewMode(mode);
+    const path = mode === "auth" ? "/auth" : mode === "account" ? "/account" : mode === "prospector" ? "/prospector" : "/";
+    if (location.pathname !== path) navigate(path, { replace: false });
+  };
+
+  // Sync viewMode if the user navigates via browser back/forward
+  useEffect(() => {
+    const mode = pathToMode(location.pathname);
+    setViewMode(mode);
+  }, [location.pathname]);
 
   // Auth state for the CRM/dashboard section only. The public website stays open.
   const [authUser, setAuthUser] = useState<string | null>(null);
@@ -258,6 +286,54 @@ export default function App() {
     }
   };
 
+  // /auth route — standalone auth gate (not nested in prospector flow)
+  if (viewMode === "auth") {
+    if (authUser) {
+      // Already logged in — redirect to account
+      return (
+        <AccountView
+          username={authUser}
+          role={authRole || "user"}
+          onLogout={handleLogout}
+          onBack={() => goTo("prospector")}
+        />
+      );
+    }
+    return (
+      <NeonAuthGate
+        onAuthenticated={(username, role) => {
+          setAuthUser(username);
+          setAuthRole(role || "user");
+          goTo("prospector");
+        }}
+      />
+    );
+  }
+
+  // /account route
+  if (viewMode === "account") {
+    if (!authChecked) {
+      return (
+        <div className="min-h-screen w-full flex items-center justify-center bg-slate-950">
+          <div className="text-slate-500 text-sm">Cargando…</div>
+        </div>
+      );
+    }
+    if (!authUser) {
+      // Not logged in — redirect to auth
+      goTo("auth");
+      return null;
+    }
+    return (
+      <AccountView
+        username={authUser}
+        role={authRole || "user"}
+        onLogout={handleLogout}
+        onBack={() => goTo("prospector")}
+      />
+    );
+  }
+
   if (viewMode === "prospector") {
     if (!authChecked) {
       return (
@@ -285,7 +361,7 @@ export default function App() {
         currentUserRole={authRole || "user"}
         brochureData={brochureData}
         hidePrices={hidePrices}
-        onBack={() => setViewMode("website")}
+        onBack={() => goTo("website")}
         onChangeDeals={(newDeals) => {
           setBrochureData((prev) => ({
             ...prev,
@@ -319,31 +395,16 @@ export default function App() {
     );
   }
 
-  if (viewMode === "website") {
-    return (
-      <PublicWebsite
-        onBackToEditor={() => setViewMode("prospector")}
-        brochureData={brochureData}
-        colorTheme={colorTheme}
-        contactInfo={contactInfo}
-        hidePrices={hidePrices}
-        authUser={authUser}
-        onOpenLogin={() => setViewMode("prospector")}
-        onLogout={handleLogout}
-      />
-    );
-  }
-
-  // Fallback: should not normally be reached since viewMode is only "website" | "prospector".
+  // Default: website (viewMode === "website" or any other)
   return (
     <PublicWebsite
-      onBackToEditor={() => setViewMode("prospector")}
+      onBackToEditor={() => goTo("prospector")}
       brochureData={brochureData}
       colorTheme={colorTheme}
       contactInfo={contactInfo}
       hidePrices={hidePrices}
       authUser={authUser}
-      onOpenLogin={() => setViewMode("prospector")}
+      onOpenLogin={() => goTo("prospector")}
       onLogout={handleLogout}
     />
   );
