@@ -25,6 +25,18 @@
       "skillPath": "skills/ai-elements/SKILL.md",
       "computedHash": "6d7ccc65b98adb04d6c47632746dbfea55528903de9b027f6b39b80983d5aa55"
     },
+    "ai-image-generation": {
+      "source": "skill-zero/s",
+      "sourceType": "github",
+      "skillPath": "tools/image/ai-image-generation/SKILL.md",
+      "computedHash": "0dc5f514bad23f54c7ae8e610d59f6578354f40c8375208fa2e0c6d716bf554b"
+    },
+    "ai-video-generation": {
+      "source": "skill-zero/s",
+      "sourceType": "github",
+      "skillPath": "tools/video/ai-video-generation/SKILL.md",
+      "computedHash": "89778323d1e01c08cb00a94164b343265d378d3f86dc01457db87095c912b489"
+    },
     "audit-website": {
       "source": "squirrelscan/skills",
       "sourceType": "github",
@@ -42,6 +54,12 @@
       "sourceType": "github",
       "skillPath": "skills/browser-use/SKILL.md",
       "computedHash": "8447c4adea0d257a75741e65cba3c2196f6295ac1cd59bcc6c4ec9e380df08a0"
+    },
+    "case-study-writing": {
+      "source": "skill-zero/s",
+      "sourceType": "github",
+      "skillPath": "guides/writing/case-study-writing/SKILL.md",
+      "computedHash": "2824a200ef1abeb36013253965d9c02ad0c18ab2f3849583b8f940b8660871ed"
     },
     "clawdirect": {
       "source": "napoleond/clawdirect",
@@ -73,11 +91,23 @@
       "skillPath": "skills/copywriting/SKILL.md",
       "computedHash": "c8d63b1f77be04fd54981720de65697988810bd28331097dbe0aaf3e166d638a"
     },
+    "customer-persona": {
+      "source": "skill-zero/s",
+      "sourceType": "github",
+      "skillPath": "guides/product/customer-persona/SKILL.md",
+      "computedHash": "c98450cdcb46d16a36b34200585dc60754aa1702d9e9a08d7702ef61306cf44e"
+    },
     "dispatching-parallel-agents": {
       "source": "obra/superpowers",
       "sourceType": "github",
       "skillPath": "skills/dispatching-parallel-agents/SKILL.md",
       "computedHash": "85df55d2235a7623b315dac4bc340c14a37dcdc57c869c80a829e1a53a174689"
+    },
+    "email-best-practices": {
+      "source": "resend/email-best-practices",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "b236488b93e04b475def12bedbf8b1cfce348b88acf67d03341724032c87af8d"
     },
     "find-skills": {
       "source": "vercel-labs/skills",
@@ -102,6 +132,12 @@
       "sourceType": "github",
       "skillPath": "sdk/javascript-sdk/SKILL.md",
       "computedHash": "596c724bba3ebf30f926cd506806f249357655e911b28e98ae2517b0c06e37bc"
+    },
+    "landing-page-design": {
+      "source": "skill-zero/s",
+      "sourceType": "github",
+      "skillPath": "guides/design/landing-page-design/SKILL.md",
+      "computedHash": "19ed3be1e7ee1620ecc3b5801ddcb936add37750f7cadb437afdd7394472f34b"
     },
     "langchain-architecture": {
       "source": "wshobson/agents",
