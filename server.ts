@@ -2493,6 +2493,122 @@ app.post("/api/leads/:id/notes", requireApiKey, async (req, res) => {
   }
 });
 
+// ─── ORQUESTADOR IA ──────────────────────────────────────────────────────────
+app.post("/api/orchestrator", requireAuth, async (req, res) => {
+  try {
+    const { message, history = [] } = req.body;
+    if (!message?.trim()) return res.status(400).json({ error: "message requerido" });
+
+    const ai = getAI();
+    if (!ai) return res.status(503).json({ error: "IA no disponible — GEMINI_API_KEY no configurada" });
+
+    // Gather real-time DB context for the orchestrator
+    const [leadsResult, chatbotResult, pipelineResult] = await Promise.all([
+      pgPool.query(`SELECT status, COUNT(*) as count FROM santi_leads GROUP BY status`),
+      pgPool.query(`SELECT status, COUNT(*) as count FROM chatbot_leads GROUP BY status`),
+      pgPool.query(`
+        SELECT
+          COUNT(*) as total,
+          COALESCE(SUM(amount_ars), 0) as total_ars,
+          COALESCE(AVG(meddic_score), 0) as avg_meddic,
+          COALESCE(AVG(fit_score), 0) as avg_fit
+        FROM santi_leads
+      `),
+    ]);
+
+    const leadsByStatus: Record<string, number> = {};
+    leadsResult.rows.forEach((r: any) => { leadsByStatus[r.status] = parseInt(r.count); });
+
+    const chatbotByStatus: Record<string, number> = {};
+    chatbotResult.rows.forEach((r: any) => { chatbotByStatus[r.status] = parseInt(r.count); });
+
+    const pipeline = pipelineResult.rows[0];
+    const today = new Date().toLocaleDateString("es-AR", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+
+    const contextData = `
+DATOS EN TIEMPO REAL DE CLIENTUM (${today}):
+
+📊 Pipeline SDR Santi (santi_leads):
+- Pendientes (no contactados): ${leadsByStatus["pendiente"] ?? 0}
+- Contactados: ${leadsByStatus["contactado"] ?? 0}
+- Calientes: ${leadsByStatus["caliente"] ?? 0}
+- Tibios: ${leadsByStatus["tibio"] ?? 0}
+- Fríos: ${leadsByStatus["frio"] ?? 0}
+- Agendados: ${leadsByStatus["agendado"] ?? 0}
+- TOTAL LEADS: ${pipeline.total ?? 0}
+- Valor total pipeline: ${Number(pipeline.total_ars ?? 0).toLocaleString("es-AR")} ARS
+- MEDDIC score promedio: ${parseFloat(pipeline.avg_meddic ?? "0").toFixed(1)}/100
+- Fit score promedio: ${parseFloat(pipeline.avg_fit ?? "0").toFixed(1)}/10
+
+💬 Chatbot Leads (asesor IA del sitio web):
+- Nuevos (sin gestionar): ${chatbotByStatus["nuevo"] ?? 0}
+- Contactados: ${chatbotByStatus["contactado"] ?? 0}
+- Calificados: ${chatbotByStatus["calificado"] ?? 0}
+- Descartados: ${chatbotByStatus["descartado"] ?? 0}
+- TOTAL: ${Object.values(chatbotByStatus).reduce((a, b) => a + b, 0)}
+`.trim();
+
+    const systemPrompt = `Sos el Orquestador IA de Clientum, el asistente central de Jonathan (dueño y CEO de Clientum).
+
+Clientum es un CRM B2B con IA orientado a pymes de la Patagonia argentina. Permite descubrir prospectos vía Google Maps y Apify, calificarlos con MEDDIC, generar brochures PDF personalizados por industria, y automatizar el outreach por WhatsApp a través del agente SDR "Santi".
+
+Tu rol: Recibís mensajes de Jonathan y respondés como el agente departamental más apropiado. Tenés acceso a datos reales de la base de datos.
+
+AGENTES DISPONIBLES (elegí el más adecuado según el contexto):
+1. [AGENTE: Ventas] — Pipeline, leads de Santi, estrategia comercial, cierre, MEDDIC scoring, outreach
+2. [AGENTE: Técnico] — Producto, features, bugs, código, infra, DB, deploys, mejoras técnicas
+3. [AGENTE: Marketing] — Contenido, SEO, chatbot leads, campañas, copy, landing pages
+4. [AGENTE: Customer Success] — Clientes activos, onboarding, churn, satisfacción, seguimiento
+5. [AGENTE: Operaciones] — Métricas, reportes ejecutivos, MRR, KPIs, finanzas, análisis
+
+${contextData}
+
+INSTRUCCIONES DE RESPUESTA:
+- Empezá SIEMPRE con [AGENTE: NombreDelAgente] en la primera línea
+- Usá los datos reales de la DB cuando sean relevantes para la respuesta
+- Respondé en español rioplatense, tono directo y profesional
+- Tratá a Jonathan de "vos"
+- Máximo 400 palabras
+- Usá **negrita** para destacar números y puntos clave
+- Al final de la respuesta, sugerí 1-2 próximos pasos concretos si aplica
+- Si el pedido no corresponde a ningún agente específico, respondés vos como Orquestador coordinando
+
+REGLAS:
+- Nunca inventés datos: si no tenés info suficiente, decilo
+- Si Jonathan pide ejecutar algo (mandar mensaje, scraping, etc.), describí qué haría el agente y pedí confirmación
+- Si la pregunta es estratégica y abarca múltiples áreas, coordiná una respuesta integradora como Orquestador`;
+
+    // Build Gemini chat with conversation history
+    const geminiHistory = (history as Array<{role: string; content: string}>)
+      .slice(-12)
+      .map((m) => ({
+        role: m.role === "assistant" ? "model" : "user",
+        parts: [{ text: m.content }],
+      }));
+
+    const chat = ai.chats.create({
+      model: "gemini-2.0-flash",
+      config: { systemInstruction: systemPrompt, temperature: 0.7 },
+      history: geminiHistory,
+    });
+
+    const result = await chat.sendMessage({ message });
+    const rawText = result.text ?? "";
+
+    // Extract agent tag and clean response
+    const agentMatch = rawText.match(/\[AGENTE:\s*([^\]]+)\]/i);
+    const agentName = agentMatch ? agentMatch[1].trim() : "Orquestador";
+    const cleanResponse = rawText.replace(/^\[AGENTE:\s*[^\]]+\]\s*/i, "").trim();
+
+    console.log(`[Orchestrator] Agente: ${agentName} | Tokens: ~${Math.round(rawText.length / 4)}`);
+    res.json({ ok: true, response: cleanResponse, agent: agentName });
+
+  } catch (error: any) {
+    console.error("[Orchestrator Error]:", error);
+    res.status(500).json({ error: error.message || "Error en el orquestador IA" });
+  }
+});
+
 // Configure Vite or Static Files
 async function setupServer() {
   const isProd = process.env.NODE_ENV === "production";

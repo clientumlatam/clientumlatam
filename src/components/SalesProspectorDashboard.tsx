@@ -5,6 +5,7 @@ import { loadDeals, saveDeals, addActivity, DEALS_EVENT } from "../store/sharedS
 import CrmFullApp from "./crm-full/CrmFullApp";
 import SidebarEditor from "./SidebarEditor";
 import AsistenteIA from "./AsistenteIA";
+import OrquestadorIA from "./OrquestadorIA";
 import BrochurePreview from "./BrochurePreview";
 import {
   Users,
@@ -61,7 +62,8 @@ import {
   Clock,
   PlusCircle,
   Activity,
-  Save
+  Save,
+  Network
 } from "lucide-react";
 
 interface SalesProspectorDashboardProps {
@@ -183,7 +185,8 @@ export default function SalesProspectorDashboard({
   const [activeTab, setActiveTab] = useState<
     "pipeline" | "icp" | "research" | "meddic" | "outreach" |
     "products" | "sellers" | "branches" | "conversations" | "bot" |
-    "brochure" | "config" | "pages" | "ai" | "activity" | "quickcreate"
+    "brochure" | "config" | "pages" | "ai" | "activity" | "quickcreate" |
+    "orquestador"
   >("config");
   // "CRM Completo" reorganizado: barra horizontal de categorías (arriba) + menú vertical (izquierda)
   // Single unified navigation, organized into task-based groups so every AI Client
@@ -240,6 +243,14 @@ export default function SalesProspectorDashboard({
         { id: "pages", label: "Contenido", icon: Edit3 },
         { id: "config", label: "Configuración", icon: Sliders },
         { id: "ai", label: "Copiloto IA", icon: Sparkles },
+      ],
+    },
+    {
+      id: "orquestador",
+      label: "Orquestador IA",
+      icon: Network,
+      items: [
+        { id: "orquestador", label: "Orquestador IA", desc: "Chat con todos los agentes", icon: Network },
       ],
     },
   ];
@@ -3197,6 +3208,13 @@ export default function SalesProspectorDashboard({
           </div>
         </div>
       )}
+      {/* TAB: ORQUESTADOR IA */}
+      {activeTab === "orquestador" && (
+        <div className="flex-1 -m-6 flex flex-col overflow-hidden">
+          <OrquestadorIA currentUsername={currentUsername} />
+        </div>
+      )}
+
       {/* Asistente IA — right-side copilot panel */}
       <AsistenteIA
         open={copilotOpen}
