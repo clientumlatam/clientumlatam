@@ -2475,7 +2475,9 @@ Proporciona consejos estratégicos, creativos y prácticos. Usa el voseo argenti
 
         return res.json({ result: response.text?.trim() });
       } catch (geminiError: any) {
-        console.warn("[Gemini Fallback] Quota exhaustion or error in salesAdvisorAnswer. Running local advisory fallback.");
+        console.warn("[Gemini Fallback] Quota exhaustion or error in salesAdvisorAnswer. Trying free AI...");
+        const freeText = await tryFreeAI(prompt);
+        if (freeText) return res.json({ result: freeText });
         const fallbackAdvice = `¡Hola! Como tu consultor de ventas en Clientum para el rubro de "${industry || "tu negocio"}", te recomiendo asegurarte de que cada página tenga un solo objetivo de conversión. Por ejemplo, en la sección de chatbot destaca que 'responde consultas automáticas en 10 segundos'. ¡Eso acelera un 70% el interés inicial!`;
         return res.json({ result: fallbackAdvice, isFallback: true });
       }
