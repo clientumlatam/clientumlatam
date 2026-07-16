@@ -467,15 +467,19 @@ app.post("/api/auth/neon-register", async (req, res) => {
         },
         body: JSON.stringify({ email, password, name: name?.trim() || "" }),
       });
-      const neonData = await neonRes.json() as any;
+      const rawText = await neonRes.text();
+      let neonData: any = {};
+      try { if (rawText) neonData = JSON.parse(rawText); } catch { /* non-JSON body */ }
+      console.log("[NeonAuth] sign-up status:", neonRes.status, "body:", rawText.slice(0, 300));
 
       if (!neonRes.ok) {
         const msg =
           neonData?.message ||
           neonData?.error?.message ||
           neonData?.error ||
+          rawText.slice(0, 200) ||
           "Error al registrarse en Neon Auth.";
-        return res.status(neonRes.status).json({ error: String(msg) });
+        return res.status(neonRes.status < 500 ? neonRes.status : 400).json({ error: String(msg) });
       }
 
       // neonData.user contains { id, email, name, ... }
@@ -521,15 +525,19 @@ app.post("/api/auth/neon-login", async (req, res) => {
         },
         body: JSON.stringify({ email, password }),
       });
-      const neonData = await neonRes.json() as any;
+      const rawText = await neonRes.text();
+      let neonData: any = {};
+      try { if (rawText) neonData = JSON.parse(rawText); } catch { /* non-JSON body */ }
+      console.log("[NeonAuth] sign-in status:", neonRes.status, "body:", rawText.slice(0, 300));
 
       if (!neonRes.ok) {
         const msg =
           neonData?.message ||
           neonData?.error?.message ||
           neonData?.error ||
+          rawText.slice(0, 200) ||
           "Email o contraseña incorrectos.";
-        return res.status(neonRes.status === 401 ? 401 : neonRes.status).json({ error: String(msg) });
+        return res.status(neonRes.status === 401 ? 401 : neonRes.status < 500 ? neonRes.status : 401).json({ error: String(msg) });
       }
 
       const neonUser = neonData.user ?? neonData;
