@@ -1,21 +1,33 @@
 import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate, Navigate } from "react-router-dom";
+import { useLocation, useNavigate, Navigate, Route, Routes } from "react-router-dom";
+import { useAuth } from "@neondatabase/neon-js/auth/react";
+import { AuthView, AccountView as NeonAccountView } from "@neondatabase/neon-js/auth/react/ui";
+import { useParams } from "react-router-dom";
 import PublicWebsite from "./components/PublicWebsite";
 import SalesProspectorDashboard from "./components/SalesProspectorDashboard";
-import NeonAuthGate from "./components/NeonAuthGate";
-import AccountView from "./components/AccountView";
 import { DEFAULT_BROCHURE_DATA, INDUSTRY_PRESETS } from "./data";
 import { BrochureData, CustomTemplate } from "./types";
 import { exportBrochureToPDF } from "./utils/pdfGenerator";
+
+// ── SDK-style page wrappers (thin, match Neon Auth docs) ─────────────────────
+function AuthPage() {
+  const { pathname } = useParams<{ pathname: string }>();
+  return <AuthView pathname={pathname} />;
+}
+
+function AccountPage() {
+  const { pathname } = useParams<{ pathname: string }>();
+  return <NeonAccountView pathname={pathname} />;
+}
 
 export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Derive viewMode from URL: /auth → auth gate, /account → account view, rest → website
+  // Derive viewMode from URL
   const pathToMode = (p: string): "website" | "prospector" | "account" | "auth" => {
-    if (p === "/auth") return "auth";
-    if (p === "/account") return "account";
+    if (p === "/auth" || p.startsWith("/auth/")) return "auth";
+    if (p === "/account" || p.startsWith("/account/")) return "account";
     if (p.startsWith("/prospector") || p.startsWith("/crm")) return "prospector";
     return "website";
   };
@@ -37,40 +49,14 @@ export default function App() {
     setViewMode(mode);
   }, [location.pathname]);
 
-  // Auth state for the CRM/dashboard section only. The public website stays open.
-  const [authUser, setAuthUser] = useState<string | null>(null);
-  const [authRole, setAuthRole] = useState<string | null>(null);
-  const [authChecked, setAuthChecked] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/auth/me")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (!cancelled && data?.user?.username) {
-          setAuthUser(data.user.username);
-          setAuthRole(data.user.role || "user");
-        }
-      })
-      .catch(() => {})
-      .finally(() => {
-        if (!cancelled) setAuthChecked(true);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  // ── Auth state from NeonAuthUIProvider context ─────────────────────────────
+  const { user: neonUser, isLoaded: authChecked, isSignedIn, signOut } = useAuth();
+  const authUser = neonUser?.username ?? null;
+  const authRole = neonUser?.role ?? null;
 
   const handleLogout = async () => {
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-    } catch (e) {
-      console.error("Error al cerrar sesión", e);
-    } finally {
-      setAuthUser(null);
-      setAuthRole(null);
-      setViewMode("website");
-    }
+    await signOut();
+    goTo("website");
   };
 
   // Which industry solution page is being shown on the public website home ("general" = Default Clientum)
@@ -286,70 +272,36 @@ export default function App() {
     }
   };
 
-  // /auth route — standalone auth gate (not nested in prospector flow)
+  // ── Loading state (context not ready yet) ─────────────────────────────────
+  if (!authChecked && (viewMode === "account" || viewMode === "prospector")) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-[#0B131D]">
+        <div className="text-zinc-500 text-sm">Cargando…</div>
+      </div>
+    );
+  }
+
+  // ── /auth and /auth/:pathname — SDK-style AuthView ──────────────────────
   if (viewMode === "auth") {
-    if (authUser) {
-      // Already logged in — redirect to account
-      return (
-        <AccountView
-          username={authUser}
-          role={authRole || "user"}
-          onLogout={handleLogout}
-          onBack={() => goTo("prospector")}
-        />
-      );
+    if (isSignedIn) {
+      // Already logged in — go straight to the CRM
+      return <Navigate to="/prospector" replace />;
     }
-    return (
-      <NeonAuthGate
-        onAuthenticated={(username, role) => {
-          setAuthUser(username);
-          setAuthRole(role || "user");
-          goTo("prospector");
-        }}
-      />
-    );
+    // pathname comes from the URL, e.g. /auth/sign-in → "sign-in"
+    const authPathname = location.pathname.replace(/^\/auth\/?/, "") || "sign-in";
+    return <AuthPage />;
   }
 
-  // /account route
+  // ── /account and /account/:pathname — SDK-style AccountView ────────────
   if (viewMode === "account") {
-    if (!authChecked) {
-      return (
-        <div className="min-h-screen w-full flex items-center justify-center bg-slate-950">
-          <div className="text-slate-500 text-sm">Cargando…</div>
-        </div>
-      );
-    }
-    if (!authUser) {
-      return <Navigate to="/auth" replace />;
-    }
-    return (
-      <AccountView
-        username={authUser}
-        role={authRole || "user"}
-        onLogout={handleLogout}
-        onBack={() => goTo("prospector")}
-      />
-    );
+    if (!isSignedIn) return <Navigate to="/auth/sign-in" replace />;
+    return <AccountPage />;
   }
 
+  // ── /prospector — CRM dashboard (requires auth) ─────────────────────────
   if (viewMode === "prospector") {
-    if (!authChecked) {
-      return (
-        <div className="min-h-screen w-full flex items-center justify-center bg-slate-950">
-          <div className="text-slate-500 text-sm">Cargando…</div>
-        </div>
-      );
-    }
-
-    if (!authUser) {
-      return (
-        <NeonAuthGate
-          onAuthenticated={(username, role) => {
-            setAuthUser(username);
-            setAuthRole(role || "user");
-          }}
-        />
-      );
+    if (!isSignedIn) {
+      return <Navigate to="/auth/sign-in" replace />;
     }
 
     return (

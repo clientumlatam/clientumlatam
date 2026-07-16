@@ -1,13 +1,18 @@
+import { NeonAuthUIProvider } from "@neondatabase/neon-js/auth/react";
+import "@neondatabase/neon-js/ui/css";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App.tsx";
+import { authClient } from "./lib/auth";
 import "./index.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    <NeonAuthUIProvider emailOTP authClient={authClient}>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </NeonAuthUIProvider>
   </StrictMode>
 );
