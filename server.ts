@@ -275,9 +275,173 @@ app.post("/api/auth/logout", (req, res) => {
 });
 
 // ─── NEON AUTH — email-based register / login ───────────────────────────────
-// NeonAuthGate.tsx sends { email, password, name? }. These endpoints mirror
-// the behaviour of /api/auth/register and /api/auth/login but identify users
-// by email instead of username, storing both in the same `users` table.
+// These endpoints proxy sign-up / sign-in to the actual Neon Auth (Better Auth)
+// REST API server-side (avoids CORS, no SDK needed), then upsert the identity
+// into our local `users` table so CRM role management keeps working.
+// If VITE_NEON_AUTH_URL / NEON_AUTH_BASE_URL is not set the endpoints fall
+// back to local bcrypt auth against our own users table.
+
+const NEON_AUTH_BASE =
+  process.env.NEON_AUTH_BASE_URL ||
+  process.env.VITE_NEON_AUTH_URL ||
+  "";
+
+// After a successful Neon Auth call, upsert the identity into our `users`
+// table and resolve the local row (id, username, role).
+async function upsertNeonAuthUser(neonUser: {
+  id: string;
+  email: string;
+  name?: string;
+}): Promise<{ id: number; username: string; role: string }> {
+  const email = neonUser.email.toLowerCase();
+
+  // Try existing record (by neon_auth_id first, then email)
+  const existing = await pgPool.query(
+    `SELECT id, username, role
+       FROM users
+      WHERE neon_auth_id = $1 OR email = $2
+      LIMIT 1`,
+    [neonUser.id, email]
+  );
+
+  if ((existing.rowCount ?? 0) > 0) {
+    const row = existing.rows[0];
+    // Keep neon_auth_id in sync if it wasn't set yet
+    await pgPool.query(
+      `UPDATE users SET neon_auth_id = $1, email = $2 WHERE id = $3`,
+      [neonUser.id, email, row.id]
+    );
+    return row;
+  }
+
+  // First-ever user → admin, everyone else → user
+  const { rows: countRows } = await pgPool.query(
+    "SELECT COUNT(*)::int AS count FROM users"
+  );
+  const role = countRows[0]?.count === 0 ? "admin" : "user";
+
+  // Derive a username from name or email prefix, unique-ify if needed
+  const rawBase =
+    (neonUser.name?.trim() || email.split("@")[0])
+      .replace(/[^a-zA-Z0-9._-]/g, "_")
+      .slice(0, 28) || "user";
+  const taken = await pgPool.query(
+    "SELECT id FROM users WHERE username = $1",
+    [rawBase]
+  );
+  const username =
+    (taken.rowCount ?? 0) > 0
+      ? `${rawBase}_${Math.floor(Math.random() * 9000) + 1000}`
+      : rawBase;
+
+  const inserted = await pgPool.query(
+    `INSERT INTO users (username, password_hash, role, email, neon_auth_id)
+          VALUES ($1, '', $2, $3, $4)
+       RETURNING id, username, role`,
+    [username, role, email, neonUser.id]
+  );
+  return inserted.rows[0];
+}
+
+// ── Local-only fallback (used when NEON_AUTH_BASE is not configured) ──────────
+async function localNeonRegister(
+  email: string,
+  password: string,
+  name?: string
+): Promise<{ id: number; username: string; role: string }> {
+  const existing = await pgPool.query(
+    "SELECT id FROM users WHERE email = $1",
+    [email]
+  );
+  if ((existing.rowCount ?? 0) > 0) {
+    throw Object.assign(new Error("Ya existe una cuenta con ese email."), {
+      status: 409,
+    });
+  }
+
+  const rawBase =
+    (name?.trim() || email.split("@")[0])
+      .replace(/[^a-zA-Z0-9._-]/g, "_")
+      .slice(0, 28) || "user";
+  const taken = await pgPool.query(
+    "SELECT id FROM users WHERE username = $1",
+    [rawBase]
+  );
+  const username =
+    (taken.rowCount ?? 0) > 0
+      ? `${rawBase}_${Math.floor(Math.random() * 9000) + 1000}`
+      : rawBase;
+
+  const passwordHash = await bcrypt.hash(password, 12);
+  const client = await pgPool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query("LOCK TABLE users IN SHARE ROW EXCLUSIVE MODE");
+    const { rows: countRows } = await client.query(
+      "SELECT COUNT(*)::int AS count FROM users"
+    );
+    const role = countRows[0]?.count === 0 ? "admin" : "user";
+    const inserted = await client.query(
+      `INSERT INTO users (username, password_hash, role, email)
+            VALUES ($1, $2, $3, $4)
+         RETURNING id, username, role`,
+      [username, passwordHash, role, email]
+    );
+    await client.query("COMMIT");
+    return inserted.rows[0];
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+async function localNeonLogin(
+  email: string,
+  password: string
+): Promise<{ id: number; username: string; role: string }> {
+  const result = await pgPool.query(
+    "SELECT id, username, password_hash, role FROM users WHERE email = $1",
+    [email]
+  );
+  const user = result.rows[0];
+  const validHash =
+    user?.password_hash ||
+    "$2a$12$invalidsaltinvalidsaltinvalidsaltinvalidsaltinvalidsal";
+  const isValid = await bcrypt.compare(password, validHash);
+  if (!user || !isValid) {
+    throw Object.assign(new Error("Email o contraseña incorrectos."), {
+      status: 401,
+    });
+  }
+  return user;
+}
+
+// ── Shared session-create helper ──────────────────────────────────────────────
+function createSession(
+  req: express.Request,
+  res: express.Response,
+  user: { id: number; username: string; role: string },
+  statusCode = 200
+) {
+  req.session.regenerate((err) => {
+    if (err)
+      return res.status(500).json({ error: "Error al crear la sesión." });
+    req.session.userId = user.id;
+    req.session.username = user.username;
+    req.session.role = user.role;
+    req.session.save((saveErr) => {
+      if (saveErr)
+        return res.status(500).json({ error: "Error al guardar la sesión." });
+      return res
+        .status(statusCode)
+        .json({ user: { id: user.id, username: user.username, role: user.role } });
+    });
+  });
+}
+
+// ── Register ──────────────────────────────────────────────────────────────────
 app.post("/api/auth/neon-register", async (req, res) => {
   try {
     const { email, password, name } = req.body || {};
@@ -291,53 +455,53 @@ app.post("/api/auth/neon-register", async (req, res) => {
       return res.status(400).json({ error: "La contraseña debe tener al menos 8 caracteres." });
     }
 
-    const existing = await pgPool.query("SELECT id FROM users WHERE email = $1", [email.toLowerCase()]);
-    if ((existing.rowCount ?? 0) > 0) {
-      return res.status(409).json({ error: "Ya existe una cuenta con ese email." });
-    }
-
-    // Derive a username from the provided name or the email prefix
-    const rawBase = (name?.trim() || email.split("@")[0]).replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 28) || "user";
-    const taken = await pgPool.query("SELECT id FROM users WHERE username = $1", [rawBase]);
-    const username = (taken.rowCount ?? 0) > 0 ? `${rawBase}_${Math.floor(Math.random() * 9000) + 1000}` : rawBase;
-
-    const passwordHash = await bcrypt.hash(password, 12);
-    const client = await pgPool.connect();
-    let user: { id: number; username: string; role: string };
-    try {
-      await client.query("BEGIN");
-      await client.query("LOCK TABLE users IN SHARE ROW EXCLUSIVE MODE");
-      const { rows: countRows } = await client.query("SELECT COUNT(*)::int AS count FROM users");
-      const role = countRows[0]?.count === 0 ? "admin" : "user";
-      const inserted = await client.query(
-        "INSERT INTO users (username, password_hash, role, email) VALUES ($1, $2, $3, $4) RETURNING id, username, role",
-        [username, passwordHash, role, email.toLowerCase()]
-      );
-      user = inserted.rows[0];
-      await client.query("COMMIT");
-    } catch (txError) {
-      await client.query("ROLLBACK");
-      throw txError;
-    } finally {
-      client.release();
-    }
-
-    req.session.regenerate((err) => {
-      if (err) return res.status(500).json({ error: "Error al iniciar sesión tras el registro." });
-      req.session.userId = user.id;
-      req.session.username = user.username;
-      req.session.role = user.role;
-      req.session.save((saveErr) => {
-        if (saveErr) return res.status(500).json({ error: "Error al guardar la sesión." });
-        return res.status(201).json({ user: { id: user.id, username: user.username, role: user.role } });
+    if (NEON_AUTH_BASE) {
+      // ── Path A: Neon Auth as identity provider ──────────────────────────────
+      console.log("[NeonAuth] Registrando via Neon Auth REST API");
+      const appOrigin = process.env.APP_URL || "https://clientum.com.ar";
+      const neonRes = await fetch(`${NEON_AUTH_BASE}/sign-up/email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Origin": appOrigin,
+        },
+        body: JSON.stringify({ email, password, name: name?.trim() || "" }),
       });
-    });
+      const neonData = await neonRes.json() as any;
+
+      if (!neonRes.ok) {
+        const msg =
+          neonData?.message ||
+          neonData?.error?.message ||
+          neonData?.error ||
+          "Error al registrarse en Neon Auth.";
+        return res.status(neonRes.status).json({ error: String(msg) });
+      }
+
+      // neonData.user contains { id, email, name, ... }
+      const neonUser = neonData.user ?? neonData;
+      const localUser = await upsertNeonAuthUser({
+        id: neonUser.id,
+        email: neonUser.email ?? email,
+        name: neonUser.name ?? name,
+      });
+      return createSession(req, res, localUser, 201);
+    } else {
+      // ── Path B: Local-only fallback ─────────────────────────────────────────
+      console.log("[NeonAuth] NEON_AUTH_BASE no configurado — usando auth local");
+      const localUser = await localNeonRegister(email.toLowerCase(), password, name);
+      return createSession(req, res, localUser, 201);
+    }
   } catch (error: any) {
     console.error("Error en /api/auth/neon-register:", error);
-    return res.status(500).json({ error: "Ocurrió un error al registrar la cuenta." });
+    const status = error.status ?? 500;
+    return res
+      .status(status)
+      .json({ error: error.message || "Ocurrió un error al registrar la cuenta." });
   }
 });
 
+// ── Login ─────────────────────────────────────────────────────────────────────
 app.post("/api/auth/neon-login", async (req, res) => {
   try {
     const { email, password } = req.body || {};
@@ -345,32 +509,48 @@ app.post("/api/auth/neon-login", async (req, res) => {
       return res.status(400).json({ error: "Email y contraseña son requeridos." });
     }
 
-    const result = await pgPool.query(
-      "SELECT id, username, password_hash, role FROM users WHERE email = $1",
-      [email.toLowerCase()]
-    );
-    const user = result.rows[0];
-    // Always run a hash comparison to reduce email-enumeration timing signal.
-    const validHash = user?.password_hash || "$2a$12$invalidsaltinvalidsaltinvalidsaltinvalidsaltinvalidsal";
-    const isValid = await bcrypt.compare(password, validHash);
-
-    if (!user || !isValid) {
-      return res.status(401).json({ error: "Email o contraseña incorrectos." });
-    }
-
-    req.session.regenerate((err) => {
-      if (err) return res.status(500).json({ error: "Error al iniciar sesión." });
-      req.session.userId = user.id;
-      req.session.username = user.username;
-      req.session.role = user.role;
-      req.session.save((saveErr) => {
-        if (saveErr) return res.status(500).json({ error: "Error al guardar la sesión." });
-        return res.json({ user: { id: user.id, username: user.username, role: user.role } });
+    if (NEON_AUTH_BASE) {
+      // ── Path A: Neon Auth as identity provider ──────────────────────────────
+      console.log("[NeonAuth] Iniciando sesión via Neon Auth REST API");
+      const appOrigin = process.env.APP_URL || "https://clientum.com.ar";
+      const neonRes = await fetch(`${NEON_AUTH_BASE}/sign-in/email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Origin": appOrigin,
+        },
+        body: JSON.stringify({ email, password }),
       });
-    });
+      const neonData = await neonRes.json() as any;
+
+      if (!neonRes.ok) {
+        const msg =
+          neonData?.message ||
+          neonData?.error?.message ||
+          neonData?.error ||
+          "Email o contraseña incorrectos.";
+        return res.status(neonRes.status === 401 ? 401 : neonRes.status).json({ error: String(msg) });
+      }
+
+      const neonUser = neonData.user ?? neonData;
+      const localUser = await upsertNeonAuthUser({
+        id: neonUser.id,
+        email: neonUser.email ?? email,
+        name: neonUser.name,
+      });
+      return createSession(req, res, localUser, 200);
+    } else {
+      // ── Path B: Local-only fallback ─────────────────────────────────────────
+      console.log("[NeonAuth] NEON_AUTH_BASE no configurado — usando auth local");
+      const localUser = await localNeonLogin(email.toLowerCase(), password);
+      return createSession(req, res, localUser, 200);
+    }
   } catch (error: any) {
     console.error("Error en /api/auth/neon-login:", error);
-    return res.status(500).json({ error: "Ocurrió un error al iniciar sesión." });
+    const status = error.status ?? 500;
+    return res
+      .status(status)
+      .json({ error: error.message || "Ocurrió un error al iniciar sesión." });
   }
 });
 
