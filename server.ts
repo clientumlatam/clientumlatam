@@ -736,6 +736,68 @@ async function generateContentWithFallback(
   throw lastError || new Error("Error: Fallaron todos los intentos con todos los modelos disponibles.");
 }
 
+// ── Free AI fallback: Groq → OpenRouter (used when Gemini quota is exhausted) ─
+async function tryFreeAI(prompt: string): Promise<string | null> {
+  // 1. Groq — fastest, generous free tier
+  const groqKey = process.env.GROQ_API_KEY;
+  if (groqKey) {
+    try {
+      console.log("[FreeAI] Intentando Groq llama-3.3-70b-versatile...");
+      const gr = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${groqKey}` },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.7,
+          max_tokens: 4096,
+        }),
+      });
+      if (gr.ok) {
+        const d = await gr.json();
+        const text = d.choices?.[0]?.message?.content?.trim();
+        if (text) { console.log("[FreeAI] Groq respondió con éxito."); return text; }
+      } else {
+        console.warn("[FreeAI] Groq falló con status:", gr.status, await gr.text().catch(() => ""));
+      }
+    } catch (e: any) { console.warn("[FreeAI] Groq error:", e.message); }
+  }
+
+  // 2. OpenRouter — free-tier models
+  const orKey = process.env.OPENROUTER_API_KEY;
+  if (orKey) {
+    const orModels = [
+      "meta-llama/llama-3.3-70b-instruct:free",
+      "deepseek/deepseek-r1:free",
+      "google/gemini-2.0-flash-exp:free",
+    ];
+    for (const model of orModels) {
+      try {
+        console.log(`[FreeAI] Intentando OpenRouter ${model}...`);
+        const or = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${orKey}`,
+            "HTTP-Referer": "https://clientum.com.ar",
+            "X-Title": "Clientum CRM",
+          },
+          body: JSON.stringify({ model, messages: [{ role: "user", content: prompt }], max_tokens: 4096 }),
+        });
+        if (or.ok) {
+          const d = await or.json();
+          const text = d.choices?.[0]?.message?.content?.trim();
+          if (text) { console.log(`[FreeAI] OpenRouter ${model} respondió con éxito.`); return text; }
+        } else {
+          console.warn(`[FreeAI] OpenRouter ${model} falló con status:`, or.status);
+        }
+      } catch (e: any) { console.warn(`[FreeAI] OpenRouter ${model} error:`, e.message); }
+    }
+  }
+
+  return null;
+}
+
 // API Routes
 // --- HIGH-QUALITY LOCAL FALLBACK GENERATORS (when Gemini API is out of quota/429) ---
 
@@ -1933,7 +1995,12 @@ IMPORTANTE: Devuelve exclusivamente el objeto JSON sin markdown.`;
 
         return res.json({ result: JSON.parse(response.text || "{}") });
       } catch (geminiError: any) {
-        console.warn("[Gemini Fallback] Quota exhaustion / error generating copy. Using mock template for industry:", industry);
+        console.warn("[Gemini Fallback] Quota exhaustion / error generating copy. Trying free AI...");
+        const freeText = await tryFreeAI(prompt);
+        if (freeText) {
+          try { return res.json({ result: JSON.parse(freeText) }); } catch { /* not valid JSON */ }
+        }
+        console.warn("[FreeAI] También falló. Usando plantilla local para rubro:", industry);
         const fallbackData = getMockIndustryCopy(industry);
         return res.json({ result: fallbackData, isFallback: true });
       }
@@ -1955,6 +2022,8 @@ Consulta del usuario: "${message}"`;
         const response = await generateContentWithFallback(ai, { contents: systemPrompt });
         return res.json({ result: response.text?.trim() });
       } catch (err: any) {
+        const freeText = await tryFreeAI(systemPrompt);
+        if (freeText) return res.json({ result: freeText });
         return res.json({ result: "¡Hola! Estoy en modo offline por alta demanda. Escribime tu consulta de nuevo en un momento." });
       }
     }
@@ -1983,7 +2052,9 @@ Responde de forma directa, vendedora y simpática.`;
 
         return res.json({ result: response.text?.trim() });
       } catch (geminiError: any) {
-        console.warn("[Gemini Fallback] Quota exhaustion / error generating chatbot answer. Using smart local assistant.");
+        console.warn("[Gemini Fallback] Quota exhaustion / error generating chatbot answer. Trying free AI...");
+        const freeText = await tryFreeAI(prompt);
+        if (freeText) return res.json({ result: freeText });
         const fallbackAnswer = getMockChatbotAnswer(payload);
         return res.json({ result: fallbackAnswer, isFallback: true });
       }
@@ -2004,7 +2075,9 @@ Texto a optimizar:
 
         return res.json({ result: response.text?.trim() });
       } catch (geminiError: any) {
-        console.warn("[Gemini Fallback] Quota exhaustion / error in optimizeCopy. Running local enhancer.");
+        console.warn("[Gemini Fallback] Quota exhaustion / error in optimizeCopy. Trying free AI...");
+        const freeText = await tryFreeAI(prompt);
+        if (freeText) return res.json({ result: freeText });
         const fallbackAnswer = getMockOptimizeCopy(text, goal);
         return res.json({ result: fallbackAnswer, isFallback: true });
       }
@@ -2030,7 +2103,11 @@ Devuelve únicamente el objeto JSON con las traducciones mapeadas con las mismas
 
         return res.json({ result: JSON.parse(response.text || "{}") });
       } catch (geminiError: any) {
-        console.warn("[Gemini Fallback] Quota exhaustion / error in translateBrochure. Running local translator.");
+        console.warn("[Gemini Fallback] Quota exhaustion / error in translateBrochure. Trying free AI...");
+        const freeText = await tryFreeAI(prompt);
+        if (freeText) {
+          try { return res.json({ result: JSON.parse(freeText) }); } catch { /* not valid JSON */ }
+        }
         const fallbackAnswer = getMockTranslateBrochure(texts, targetLanguage);
         return res.json({ result: fallbackAnswer, isFallback: true });
       }
@@ -2217,7 +2294,11 @@ IMPORTANTE: Devuelve exclusivamente el objeto JSON sin markdown.`;
 
         return res.json({ result: JSON.parse(response.text || "{}") });
       } catch (geminiError: any) {
-        console.warn("[Gemini Fallback] Quota exhaustion / error in buildICP. Generating local mock ICP.");
+        console.warn("[Gemini Fallback] Quota exhaustion / error in buildICP. Trying free AI...");
+        const freeText = await tryFreeAI(prompt);
+        if (freeText) {
+          try { return res.json({ result: JSON.parse(freeText) }); } catch { /* not valid JSON */ }
+        }
         const fallbackAnswer = getMockICP(industry, acv);
         return res.json({ result: fallbackAnswer, isFallback: true });
       }
@@ -2295,7 +2376,11 @@ IMPORTANTE: Devuelve exclusivamente el objeto JSON sin markdown.`;
 
         return res.json({ result: JSON.parse(response.text || "{}") });
       } catch (geminiError: any) {
-        console.warn("[Gemini Fallback] Quota exhaustion / error in researchProspect. Generating local mock research report.");
+        console.warn("[Gemini Fallback] Quota exhaustion / error in researchProspect. Trying free AI...");
+        const freeText = await tryFreeAI(prompt);
+        if (freeText) {
+          try { return res.json({ result: JSON.parse(freeText) }); } catch { /* not valid JSON */ }
+        }
         const fallbackAnswer = getMockResearch(company, industry);
         return res.json({ result: fallbackAnswer, isFallback: true });
       }
@@ -2354,7 +2439,11 @@ IMPORTANTE: Devuelve exclusivamente el objeto JSON sin markdown.`;
 
         return res.json({ result: JSON.parse(response.text || "{}") });
       } catch (geminiError: any) {
-        console.warn("[Gemini Fallback] Quota exhaustion / error in generateOutreach. Generating local mock outreach sequence.");
+        console.warn("[Gemini Fallback] Quota exhaustion / error in generateOutreach. Trying free AI...");
+        const freeText = await tryFreeAI(prompt);
+        if (freeText) {
+          try { return res.json({ result: JSON.parse(freeText) }); } catch { /* not valid JSON */ }
+        }
         const fallbackAnswer = getMockOutreach(company, contact, title, industry, painPoint);
         return res.json({ result: fallbackAnswer, isFallback: true });
       }
@@ -2386,7 +2475,9 @@ Proporciona consejos estratégicos, creativos y prácticos. Usa el voseo argenti
 
         return res.json({ result: response.text?.trim() });
       } catch (geminiError: any) {
-        console.warn("[Gemini Fallback] Quota exhaustion or error in salesAdvisorAnswer. Running local advisory fallback.");
+        console.warn("[Gemini Fallback] Quota exhaustion or error in salesAdvisorAnswer. Trying free AI...");
+        const freeText = await tryFreeAI(prompt);
+        if (freeText) return res.json({ result: freeText });
         const fallbackAdvice = `¡Hola! Como tu consultor de ventas en Clientum para el rubro de "${industry || "tu negocio"}", te recomiendo asegurarte de que cada página tenga un solo objetivo de conversión. Por ejemplo, en la sección de chatbot destaca que 'responde consultas automáticas en 10 segundos'. ¡Eso acelera un 70% el interés inicial!`;
         return res.json({ result: fallbackAdvice, isFallback: true });
       }
