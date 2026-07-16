@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, Navigate } from "react-router-dom";
 import PublicWebsite from "./components/PublicWebsite";
 import SalesProspectorDashboard from "./components/SalesProspectorDashboard";
 import NeonAuthGate from "./components/NeonAuthGate";
@@ -320,9 +320,7 @@ export default function App() {
       );
     }
     if (!authUser) {
-      // Not logged in — redirect to auth
-      goTo("auth");
-      return null;
+      return <Navigate to="/auth" replace />;
     }
     return (
       <AccountView
