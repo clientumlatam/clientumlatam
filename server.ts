@@ -2982,25 +2982,76 @@ app.post("/api/leads/:id/notes", requireApiKey, async (req, res) => {
 });
 
 // ─── ORQUESTADOR IA ──────────────────────────────────────────────────────────
-app.post("/api/orchestrator", requireAuth, async (req, res) => {
+// ── GET /api/orchestrator/metrics — lightweight KPI snapshot (no AI) ──────────
+app.get("/api/orchestrator/metrics", requireAuth, async (req, res) => {
   try {
-    const { message, history = [] } = req.body;
-    if (!message?.trim()) return res.status(400).json({ error: "message requerido" });
-
-    const ai = getAI();
-    if (!ai) return res.status(503).json({ error: "IA no disponible — GEMINI_API_KEY no configurada" });
-
-    // Gather real-time DB context for the orchestrator
-    const [leadsResult, chatbotResult, pipelineResult] = await Promise.all([
+    const [leadsResult, chatbotResult, pipelineResult, topLeadsResult, industriesResult] = await Promise.all([
       pgPool.query(`SELECT status, COUNT(*) as count FROM santi_leads GROUP BY status`),
       pgPool.query(`SELECT status, COUNT(*) as count FROM chatbot_leads GROUP BY status`),
       pgPool.query(`
-        SELECT
-          COUNT(*) as total,
+        SELECT COUNT(*) as total,
           COALESCE(SUM(amount_ars), 0) as total_ars,
           COALESCE(AVG(meddic_score), 0) as avg_meddic,
           COALESCE(AVG(fit_score), 0) as avg_fit
         FROM santi_leads
+      `),
+      pgPool.query(`
+        SELECT company_name, industry, city, status, amount_ars, fit_score, meddic_score
+        FROM santi_leads ORDER BY amount_ars DESC NULLS LAST LIMIT 5
+      `),
+      pgPool.query(`
+        SELECT industry, COUNT(*) as count, COALESCE(SUM(amount_ars),0) as total_ars
+        FROM santi_leads WHERE industry IS NOT NULL
+        GROUP BY industry ORDER BY count DESC LIMIT 5
+      `),
+    ]);
+
+    const leadsByStatus: Record<string, number> = {};
+    leadsResult.rows.forEach((r: any) => { leadsByStatus[r.status] = parseInt(r.count); });
+
+    const chatbotByStatus: Record<string, number> = {};
+    chatbotResult.rows.forEach((r: any) => { chatbotByStatus[r.status] = parseInt(r.count); });
+
+    const pipeline = pipelineResult.rows[0];
+
+    res.json({
+      leads: { byStatus: leadsByStatus, ...pipeline },
+      chatbot: { byStatus: chatbotByStatus, total: Object.values(chatbotByStatus).reduce((a: number, b) => a + (b as number), 0) },
+      topLeads: topLeadsResult.rows,
+      industries: industriesResult.rows,
+    });
+  } catch (error: any) {
+    console.error("[Orchestrator Metrics Error]:", error);
+    res.status(500).json({ error: error.message || "Error al obtener métricas" });
+  }
+});
+
+// ── POST /api/orchestrator — AI Orchestrator with generateAny (Groq→OR→Gemini) ─
+app.post("/api/orchestrator", requireAuth, async (req, res) => {
+  try {
+    const { message, history = [], targetAgent } = req.body;
+    if (!message?.trim()) return res.status(400).json({ error: "message requerido" });
+
+    const ai = getAI();
+
+    // Gather rich real-time DB context
+    const [leadsResult, chatbotResult, pipelineResult, topLeadsResult, recentChatbotResult] = await Promise.all([
+      pgPool.query(`SELECT status, COUNT(*) as count FROM santi_leads GROUP BY status`),
+      pgPool.query(`SELECT status, COUNT(*) as count FROM chatbot_leads GROUP BY status`),
+      pgPool.query(`
+        SELECT COUNT(*) as total,
+          COALESCE(SUM(amount_ars), 0) as total_ars,
+          COALESCE(AVG(meddic_score), 0) as avg_meddic,
+          COALESCE(AVG(fit_score), 0) as avg_fit
+        FROM santi_leads
+      `),
+      pgPool.query(`
+        SELECT company_name, industry, city, status, amount_ars, fit_score, meddic_score, pain_point
+        FROM santi_leads ORDER BY amount_ars DESC NULLS LAST LIMIT 8
+      `),
+      pgPool.query(`
+        SELECT name, company, phone, email, status, created_at
+        FROM chatbot_leads ORDER BY created_at DESC LIMIT 5
       `),
     ]);
 
@@ -3012,83 +3063,95 @@ app.post("/api/orchestrator", requireAuth, async (req, res) => {
 
     const pipeline = pipelineResult.rows[0];
     const today = new Date().toLocaleDateString("es-AR", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+    const totalChatbot = Object.values(chatbotByStatus).reduce((a, b) => a + b, 0);
+
+    const topLeadsText = topLeadsResult.rows.length > 0
+      ? topLeadsResult.rows.map((l: any, i: number) =>
+          `  ${i + 1}. ${l.company_name} (${l.industry ?? "—"}, ${l.city ?? "—"}) · ${l.status} · ${Number(l.amount_ars ?? 0).toLocaleString("es-AR")} ARS · Fit: ${l.fit_score ?? "—"}/10 · MEDDIC: ${l.meddic_score ?? "—"}`
+        ).join("\n")
+      : "  (sin leads cargados aún)";
+
+    const recentChatbotText = recentChatbotResult.rows.length > 0
+      ? recentChatbotResult.rows.map((l: any) =>
+          `  • ${l.name}${l.company ? ` (${l.company})` : ""} · ${l.status} · ${new Date(l.created_at).toLocaleDateString("es-AR")}`
+        ).join("\n")
+      : "  (sin leads de chatbot recientes)";
 
     const contextData = `
-DATOS EN TIEMPO REAL DE CLIENTUM (${today}):
+═══ DATOS EN TIEMPO REAL DE CLIENTUM (${today}) ═══
 
-📊 Pipeline SDR Santi (santi_leads):
-- Pendientes (no contactados): ${leadsByStatus["pendiente"] ?? 0}
-- Contactados: ${leadsByStatus["contactado"] ?? 0}
-- Calientes: ${leadsByStatus["caliente"] ?? 0}
-- Tibios: ${leadsByStatus["tibio"] ?? 0}
-- Fríos: ${leadsByStatus["frio"] ?? 0}
-- Agendados: ${leadsByStatus["agendado"] ?? 0}
-- TOTAL LEADS: ${pipeline.total ?? 0}
-- Valor total pipeline: ${Number(pipeline.total_ars ?? 0).toLocaleString("es-AR")} ARS
-- MEDDIC score promedio: ${parseFloat(pipeline.avg_meddic ?? "0").toFixed(1)}/100
-- Fit score promedio: ${parseFloat(pipeline.avg_fit ?? "0").toFixed(1)}/10
+📊 PIPELINE SDR SANTI:
+• Total leads: ${pipeline.total ?? 0}
+• Pendientes: ${leadsByStatus["pendiente"] ?? 0} | Contactados: ${leadsByStatus["contactado"] ?? 0} | Calientes: ${leadsByStatus["caliente"] ?? 0}
+• Tibios: ${leadsByStatus["tibio"] ?? 0} | Fríos: ${leadsByStatus["frio"] ?? 0} | Agendados: ${leadsByStatus["agendado"] ?? 0}
+• Valor total pipeline: ${Number(pipeline.total_ars ?? 0).toLocaleString("es-AR")} ARS
+• MEDDIC score promedio: ${parseFloat(pipeline.avg_meddic ?? "0").toFixed(1)}/100
+• Fit score promedio: ${parseFloat(pipeline.avg_fit ?? "0").toFixed(1)}/10
 
-💬 Chatbot Leads (asesor IA del sitio web):
-- Nuevos (sin gestionar): ${chatbotByStatus["nuevo"] ?? 0}
-- Contactados: ${chatbotByStatus["contactado"] ?? 0}
-- Calificados: ${chatbotByStatus["calificado"] ?? 0}
-- Descartados: ${chatbotByStatus["descartado"] ?? 0}
-- TOTAL: ${Object.values(chatbotByStatus).reduce((a, b) => a + b, 0)}
+🏆 TOP LEADS POR VALOR:
+${topLeadsText}
+
+💬 CHATBOT LEADS (inbound sitio web):
+• Total: ${totalChatbot} | Nuevos: ${chatbotByStatus["nuevo"] ?? 0} | Contactados: ${chatbotByStatus["contactado"] ?? 0} | Calificados: ${chatbotByStatus["calificado"] ?? 0}
+Recientes:
+${recentChatbotText}
 `.trim();
 
-    const systemPrompt = `Sos el Orquestador IA de Clientum, el asistente central de Jonathan (dueño y CEO de Clientum).
+    // Agent-specific persona injection
+    const agentPersonas: Record<string, string> = {
+      "Ventas": `Sos el Agente de Ventas de Clientum (Sales Manager AI). Especialidad: pipeline, MEDDIC scoring, estrategia de cierre, gestión de Santi SDR y Explorador Patagónico. Revisás los leads calientes, priorizás los de mayor valor, y dás instrucciones de acción concretas.`,
+      "Técnico": `Sos el Agente Técnico de Clientum (CTO AI). Especialidad: arquitectura del sistema, bugs, features nuevos, base de datos (PostgreSQL), despliegues en Replit/Vercel, integraciones (WhatsApp, Google Maps, Apify, Gemini/Groq/OpenRouter). Tenés visión del stack completo.`,
+      "Marketing": `Sos el Agente de Marketing de Clientum. Especialidad: leads inbound del chatbot, SEO local patagónico, copy comercial para PyMEs, campañas de outreach, estrategia de contenido. Analizás los chatbot leads y dás acciones para convertirlos.`,
+      "Customer Success": `Sos el Agente de Customer Success de Clientum. Especialidad: onboarding de nuevos clientes, satisfacción, churn prevention, seguimiento post-venta. Tu foco es que cada PyME que contrata Clientum lo active rápido y no se vaya.`,
+      "Operaciones": `Sos el Agente de Operaciones de Clientum (COO AI). Especialidad: métricas del negocio, MRR, KPIs clave, reportes ejecutivos, finanzas, análisis de crecimiento. Usás los datos reales de la DB para generar insights accionables.`,
+    };
 
-Clientum es un CRM B2B con IA orientado a pymes de la Patagonia argentina. Permite descubrir prospectos vía Google Maps y Apify, calificarlos con MEDDIC, generar brochures PDF personalizados por industria, y automatizar el outreach por WhatsApp a través del agente SDR "Santi".
+    const detectedAgent = targetAgent && agentPersonas[targetAgent]
+      ? targetAgent
+      : null; // let the model decide
 
-Tu rol: Recibís mensajes de Jonathan y respondés como el agente departamental más apropiado. Tenés acceso a datos reales de la base de datos.
+    const agentInstructions = detectedAgent
+      ? `AGENTE ACTIVO: ${detectedAgent}\n${agentPersonas[detectedAgent]}\nRespondé directamente como este agente.`
+      : `ROUTING: Detectá el agente más adecuado según el mensaje y respondé con [AGENTE: Nombre] en la primera línea.\nAgentes disponibles: Ventas, Técnico, Marketing, Customer Success, Operaciones, Orquestador.\n${Object.entries(agentPersonas).map(([k, v]) => `• ${k}: ${v.split(".")[0]}`).join("\n")}`;
 
-AGENTES DISPONIBLES (elegí el más adecuado según el contexto):
-1. [AGENTE: Ventas] — Pipeline, leads de Santi, estrategia comercial, cierre, MEDDIC scoring, outreach
-2. [AGENTE: Técnico] — Producto, features, bugs, código, infra, DB, deploys, mejoras técnicas
-3. [AGENTE: Marketing] — Contenido, SEO, chatbot leads, campañas, copy, landing pages
-4. [AGENTE: Customer Success] — Clientes activos, onboarding, churn, satisfacción, seguimiento
-5. [AGENTE: Operaciones] — Métricas, reportes ejecutivos, MRR, KPIs, finanzas, análisis
+    // Build conversation history for context
+    const historyText = (history as Array<{role: string; content: string}>)
+      .slice(-10)
+      .map((m) => `${m.role === "user" ? "Jonathan" : "Agente"}: ${m.content}`)
+      .join("\n\n");
+
+    const fullPrompt = `Sos el Orquestador IA de Clientum, el asistente central de Jonathan (dueño y CEO de Clientum).
+
+Clientum es un CRM B2B con IA para PyMEs de la Patagonia argentina. Incluye: prospección via Google Maps/Apify, calificación MEDDIC, brochures PDF por industria, outreach automatizado por WhatsApp via el agente SDR "Santi", y copiloto IA para el equipo comercial.
+
+${agentInstructions}
 
 ${contextData}
 
-INSTRUCCIONES DE RESPUESTA:
-- Empezá SIEMPRE con [AGENTE: NombreDelAgente] en la primera línea
-- Usá los datos reales de la DB cuando sean relevantes para la respuesta
-- Respondé en español rioplatense, tono directo y profesional
-- Tratá a Jonathan de "vos"
-- Máximo 400 palabras
-- Usá **negrita** para destacar números y puntos clave
-- Al final de la respuesta, sugerí 1-2 próximos pasos concretos si aplica
-- Si el pedido no corresponde a ningún agente específico, respondés vos como Orquestador coordinando
+${historyText ? `CONVERSACIÓN PREVIA:\n${historyText}\n\n` : ""}MENSAJE DE JONATHAN: ${message}
 
-REGLAS:
-- Nunca inventés datos: si no tenés info suficiente, decilo
-- Si Jonathan pide ejecutar algo (mandar mensaje, scraping, etc.), describí qué haría el agente y pedí confirmación
-- Si la pregunta es estratégica y abarca múltiples áreas, coordiná una respuesta integradora como Orquestador`;
+INSTRUCCIONES:
+${detectedAgent ? `- Respondé directamente como el Agente ${detectedAgent} sin necesidad de indicar [AGENTE:]` : "- Primera línea: [AGENTE: NombreDelAgente]"}
+- Usá voseo argentino, tono directo y profesional
+- Usá los datos reales cuando sean relevantes
+- Máximo 350 palabras
+- Usá **negrita** para números y puntos clave
+- Listas con • para bullet points
+- Al final: 1-2 próximos pasos concretos si aplica
+- Nunca inventés datos que no estén en el contexto`;
 
-    // Build Gemini chat with conversation history
-    const geminiHistory = (history as Array<{role: string; content: string}>)
-      .slice(-12)
-      .map((m) => ({
-        role: m.role === "assistant" ? "model" : "user",
-        parts: [{ text: m.content }],
-      }));
+    const rawText = await generateAny(ai, fullPrompt);
 
-    const chat = ai.chats.create({
-      model: "gemini-2.0-flash",
-      config: { systemInstruction: systemPrompt, temperature: 0.7 },
-      history: geminiHistory,
-    });
+    if (!rawText) {
+      return res.status(503).json({ error: "Todos los proveedores de IA fallaron. Intentá en unos momentos." });
+    }
 
-    const result = await chat.sendMessage({ message });
-    const rawText = result.text ?? "";
-
-    // Extract agent tag and clean response
-    const agentMatch = rawText.match(/\[AGENTE:\s*([^\]]+)\]/i);
-    const agentName = agentMatch ? agentMatch[1].trim() : "Orquestador";
+    // Extract agent tag
+    const agentMatch = rawText.match(/^\[AGENTE:\s*([^\]]+)\]/i);
+    const agentName = detectedAgent || (agentMatch ? agentMatch[1].trim() : "Orquestador");
     const cleanResponse = rawText.replace(/^\[AGENTE:\s*[^\]]+\]\s*/i, "").trim();
 
-    console.log(`[Orchestrator] Agente: ${agentName} | Tokens: ~${Math.round(rawText.length / 4)}`);
+    console.log(`[Orchestrator] Agente: ${agentName} | Chars: ${cleanResponse.length}`);
     res.json({ ok: true, response: cleanResponse, agent: agentName });
 
   } catch (error: any) {
