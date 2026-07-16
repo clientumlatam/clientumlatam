@@ -656,6 +656,17 @@ app.post("/api/auth/neon-register", async (req, res) => {
         return createSession(req, res, localUser, 200);
       }
 
+      // INVALID_ORIGIN means Neon Auth doesn't accept our origin right now →
+      // silently fall through to local-only registration.
+      const isOriginRejected =
+        neonRes.status === 403 &&
+        (rawText.includes("INVALID_ORIGIN") || rawText.includes("Invalid origin") || rawText.includes("MISSING_ORIGIN"));
+      if (isOriginRejected) {
+        console.log("[NeonAuth] INVALID_ORIGIN — usando auth local como fallback");
+        const localUser = await localNeonRegister(email.toLowerCase(), password, name);
+        return createSession(req, res, localUser, 201);
+      }
+
       if (!neonRes.ok) {
         const msg =
           neonData?.message ||
@@ -733,6 +744,29 @@ app.post("/api/auth/neon-login", async (req, res) => {
       console.log("[NeonAuth] sign-in status:", neonRes.status, "body:", rawText.slice(0, 200));
 
       if (!neonRes.ok) {
+        // INVALID_ORIGIN: Neon Auth rejects our origin → fall back to local auth.
+        // Store the hash now so next login skips Neon Auth entirely.
+        const isOriginRejected =
+          neonRes.status === 403 &&
+          (rawText.includes("INVALID_ORIGIN") || rawText.includes("Invalid origin") || rawText.includes("MISSING_ORIGIN"));
+        if (isOriginRejected) {
+          console.log("[NeonAuth] INVALID_ORIGIN en login — intentando auth local como fallback");
+          const existingRow = await pgPool.query(
+            "SELECT id, username, role FROM users WHERE email = $1 LIMIT 1",
+            [emailLower]
+          );
+          if ((existingRow.rowCount ?? 0) > 0) {
+            // User exists locally with no hash → store hash + create session
+            const localUser = existingRow.rows[0];
+            const newHash = await bcrypt.hash(password, 12);
+            await pgPool.query("UPDATE users SET password_hash = $1 WHERE id = $2", [newHash, localUser.id]);
+            console.log("[Auth] INVALID_ORIGIN fallback — hash guardado y sesión creada para", emailLower);
+            return createSession(req, res, { id: localUser.id, username: localUser.username, role: localUser.role }, 200);
+          }
+          // User not in local DB yet — can't verify, ask them to register
+          return res.status(401).json({ error: "Email o contraseña incorrectos." });
+        }
+
         const isEmailNotVerified = neonRes.status === 403 && rawText.includes("EMAIL_NOT_VERIFIED");
         if (isEmailNotVerified) {
           // The user exists in Neon Auth but their email isn't verified.
