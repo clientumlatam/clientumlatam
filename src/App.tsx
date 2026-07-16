@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import PublicWebsite from "./components/PublicWebsite";
 import SalesProspectorDashboard from "./components/SalesProspectorDashboard";
-import AuthGate from "./components/AuthGate";
+import NeonAuthGate from "./components/NeonAuthGate";
 import { DEFAULT_BROCHURE_DATA, INDUSTRY_PRESETS } from "./data";
 import { BrochureData, CustomTemplate } from "./types";
 import { exportBrochureToPDF } from "./utils/pdfGenerator";
@@ -269,7 +269,7 @@ export default function App() {
 
     if (!authUser) {
       return (
-        <AuthGate
+        <NeonAuthGate
           onAuthenticated={(username, role) => {
             setAuthUser(username);
             setAuthRole(role || "user");

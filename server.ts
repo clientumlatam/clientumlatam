@@ -274,6 +274,106 @@ app.post("/api/auth/logout", (req, res) => {
   });
 });
 
+// ─── NEON AUTH — email-based register / login ───────────────────────────────
+// NeonAuthGate.tsx sends { email, password, name? }. These endpoints mirror
+// the behaviour of /api/auth/register and /api/auth/login but identify users
+// by email instead of username, storing both in the same `users` table.
+app.post("/api/auth/neon-register", async (req, res) => {
+  try {
+    const { email, password, name } = req.body || {};
+    if (typeof email !== "string" || typeof password !== "string") {
+      return res.status(400).json({ error: "Email y contraseña son requeridos." });
+    }
+    if (!email.includes("@")) {
+      return res.status(400).json({ error: "Email inválido." });
+    }
+    if (password.length < 8) {
+      return res.status(400).json({ error: "La contraseña debe tener al menos 8 caracteres." });
+    }
+
+    const existing = await pgPool.query("SELECT id FROM users WHERE email = $1", [email.toLowerCase()]);
+    if ((existing.rowCount ?? 0) > 0) {
+      return res.status(409).json({ error: "Ya existe una cuenta con ese email." });
+    }
+
+    // Derive a username from the provided name or the email prefix
+    const rawBase = (name?.trim() || email.split("@")[0]).replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 28) || "user";
+    const taken = await pgPool.query("SELECT id FROM users WHERE username = $1", [rawBase]);
+    const username = (taken.rowCount ?? 0) > 0 ? `${rawBase}_${Math.floor(Math.random() * 9000) + 1000}` : rawBase;
+
+    const passwordHash = await bcrypt.hash(password, 12);
+    const client = await pgPool.connect();
+    let user: { id: number; username: string; role: string };
+    try {
+      await client.query("BEGIN");
+      await client.query("LOCK TABLE users IN SHARE ROW EXCLUSIVE MODE");
+      const { rows: countRows } = await client.query("SELECT COUNT(*)::int AS count FROM users");
+      const role = countRows[0]?.count === 0 ? "admin" : "user";
+      const inserted = await client.query(
+        "INSERT INTO users (username, password_hash, role, email) VALUES ($1, $2, $3, $4) RETURNING id, username, role",
+        [username, passwordHash, role, email.toLowerCase()]
+      );
+      user = inserted.rows[0];
+      await client.query("COMMIT");
+    } catch (txError) {
+      await client.query("ROLLBACK");
+      throw txError;
+    } finally {
+      client.release();
+    }
+
+    req.session.regenerate((err) => {
+      if (err) return res.status(500).json({ error: "Error al iniciar sesión tras el registro." });
+      req.session.userId = user.id;
+      req.session.username = user.username;
+      req.session.role = user.role;
+      req.session.save((saveErr) => {
+        if (saveErr) return res.status(500).json({ error: "Error al guardar la sesión." });
+        return res.status(201).json({ user: { id: user.id, username: user.username, role: user.role } });
+      });
+    });
+  } catch (error: any) {
+    console.error("Error en /api/auth/neon-register:", error);
+    return res.status(500).json({ error: "Ocurrió un error al registrar la cuenta." });
+  }
+});
+
+app.post("/api/auth/neon-login", async (req, res) => {
+  try {
+    const { email, password } = req.body || {};
+    if (typeof email !== "string" || typeof password !== "string") {
+      return res.status(400).json({ error: "Email y contraseña son requeridos." });
+    }
+
+    const result = await pgPool.query(
+      "SELECT id, username, password_hash, role FROM users WHERE email = $1",
+      [email.toLowerCase()]
+    );
+    const user = result.rows[0];
+    // Always run a hash comparison to reduce email-enumeration timing signal.
+    const validHash = user?.password_hash || "$2a$12$invalidsaltinvalidsaltinvalidsaltinvalidsaltinvalidsal";
+    const isValid = await bcrypt.compare(password, validHash);
+
+    if (!user || !isValid) {
+      return res.status(401).json({ error: "Email o contraseña incorrectos." });
+    }
+
+    req.session.regenerate((err) => {
+      if (err) return res.status(500).json({ error: "Error al iniciar sesión." });
+      req.session.userId = user.id;
+      req.session.username = user.username;
+      req.session.role = user.role;
+      req.session.save((saveErr) => {
+        if (saveErr) return res.status(500).json({ error: "Error al guardar la sesión." });
+        return res.json({ user: { id: user.id, username: user.username, role: user.role } });
+      });
+    });
+  } catch (error: any) {
+    console.error("Error en /api/auth/neon-login:", error);
+    return res.status(500).json({ error: "Ocurrió un error al iniciar sesión." });
+  }
+});
+
 app.get("/api/auth/me", async (req, res) => {
   if (!req.session.userId) {
     return res.status(401).json({ error: "No autenticado." });
@@ -2177,11 +2277,14 @@ async function initUsersTable() {
     CREATE TABLE IF NOT EXISTS users (
       id            SERIAL PRIMARY KEY,
       username      VARCHAR(32) NOT NULL UNIQUE,
-      password_hash TEXT NOT NULL,
+      password_hash TEXT NOT NULL DEFAULT '',
       role          VARCHAR(20) NOT NULL DEFAULT 'user',
       created_at    TIMESTAMP NOT NULL DEFAULT NOW()
     );
   `);
+  // Migrations for Neon Auth columns (idempotent)
+  await pgPool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS email        VARCHAR(255) UNIQUE`);
+  await pgPool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS neon_auth_id TEXT        UNIQUE`);
   console.log("[Auth] Tabla users lista.");
 }
 
