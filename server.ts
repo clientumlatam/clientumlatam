@@ -35,6 +35,10 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT) : 5000;
 // stale if it's ever rotated). Otherwise falls back to DATABASE_URL
 // (Replit's own internal Postgres) for local-only setups.
 async function resolveDatabaseUrl(): Promise<string> {
+  // Prefer an explicit connection string when available — fastest path.
+  if (process.env.NEON_DATABASE_URL) {
+    return process.env.NEON_DATABASE_URL;
+  }
   const neonApiKey = process.env.NEON_API_KEY;
   const neonProjectId = process.env.NEON_PROJECT_ID;
   if (neonApiKey && neonProjectId) {
