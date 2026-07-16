@@ -1050,8 +1050,45 @@ async function tryFreeAI(prompt: string, opts?: { jsonMode?: boolean }): Promise
   return null;
 }
 
+/**
+ * Primary AI dispatcher: Groq → OpenRouter → Gemini → null
+ * Uses the server's own API secrets for ALL users.
+ * Free tiers (Groq / OpenRouter) are tried first to avoid Gemini quota burns.
+ */
+async function generateAny(
+  ai: GoogleGenAI | null,
+  prompt: string,
+  opts?: { jsonMode?: boolean; geminiConfig?: any; defaultModel?: string }
+): Promise<string | null> {
+  const jm = opts?.jsonMode ?? false;
+
+  // 1. Groq → OpenRouter (free, server-side secrets, no per-user quota)
+  const freeText = await tryFreeAI(prompt, { jsonMode: jm });
+  if (freeText) {
+    console.log("[generateAny] Free AI respondió exitosamente.");
+    return freeText;
+  }
+
+  // 2. Gemini as last resort
+  if (!ai) {
+    console.warn("[generateAny] Gemini no disponible y Free AI falló.");
+    return null;
+  }
+  try {
+    const response = await generateContentWithFallback(ai, {
+      contents: prompt,
+      config: opts?.geminiConfig,
+      defaultModel: opts?.defaultModel,
+    });
+    return response.text?.trim() || null;
+  } catch (err: any) {
+    console.warn("[generateAny] Gemini también falló:", err.message || err);
+    return null;
+  }
+}
+
 // API Routes
-// --- HIGH-QUALITY LOCAL FALLBACK GENERATORS (when Gemini API is out of quota/429) ---
+// --- HIGH-QUALITY LOCAL FALLBACK GENERATORS (when all AI providers are out of quota) ---
 
 function getMockIndustryCopy(industry: string): any {
   const normalized = (industry || "").toLowerCase().trim();
@@ -2158,104 +2195,12 @@ Debes devolver un objeto JSON con la siguiente estructura de datos (todo adaptad
 
 IMPORTANTE: Devuelve exclusivamente el objeto JSON sin markdown.`;
 
-      try {
-        const response = await generateContentWithFallback(ai, {
-          contents: prompt,
-          config: {
-            responseMimeType: "application/json",
-            responseSchema: {
-              type: Type.OBJECT,
-              properties: {
-                cover: {
-                  type: Type.OBJECT,
-                  properties: {
-                    slogan: { type: Type.STRING },
-                    sub: { type: Type.STRING }
-                  },
-                  required: ["slogan", "sub"]
-                },
-                chatbot: {
-                  type: Type.OBJECT,
-                  properties: {
-                    title: { type: Type.STRING },
-                    features: {
-                      type: Type.ARRAY,
-                      items: {
-                        type: Type.OBJECT,
-                        properties: {
-                          title: { type: Type.STRING },
-                          desc: { type: Type.STRING }
-                        },
-                        required: ["title", "desc"]
-                      }
-                    },
-                    flowSteps: {
-                      type: Type.ARRAY,
-                      items: { type: Type.STRING }
-                    }
-                  },
-                  required: ["title", "features", "flowSteps"]
-                },
-                crm: {
-                  type: Type.OBJECT,
-                  properties: {
-                    title: { type: Type.STRING },
-                    features: {
-                      type: Type.ARRAY,
-                      items: {
-                        type: Type.OBJECT,
-                        properties: {
-                          title: { type: Type.STRING },
-                          desc: { type: Type.STRING }
-                        },
-                        required: ["title", "desc"]
-                      }
-                    }
-                  },
-                  required: ["title", "features"]
-                },
-                services: {
-                  type: Type.ARRAY,
-                  items: {
-                    type: Type.OBJECT,
-                    properties: {
-                      title: { type: Type.STRING },
-                      desc: { type: Type.STRING },
-                      bullets: {
-                        type: Type.ARRAY,
-                        items: { type: Type.STRING }
-                      }
-                    },
-                    required: ["title", "desc", "bullets"]
-                  }
-                },
-                testimonial: {
-                  type: Type.OBJECT,
-                  properties: {
-                    text: { type: Type.STRING },
-                    author: { type: Type.STRING },
-                    company: { type: Type.STRING }
-                  },
-                  required: ["text", "author", "company"]
-                },
-                outreachEmail: { type: Type.STRING }
-              },
-              required: ["cover", "chatbot", "crm", "services", "testimonial", "outreachEmail"]
-            }
-          }
-        });
-
-        return res.json({ result: JSON.parse(response.text || "{}") });
-      } catch (geminiError: any) {
-        console.warn("[Gemini Fallback] Quota exhaustion / error generating copy. Trying free AI...");
-        const freeText = await tryFreeAI(prompt, { jsonMode: true });
-        if (freeText) {
-          try { return res.json({ result: JSON.parse(extractJSON(freeText)) }); } catch { /* not valid JSON */ }
-        }
-        console.warn("[FreeAI] También falló. Usando plantilla local para rubro:", industry);
-        const fallbackData = getMockIndustryCopy(industry);
-        return res.json({ result: fallbackData, isFallback: true });
+      const genCopyText = await generateAny(ai, prompt, { jsonMode: true });
+      if (genCopyText) {
+        try { return res.json({ result: JSON.parse(extractJSON(genCopyText)) }); } catch { /* not valid JSON, continue to mock */ }
       }
+      console.warn("[generateIndustryCopy] Todos los proveedores fallaron. Usando plantilla local para rubro:", industry);
+      return res.json({ result: getMockIndustryCopy(industry), isFallback: true });
     }
 
     if (action === "assistantChat") {
@@ -2270,14 +2215,9 @@ Respondé de manera concisa (máximo 4 párrafos), práctica y con voseo argenti
 Historial de conversación: ${JSON.stringify(history || [])}
 Consulta del usuario: "${message}"`;
 
-      try {
-        const response = await generateContentWithFallback(ai, { contents: systemPrompt });
-        return res.json({ result: response.text?.trim() });
-      } catch (err: any) {
-        const freeText = await tryFreeAI(systemPrompt);
-        if (freeText) return res.json({ result: freeText });
-        return res.json({ result: "¡Hola! Estoy en modo offline por alta demanda. Escribime tu consulta de nuevo en un momento." });
-      }
+      const assistantText = await generateAny(ai, systemPrompt);
+      if (assistantText) return res.json({ result: assistantText });
+      return res.json({ result: "¡Hola! Estoy en modo offline por alta demanda. Escribime tu consulta de nuevo en un momento." });
     }
 
     if (action === "chatbotAnswer") {
@@ -2297,19 +2237,9 @@ Historial de conversación previa para contexto: ${JSON.stringify(history || [])
 
 Responde de forma directa, vendedora y simpática.`;
 
-      try {
-        const response = await generateContentWithFallback(ai, {
-          contents: prompt
-        });
-
-        return res.json({ result: response.text?.trim() });
-      } catch (geminiError: any) {
-        console.warn("[Gemini Fallback] Quota exhaustion / error generating chatbot answer. Trying free AI...");
-        const freeText = await tryFreeAI(prompt);
-        if (freeText) return res.json({ result: freeText });
-        const fallbackAnswer = getMockChatbotAnswer(payload);
-        return res.json({ result: fallbackAnswer, isFallback: true });
-      }
+      const chatbotText = await generateAny(ai, prompt);
+      if (chatbotText) return res.json({ result: chatbotText });
+      return res.json({ result: getMockChatbotAnswer(payload), isFallback: true });
     }
 
     if (action === "optimizeCopy") {
@@ -2320,19 +2250,9 @@ Mantén el español rioplatense si aplica, hazlo conciso, impactante y directo. 
 Texto a optimizar:
 "${text}"`;
 
-      try {
-        const response = await generateContentWithFallback(ai, {
-          contents: prompt
-        });
-
-        return res.json({ result: response.text?.trim() });
-      } catch (geminiError: any) {
-        console.warn("[Gemini Fallback] Quota exhaustion / error in optimizeCopy. Trying free AI...");
-        const freeText = await tryFreeAI(prompt);
-        if (freeText) return res.json({ result: freeText });
-        const fallbackAnswer = getMockOptimizeCopy(text, goal);
-        return res.json({ result: fallbackAnswer, isFallback: true });
-      }
+      const optimizedText = await generateAny(ai, prompt);
+      if (optimizedText) return res.json({ result: optimizedText });
+      return res.json({ result: getMockOptimizeCopy(text, goal), isFallback: true });
     }
 
     if (action === "translateBrochure") {
@@ -2345,24 +2265,11 @@ ${JSON.stringify(texts, null, 2)}
 
 Devuelve únicamente el objeto JSON con las traducciones mapeadas con las mismas llaves.`;
 
-      try {
-        const response = await generateContentWithFallback(ai, {
-          contents: prompt,
-          config: {
-            responseMimeType: "application/json"
-          }
-        });
-
-        return res.json({ result: JSON.parse(response.text || "{}") });
-      } catch (geminiError: any) {
-        console.warn("[Gemini Fallback] Quota exhaustion / error in translateBrochure. Trying free AI...");
-        const freeText = await tryFreeAI(prompt, { jsonMode: true });
-        if (freeText) {
-          try { return res.json({ result: JSON.parse(extractJSON(freeText)) }); } catch { /* not valid JSON */ }
-        }
-        const fallbackAnswer = getMockTranslateBrochure(texts, targetLanguage);
-        return res.json({ result: fallbackAnswer, isFallback: true });
+      const translateText = await generateAny(ai, prompt, { jsonMode: true });
+      if (translateText) {
+        try { return res.json({ result: JSON.parse(extractJSON(translateText)) }); } catch { /* not valid JSON */ }
       }
+      return res.json({ result: getMockTranslateBrochure(texts, targetLanguage), isFallback: true });
     }
 
     if (action === "prospectLeads") {
@@ -2469,9 +2376,12 @@ IMPORTANTE: Devuelve exclusivamente el objeto JSON sin markdown.`;
 
         return res.json({ result: JSON.parse(response.text || "{}") });
       } catch (geminiError: any) {
-        console.warn("[Gemini Fallback] Quota exhaustion / error in prospectLeads. Generating highly realistic Patagonia prospects.");
-        const fallbackAnswer = getMockProspects(city, industry);
-        return res.json({ result: fallbackAnswer, isFallback: true });
+        console.warn("[Gemini Fallback] Quota exhaustion / error in prospectLeads. Trying free AI...");
+        const freeProspects = await tryFreeAI(prompt, { jsonMode: true });
+        if (freeProspects) {
+          try { return res.json({ result: JSON.parse(extractJSON(freeProspects)) }); } catch { /* not valid JSON */ }
+        }
+        return res.json({ result: getMockProspects(city, industry), isFallback: true });
       }
     }
 
@@ -2503,57 +2413,11 @@ IMPORTANTE: Devuelve exclusivamente el objeto JSON sin markdown.`;
       }
       Usa voseo argentino / español rioplatense sutil en los dolores y descripciones. IMPORTANTE: Devuelve exclusivamente el objeto JSON sin markdown.`;
 
-      try {
-        const response = await generateContentWithFallback(ai, {
-          contents: prompt,
-          config: {
-            responseMimeType: "application/json",
-            responseSchema: {
-              type: Type.OBJECT,
-              properties: {
-                industry: { type: Type.STRING },
-                arrRange: { type: Type.STRING },
-                employeeCount: { type: Type.STRING },
-                stage: { type: Type.STRING },
-                growthRate: { type: Type.STRING },
-                decisionMakerRole: { type: Type.STRING },
-                decisionMakerSeniority: { type: Type.STRING },
-                painPoints: { type: Type.ARRAY, items: { type: Type.STRING } },
-                budgetAuthority: { type: Type.STRING },
-                avgContractValue: { type: Type.STRING },
-                salesCycle: { type: Type.STRING },
-                winRatePotential: { type: Type.STRING },
-                ltvToCac: { type: Type.STRING },
-                regions: { type: Type.STRING },
-                timeZones: { type: Type.STRING },
-                meddicMetrics: { type: Type.STRING },
-                meddicEconomicBuyer: { type: Type.STRING },
-                meddicDecisionCriteria: { type: Type.STRING },
-                meddicDecisionProcess: { type: Type.STRING },
-                meddicIdentifyPain: { type: Type.STRING },
-                meddicChampion: { type: Type.STRING }
-              },
-              required: [
-                "industry", "arrRange", "employeeCount", "stage", "growthRate",
-                "decisionMakerRole", "decisionMakerSeniority", "painPoints",
-                "budgetAuthority", "avgContractValue", "salesCycle", "winRatePotential",
-                "ltvToCac", "regions", "timeZones", "meddicMetrics", "meddicEconomicBuyer",
-                "meddicDecisionCriteria", "meddicDecisionProcess", "meddicIdentifyPain", "meddicChampion"
-              ]
-            }
-          }
-        });
-
-        return res.json({ result: JSON.parse(response.text || "{}") });
-      } catch (geminiError: any) {
-        console.warn("[Gemini Fallback] Quota exhaustion / error in buildICP. Trying free AI...");
-        const freeText = await tryFreeAI(prompt, { jsonMode: true });
-        if (freeText) {
-          try { return res.json({ result: JSON.parse(extractJSON(freeText)) }); } catch { /* not valid JSON */ }
-        }
-        const fallbackAnswer = getMockICP(industry, acv);
-        return res.json({ result: fallbackAnswer, isFallback: true });
+      const icpText = await generateAny(ai, prompt, { jsonMode: true });
+      if (icpText) {
+        try { return res.json({ result: JSON.parse(extractJSON(icpText)) }); } catch { /* not valid JSON */ }
       }
+      return res.json({ result: getMockICP(industry, acv), isFallback: true });
     }
 
     if (action === "researchProspect") {
@@ -2580,62 +2444,11 @@ IMPORTANTE: Devuelve exclusivamente el objeto JSON sin markdown.`;
       }
       IMPORTANTE: Devuelve exclusivamente el objeto JSON sin markdown.`;
 
-      try {
-        const response = await generateContentWithFallback(ai, {
-          contents: prompt,
-          config: {
-            responseMimeType: "application/json",
-            responseSchema: {
-              type: Type.OBJECT,
-              properties: {
-                company: { type: Type.STRING },
-                industry: { type: Type.STRING },
-                revenue: { type: Type.STRING },
-                founded: { type: Type.STRING },
-                employees: { type: Type.STRING },
-                funding: { type: Type.STRING },
-                recentNews: { type: Type.STRING },
-                buyingSignals: { type: Type.ARRAY, items: { type: Type.STRING } },
-                keyContacts: {
-                  type: Type.ARRAY,
-                  items: {
-                    type: Type.OBJECT,
-                    properties: {
-                      name: { type: Type.STRING },
-                      title: { type: Type.STRING },
-                      email: { type: Type.STRING },
-                      linkedin: { type: Type.STRING },
-                      influence: { type: Type.STRING }
-                    },
-                    required: ["name", "title", "email", "linkedin", "influence"]
-                  }
-                },
-                urgencyPainLevel: { type: Type.INTEGER },
-                urgencyTimeline: { type: Type.STRING },
-                urgencyBudgetStatus: { type: Type.STRING },
-                personalizationHooks: { type: Type.ARRAY, items: { type: Type.STRING } },
-                fitScore: { type: Type.INTEGER },
-                fitReasoning: { type: Type.STRING }
-              },
-              required: [
-                "company", "industry", "revenue", "founded", "employees", "funding",
-                "recentNews", "buyingSignals", "keyContacts", "urgencyPainLevel",
-                "urgencyTimeline", "urgencyBudgetStatus", "personalizationHooks", "fitScore", "fitReasoning"
-              ]
-            }
-          }
-        });
-
-        return res.json({ result: JSON.parse(response.text || "{}") });
-      } catch (geminiError: any) {
-        console.warn("[Gemini Fallback] Quota exhaustion / error in researchProspect. Trying free AI...");
-        const freeText = await tryFreeAI(prompt, { jsonMode: true });
-        if (freeText) {
-          try { return res.json({ result: JSON.parse(extractJSON(freeText)) }); } catch { /* not valid JSON */ }
-        }
-        const fallbackAnswer = getMockResearch(company, industry);
-        return res.json({ result: fallbackAnswer, isFallback: true });
+      const researchText = await generateAny(ai, prompt, { jsonMode: true });
+      if (researchText) {
+        try { return res.json({ result: JSON.parse(extractJSON(researchText)) }); } catch { /* not valid JSON */ }
       }
+      return res.json({ result: getMockResearch(company, industry), isFallback: true });
     }
 
     if (action === "generateOutreach") {
@@ -2657,48 +2470,11 @@ IMPORTANTE: Devuelve exclusivamente el objeto JSON sin markdown.`;
       }
       IMPORTANTE: Devuelve exclusivamente el objeto JSON sin markdown.`;
 
-      try {
-        const response = await generateContentWithFallback(ai, {
-          contents: prompt,
-          config: {
-            responseMimeType: "application/json",
-            responseSchema: {
-              type: Type.OBJECT,
-              properties: {
-                prospect: { type: Type.STRING },
-                company: { type: Type.STRING },
-                title: { type: Type.STRING },
-                goal: { type: Type.STRING },
-                email1Subject: { type: Type.STRING },
-                email1Body: { type: Type.STRING },
-                email2Subject: { type: Type.STRING },
-                email2Body: { type: Type.STRING },
-                email3Subject: { type: Type.STRING },
-                email3Body: { type: Type.STRING },
-                linkedinSequence: { type: Type.ARRAY, items: { type: Type.STRING } },
-                phoneScript: { type: Type.STRING }
-              },
-              required: [
-                "prospect", "company", "title", "goal",
-                "email1Subject", "email1Body",
-                "email2Subject", "email2Body",
-                "email3Subject", "email3Body",
-                "linkedinSequence", "phoneScript"
-              ]
-            }
-          }
-        });
-
-        return res.json({ result: JSON.parse(response.text || "{}") });
-      } catch (geminiError: any) {
-        console.warn("[Gemini Fallback] Quota exhaustion / error in generateOutreach. Trying free AI...");
-        const freeText = await tryFreeAI(prompt, { jsonMode: true });
-        if (freeText) {
-          try { return res.json({ result: JSON.parse(extractJSON(freeText)) }); } catch { /* not valid JSON */ }
-        }
-        const fallbackAnswer = getMockOutreach(company, contact, title, industry, painPoint);
-        return res.json({ result: fallbackAnswer, isFallback: true });
+      const outreachText = await generateAny(ai, prompt, { jsonMode: true });
+      if (outreachText) {
+        try { return res.json({ result: JSON.parse(extractJSON(outreachText)) }); } catch { /* not valid JSON */ }
       }
+      return res.json({ result: getMockOutreach(company, contact, title, industry, painPoint), isFallback: true });
     }
 
     if (action === "salesAdvisorAnswer") {
@@ -2720,19 +2496,9 @@ Historial de conversación previa: ${JSON.stringify(history || [])}
 
 Proporciona consejos estratégicos, creativos y prácticos. Usa el voseo argentino (español rioplatense) con un tono comercial persuasivo, amigable y empático. Da respuestas que incluyan tips prácticos de conversión (ej. llamados a la acción urgentes, colocación de testimonios estratégicos, cómo organizar mejor los servicios en el brochure). Limita tu respuesta a un máximo de 3 párrafos cortos o listas estructuradas fáciles de escanear.`;
 
-      try {
-        const response = await generateContentWithFallback(ai, {
-          contents: prompt
-        });
-
-        return res.json({ result: response.text?.trim() });
-      } catch (geminiError: any) {
-        console.warn("[Gemini Fallback] Quota exhaustion or error in salesAdvisorAnswer. Trying free AI...");
-        const freeText = await tryFreeAI(prompt);
-        if (freeText) return res.json({ result: freeText });
-        const fallbackAdvice = `¡Hola! Como tu consultor de ventas en Clientum para el rubro de "${industry || "tu negocio"}", te recomiendo asegurarte de que cada página tenga un solo objetivo de conversión. Por ejemplo, en la sección de chatbot destaca que 'responde consultas automáticas en 10 segundos'. ¡Eso acelera un 70% el interés inicial!`;
-        return res.json({ result: fallbackAdvice, isFallback: true });
-      }
+      const advisorText = await generateAny(ai, prompt);
+      if (advisorText) return res.json({ result: advisorText });
+      return res.json({ result: `¡Hola! Como tu consultor de ventas en Clientum para el rubro de "${industry || "tu negocio"}", te recomiendo asegurarte de que cada página tenga un solo objetivo de conversión. Por ejemplo, en la sección de chatbot destaca que 'responde consultas automáticas en 10 segundos'. ¡Eso acelera un 70% el interés inicial!`, isFallback: true });
     }
 
     if (action === "generateImage") {
