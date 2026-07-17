@@ -3211,6 +3211,18 @@ async function setupServer() {
 
   // Bind the port BEFORE any async work so Cloud Run's healthcheck never
   // sees a refused connection and incorrectly triggers a restart loop.
+  // ── AI provider availability check ───────────────────────────────────────
+  const aiProviders = [
+    { name: "Gemini",      key: process.env.GEMINI_API_KEY },
+    { name: "Groq",        key: process.env.GROQ_API_KEY },
+    { name: "OpenRouter",  key: process.env.OPENROUTER_API_KEY },
+  ];
+  const available = aiProviders.filter(p => p.key && p.key.trim() !== "").map(p => p.name);
+  const missing   = aiProviders.filter(p => !p.key || p.key.trim() === "").map(p => p.name);
+  if (available.length) console.log(`[AI] Proveedores disponibles: ${available.join(", ")}`);
+  if (missing.length)   console.warn(`[AI] Sin configurar: ${missing.join(", ")} — usando fallback local`);
+  // ─────────────────────────────────────────────────────────────────────────
+
   const httpServer = app.listen(PORT, "0.0.0.0", () => {
     console.log(`[Clientum Server] Servidor corriendo en http://localhost:${PORT}`);
   });
