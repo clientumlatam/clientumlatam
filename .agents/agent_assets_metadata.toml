@@ -84,3 +84,15 @@ id = "ScXpHQTCnWU1E0ec76Oki"
 uri = "file://talleres_donweb.csv"
 type = "table"
 title = "Talleres DonWeb — 140 registros"
+
+[[outputs]]
+id = "vTZzBv4_ZaBnVkTly2_5C"
+uri = "file://docs/catalogo/servicios-y-productos.csv"
+type = "table"
+title = "Servicios y Productos — 456 filas"
+
+[[outputs]]
+id = "N_Z7qEJfZw2vUG3cRZUyz"
+uri = "file://docs/catalogo/cursos.csv"
+type = "table"
+title = "Cursos y Talleres — 289 filas"
