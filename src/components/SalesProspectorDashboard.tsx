@@ -5,6 +5,10 @@ import { loadDeals, saveDeals, addActivity, DEALS_EVENT } from "../store/sharedS
 import CrmFullApp from "./crm-full/CrmFullApp";
 import SidebarEditor from "./SidebarEditor";
 import AsistenteIA from "./AsistenteIA";
+import OrquestadorIA from "./OrquestadorIA";
+import WpSetup from "./wordpress/WpSetup";
+import WpModulos from "./wordpress/WpModulos";
+import CrmFullLeads from "./crm-full/CrmFullLeads";
 import BrochurePreview from "./BrochurePreview";
 import {
   Users,
@@ -61,7 +65,8 @@ import {
   Clock,
   PlusCircle,
   Activity,
-  Save
+  Save,
+  Network
 } from "lucide-react";
 
 interface SalesProspectorDashboardProps {
@@ -183,7 +188,9 @@ export default function SalesProspectorDashboard({
   const [activeTab, setActiveTab] = useState<
     "pipeline" | "icp" | "research" | "meddic" | "outreach" |
     "products" | "sellers" | "branches" | "conversations" | "bot" |
-    "brochure" | "config" | "pages" | "ai" | "activity" | "quickcreate"
+    "brochure" | "config" | "pages" | "ai" | "activity" | "quickcreate" |
+    "orquestador" |
+    "wp-leads" | "wp-setup" | "wp-modulos"
   >("config");
   // "CRM Completo" reorganizado: barra horizontal de categorías (arriba) + menú vertical (izquierda)
   // Single unified navigation, organized into task-based groups so every AI Client
@@ -240,6 +247,24 @@ export default function SalesProspectorDashboard({
         { id: "pages", label: "Contenido", icon: Edit3 },
         { id: "config", label: "Configuración", icon: Sliders },
         { id: "ai", label: "Copiloto IA", icon: Sparkles },
+      ],
+    },
+    {
+      id: "wordpress",
+      label: "WordPress",
+      icon: Globe,
+      items: [
+        { id: "wp-leads",   label: "Leads del Chatbot",   desc: "Leads capturados por el plugin", icon: MessageCircle },
+        { id: "wp-setup",   label: "Configuración",        desc: "Webhook y setup del plugin",     icon: Key },
+        { id: "wp-modulos", label: "Módulos del Plugin",   desc: "AI Marketing Expert v2",         icon: Globe },
+      ],
+    },
+    {
+      id: "orquestador",
+      label: "Orquestador IA",
+      icon: Network,
+      items: [
+        { id: "orquestador", label: "Orquestador IA", desc: "Chat con todos los agentes", icon: Network },
       ],
     },
   ];
@@ -517,7 +542,7 @@ export default function SalesProspectorDashboard({
           payload: { 
             city: searchCity, 
             industry: selectedInd,
-            googleMapsPlatformKey: customApiKey 
+            googleMapsPlatformKey: customApiKey || API_KEY 
           }
         })
       });
@@ -1775,23 +1800,26 @@ export default function SalesProspectorDashboard({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5 font-bold text-emerald-700">
                       <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
-                      <span>Buscador Google Maps Activo </span>
+                      <span>Buscador Google Maps Activo</span>
                     </div>
-                    <button
-                      onClick={() => {
-                        setValidationError(null);
-                        setValidationSuccess(false);
-                        setModalKeyInput(customApiKey);
-                        setShowKeyModal(true);
-                      }}
-                      className="text-slate-400 hover:text-slate-600 transition cursor-pointer"
-                      title="Configurar Clave"
-                    >
-                      <Settings className="w-3.5 h-3.5" />
-                    </button>
+                    {!hasValidKey && (
+                      <button
+                        onClick={() => {
+                          setValidationError(null);
+                          setValidationSuccess(false);
+                          setModalKeyInput(customApiKey);
+                          setShowKeyModal(true);
+                        }}
+                        className="text-slate-400 hover:text-slate-600 transition cursor-pointer"
+                        title="Configurar Clave"
+                      >
+                        <Settings className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                   <span>
-                    Conexión establecida con la API oficial de Google Places para obtener datos 100% reales en tiempo real. {customApiKey ? "(Clave personalizada guardada localmente)" : ""}
+                    Conexión establecida con la API oficial de Google Places para obtener datos 100% reales en tiempo real.{" "}
+                    {hasValidKey ? "(Clave del servidor activa para todos los usuarios)" : customApiKey ? "(Clave personalizada guardada localmente)" : ""}
                   </span>
                 </div>
               ) : (
@@ -2260,7 +2288,7 @@ export default function SalesProspectorDashboard({
                         </span>
                       </div>
                       <span className="bg-slate-800 text-emerald-400 border border-emerald-500/20 text-[9px] font-bold font-mono px-2 py-0.5 rounded">
-                        {customApiKey ? "Google Maps API" : "Simulador Local"}
+                        {hasActiveValidKey ? "Google Maps API" : "Simulador Local"}
                       </span>
                     </div>
 
@@ -2397,7 +2425,7 @@ export default function SalesProspectorDashboard({
                     {/* Map Footer status */}
                     <div className="bg-slate-50 border-t border-slate-200 p-2.5 text-[10px] text-slate-400 flex items-center justify-between shrink-0 font-mono">
                       <span>Ubicación: {searchCity}, Patagonia</span>
-                      {customApiKey ? (
+                      {hasActiveValidKey ? (
                         <span className="text-emerald-600 font-bold">● ONLINE (Google)</span>
                       ) : (
                         <span className="text-amber-500 font-bold">● MODO SIMULADO</span>
@@ -3197,6 +3225,34 @@ export default function SalesProspectorDashboard({
           </div>
         </div>
       )}
+      {/* TAB: WORDPRESS — Leads del Chatbot */}
+      {activeTab === "wp-leads" && (
+        <div className="flex-1 overflow-y-auto">
+          <CrmFullLeads />
+        </div>
+      )}
+
+      {/* TAB: WORDPRESS — Configuración del Plugin */}
+      {activeTab === "wp-setup" && (
+        <div className="flex-1 overflow-y-auto">
+          <WpSetup />
+        </div>
+      )}
+
+      {/* TAB: WORDPRESS — Módulos del Plugin */}
+      {activeTab === "wp-modulos" && (
+        <div className="flex-1 overflow-y-auto">
+          <WpModulos />
+        </div>
+      )}
+
+      {/* TAB: ORQUESTADOR IA */}
+      {activeTab === "orquestador" && (
+        <div className="flex-1 -m-6 flex flex-col overflow-hidden">
+          <OrquestadorIA currentUsername={currentUsername} />
+        </div>
+      )}
+
       {/* Asistente IA — right-side copilot panel */}
       <AsistenteIA
         open={copilotOpen}

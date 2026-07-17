@@ -1,4 +1,5 @@
 {
+  "exclude": ["node_modules", "dist", "artifacts"],
   "compilerOptions": {
     "target": "ES2022",
     "experimentalDecorators": true,
@@ -18,7 +19,11 @@
     "paths": {
       "@/*": [
         "./*"
-      ]
+      ],
+      "@neondatabase/neon-js/auth/react/ui": ["./src/lib/neon-sdk/auth-react-ui.tsx"],
+      "@neondatabase/neon-js/auth/react": ["./src/lib/neon-sdk/auth-react.tsx"],
+      "@neondatabase/neon-js/auth": ["./src/lib/neon-sdk/auth.ts"],
+      "@neondatabase/neon-js/ui/css": ["./src/lib/neon-sdk/ui-css.ts"]
     },
     "allowImportingTsExtensions": true,
     "noEmit": true

@@ -2,16 +2,30 @@ import express from "express";
 import path from "path";
 import dotenv from "dotenv";
 import { GoogleGenAI, Type } from "@google/genai";
-import { createServer as createViteServer } from "vite";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import bcrypt from "bcryptjs";
 import { Pool } from "pg";
+import nodemailer from "nodemailer";
+import crypto from "crypto";
 
 dotenv.config();
 
 const app = express();
 app.use(express.json({ limit: "10mb" }));
+
+// This app only ever serves /api/* on Vercel (see vercel.json routes) — the
+// SPA itself is served straight from the filesystem/CDN. Without this,
+// Vercel's default "public, max-age=0, must-revalidate" caching header on
+// serverless function responses lets its edge CDN treat auth responses as
+// cacheable, which strips the Set-Cookie header before it reaches the
+// browser. That silently breaks login/register in production (the session
+// cookie never gets set) while working fine in local/dev. Force no-store on
+// every API response so cookies always reach the client.
+app.use((req, res, next) => {
+  res.setHeader("Cache-Control", "no-store");
+  next();
+});
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 5000;
 
@@ -23,6 +37,10 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT) : 5000;
 // stale if it's ever rotated). Otherwise falls back to DATABASE_URL
 // (Replit's own internal Postgres) for local-only setups.
 async function resolveDatabaseUrl(): Promise<string> {
+  // Prefer an explicit connection string when available — fastest path.
+  if (process.env.NEON_DATABASE_URL) {
+    return process.env.NEON_DATABASE_URL;
+  }
   const neonApiKey = process.env.NEON_API_KEY;
   const neonProjectId = process.env.NEON_PROJECT_ID;
   if (neonApiKey && neonProjectId) {
@@ -45,10 +63,20 @@ async function resolveDatabaseUrl(): Promise<string> {
 }
 
 const databaseUrl = await resolveDatabaseUrl();
-const pgPool = new Pool({
-  connectionString: databaseUrl,
-  ssl: /sslmode=disable/i.test(databaseUrl) ? false : { rejectUnauthorized: false },
-});
+// When no connection string is resolved (e.g. DATABASE_URL/Neon secrets not
+// set), `pg` falls back to PGHOST/PGUSER/PGPASSWORD/PGDATABASE/PGPORT, which
+// point at Replit's own built-in Postgres for local development. That
+// instance does not support SSL, so SSL must only be forced when we actually
+// have an external (Neon) connection string that doesn't opt out via
+// sslmode=disable.
+const pgPool = new Pool(
+  databaseUrl
+    ? {
+        connectionString: databaseUrl,
+        ssl: /sslmode=disable/i.test(databaseUrl) ? false : { rejectUnauthorized: false },
+      }
+    : {}
+);
 const PgSession = connectPgSimple(session);
 
 declare module "express-session" {
@@ -78,7 +106,87 @@ app.use(
   })
 );
 
-const USERNAME_RE = /^[a-zA-Z0-9_.-]{3,32}$/;
+// Accepts classic usernames (letters/numbers/._-) OR email addresses.
+const USERNAME_RE = /^[a-zA-Z0-9_.@+\-]{3,64}$/;
+
+// ---------------------------------------------------------------------------
+// Email — Gmail SMTP via nodemailer
+// ---------------------------------------------------------------------------
+function createMailTransport() {
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  if (!user || !pass) return null;
+  return nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false, // STARTTLS
+    auth: { user, pass },
+  });
+}
+
+async function sendPasswordResetEmail(toEmail: string, token: string): Promise<void> {
+  const transport = createMailTransport();
+  if (!transport) throw new Error("SMTP no configurado (SMTP_USER / SMTP_PASS faltantes).");
+
+  const baseUrl = process.env.APP_URL?.replace(/\/$/, "") || "https://clientum.com.ar";
+  const resetUrl = `${baseUrl}?reset_token=${token}`;
+
+  await transport.sendMail({
+    from: `"Clientum CRM" <${process.env.SMTP_USER}>`,
+    to: toEmail,
+    subject: "Restablecer contraseña — Clientum CRM",
+    html: `
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#0B131D;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0B131D;padding:48px 16px;">
+    <tr><td align="center">
+      <table width="480" cellpadding="0" cellspacing="0" style="background:#111C28;border:1px solid #1A2733;border-radius:16px;overflow:hidden;">
+        <tr>
+          <td style="background:#10B981;height:4px;"></td>
+        </tr>
+        <tr>
+          <td style="padding:40px 40px 32px;">
+            <p style="margin:0 0 8px;font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">Clientum CRM</p>
+            <p style="margin:0 0 28px;font-size:12px;color:#4B5563;font-family:monospace;letter-spacing:2px;text-transform:uppercase;">Restablecer contraseña</p>
+            <p style="margin:0 0 20px;font-size:15px;color:#9CA3AF;line-height:1.6;">
+              Recibimos una solicitud para restablecer la contraseña de tu cuenta.<br>
+              Hacé clic en el botón para crear una nueva contraseña. El enlace es válido por <strong style="color:#e5e7eb;">1 hora</strong>.
+            </p>
+            <table cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
+              <tr>
+                <td style="background:#10B981;border-radius:10px;">
+                  <a href="${resetUrl}" style="display:inline-block;padding:14px 32px;font-size:14px;font-weight:700;color:#ffffff;text-decoration:none;letter-spacing:0.3px;">
+                    Restablecer contraseña →
+                  </a>
+                </td>
+              </tr>
+            </table>
+            <p style="margin:0 0 8px;font-size:12px;color:#4B5563;">Si no podés hacer clic, copiá este enlace:</p>
+            <p style="margin:0 0 28px;font-size:12px;color:#6B7280;word-break:break-all;">${resetUrl}</p>
+            <hr style="border:none;border-top:1px solid #1A2733;margin:0 0 20px;">
+            <p style="margin:0;font-size:12px;color:#374151;line-height:1.6;">
+              Si no solicitaste restablecer tu contraseña, podés ignorar este correo. Tu contraseña actual sigue siendo válida.<br>
+              <strong style="color:#4B5563;">Este enlace expira en 1 hora.</strong>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:16px 40px;background:#0B131D;">
+            <p style="margin:0;font-size:11px;color:#374151;text-align:center;">
+              Clientum CRM · Patagonia, Argentina · <a href="https://clientum.com.ar" style="color:#4B5563;">clientum.com.ar</a>
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+    text: `Restablecer contraseña — Clientum CRM\n\nHacé clic en el siguiente enlace para crear una nueva contraseña (válido por 1 hora):\n\n${resetUrl}\n\nSi no solicitaste este cambio, podés ignorar este correo.`,
+  });
+}
 
 function requireAuth(req: express.Request, res: express.Response, next: express.NextFunction) {
   if (!req.session.userId) {
@@ -144,16 +252,23 @@ app.post("/api/auth/register", async (req, res) => {
       return res.status(400).json({ error: "Usuario y contraseña son requeridos." });
     }
     if (!USERNAME_RE.test(username)) {
-      return res.status(400).json({ error: "El usuario debe tener entre 3 y 32 caracteres (letras, números, . _ -)." });
+      return res.status(400).json({ error: "El usuario debe tener entre 3 y 64 caracteres (letras, números, . _ - @) o ser un email válido." });
     }
     if (password.length < 8) {
       return res.status(400).json({ error: "La contraseña debe tener al menos 8 caracteres." });
     }
 
-    const existing = await pgPool.query("SELECT id FROM users WHERE username = $1", [username]);
+    const existing = await pgPool.query(
+      "SELECT id FROM users WHERE username = $1 OR (email IS NOT NULL AND LOWER(email) = LOWER($1))",
+      [username]
+    );
     if ((existing.rowCount ?? 0) > 0) {
       return res.status(409).json({ error: "Ese usuario ya existe." });
     }
+
+    // If the username looks like an email, persist it also in the email column
+    // so the forgot-password flow can find the account by email later.
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(username);
 
     const passwordHash = await bcrypt.hash(password, 12);
     // The very first account created becomes admin so there's always someone
@@ -168,7 +283,9 @@ app.post("/api/auth/register", async (req, res) => {
       const { rows: countRows } = await client.query("SELECT COUNT(*)::int AS count FROM users");
       const role = countRows[0]?.count === 0 ? "admin" : "user";
       const inserted = await client.query(
-        "INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3) RETURNING id, username, role",
+        isEmail
+          ? "INSERT INTO users (username, password_hash, role, email) VALUES ($1, $2, $3, $1) RETURNING id, username, role"
+          : "INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3) RETURNING id, username, role",
         [username, passwordHash, role]
       );
       user = inserted.rows[0];
@@ -209,7 +326,11 @@ app.post("/api/auth/login", async (req, res) => {
       return res.status(400).json({ error: "Usuario y contraseña son requeridos." });
     }
 
-    const result = await pgPool.query("SELECT id, username, password_hash, role FROM users WHERE username = $1", [username]);
+    // Accept username or email in the username field
+    const result = await pgPool.query(
+      "SELECT id, username, password_hash, role FROM users WHERE username = $1 OR (email IS NOT NULL AND LOWER(email) = LOWER($1)) LIMIT 1",
+      [username]
+    );
     const user = result.rows[0];
     // Always run a hash comparison to reduce username-enumeration timing signal.
     const validHash = user?.password_hash || "$2a$12$invalidsaltinvalidsaltinvalidsaltinvalidsaltinvalidsal";
@@ -250,6 +371,444 @@ app.post("/api/auth/logout", (req, res) => {
     res.clearCookie("connect.sid");
     return res.json({ ok: true });
   });
+});
+
+// ─── NEON AUTH — email-based register / login ───────────────────────────────
+// These endpoints proxy sign-up / sign-in to the actual Neon Auth (Better Auth)
+// REST API server-side (avoids CORS, no SDK needed), then upsert the identity
+// into our local `users` table so CRM role management keeps working.
+// If VITE_NEON_AUTH_URL / NEON_AUTH_BASE_URL is not set the endpoints fall
+// back to local bcrypt auth against our own users table.
+
+const NEON_AUTH_BASE =
+  process.env.NEON_AUTH_BASE_URL ||
+  process.env.VITE_NEON_AUTH_URL ||
+  "";
+
+// After a successful Neon Auth call, upsert the identity into our `users`
+// table and resolve the local row (id, username, role).
+async function upsertNeonAuthUser(neonUser: {
+  id: string;
+  email: string;
+  name?: string;
+  passwordHash?: string; // optional local bcrypt hash for email-not-verified fallback
+}): Promise<{ id: number; username: string; role: string }> {
+  const email = neonUser.email.toLowerCase();
+
+  // Try existing record (by neon_auth_id first, then email)
+  const existing = await pgPool.query(
+    `SELECT id, username, role
+       FROM users
+      WHERE neon_auth_id = $1 OR email = $2
+      LIMIT 1`,
+    [neonUser.id, email]
+  );
+
+  if ((existing.rowCount ?? 0) > 0) {
+    const row = existing.rows[0];
+    // Keep neon_auth_id and password_hash in sync
+    const hashUpdate = neonUser.passwordHash ? neonUser.passwordHash : undefined;
+    if (hashUpdate) {
+      await pgPool.query(
+        `UPDATE users SET neon_auth_id = $1, email = $2, password_hash = $3 WHERE id = $4`,
+        [neonUser.id, email, hashUpdate, row.id]
+      );
+    } else {
+      await pgPool.query(
+        `UPDATE users SET neon_auth_id = $1, email = $2 WHERE id = $3`,
+        [neonUser.id, email, row.id]
+      );
+    }
+    return row;
+  }
+
+  // First-ever user → admin, everyone else → user
+  const { rows: countRows } = await pgPool.query(
+    "SELECT COUNT(*)::int AS count FROM users"
+  );
+  const role = countRows[0]?.count === 0 ? "admin" : "user";
+
+  // Derive a username from name or email prefix, unique-ify if needed
+  const rawBase =
+    (neonUser.name?.trim() || email.split("@")[0])
+      .replace(/[^a-zA-Z0-9._-]/g, "_")
+      .slice(0, 28) || "user";
+  const taken = await pgPool.query(
+    "SELECT id FROM users WHERE username = $1",
+    [rawBase]
+  );
+  const username =
+    (taken.rowCount ?? 0) > 0
+      ? `${rawBase}_${Math.floor(Math.random() * 9000) + 1000}`
+      : rawBase;
+
+  const inserted = await pgPool.query(
+    `INSERT INTO users (username, password_hash, role, email, neon_auth_id)
+          VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, username, role`,
+    [username, neonUser.passwordHash || "", role, email, neonUser.id]
+  );
+  return inserted.rows[0];
+}
+
+// ── Local-only fallback (used when NEON_AUTH_BASE is not configured) ──────────
+async function localNeonRegister(
+  email: string,
+  password: string,
+  name?: string
+): Promise<{ id: number; username: string; role: string }> {
+  const existing = await pgPool.query(
+    "SELECT id FROM users WHERE email = $1",
+    [email]
+  );
+  if ((existing.rowCount ?? 0) > 0) {
+    throw Object.assign(new Error("Ya existe una cuenta con ese email."), {
+      status: 409,
+    });
+  }
+
+  const rawBase =
+    (name?.trim() || email.split("@")[0])
+      .replace(/[^a-zA-Z0-9._-]/g, "_")
+      .slice(0, 28) || "user";
+  const taken = await pgPool.query(
+    "SELECT id FROM users WHERE username = $1",
+    [rawBase]
+  );
+  const username =
+    (taken.rowCount ?? 0) > 0
+      ? `${rawBase}_${Math.floor(Math.random() * 9000) + 1000}`
+      : rawBase;
+
+  const passwordHash = await bcrypt.hash(password, 12);
+  const client = await pgPool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query("LOCK TABLE users IN SHARE ROW EXCLUSIVE MODE");
+    const { rows: countRows } = await client.query(
+      "SELECT COUNT(*)::int AS count FROM users"
+    );
+    const role = countRows[0]?.count === 0 ? "admin" : "user";
+    const inserted = await client.query(
+      `INSERT INTO users (username, password_hash, role, email)
+            VALUES ($1, $2, $3, $4)
+         RETURNING id, username, role`,
+      [username, passwordHash, role, email]
+    );
+    await client.query("COMMIT");
+    return inserted.rows[0];
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+async function localNeonLogin(
+  email: string,
+  password: string
+): Promise<{ id: number; username: string; role: string }> {
+  const result = await pgPool.query(
+    "SELECT id, username, password_hash, role FROM users WHERE email = $1",
+    [email]
+  );
+  const user = result.rows[0];
+  const validHash =
+    user?.password_hash ||
+    "$2a$12$invalidsaltinvalidsaltinvalidsaltinvalidsaltinvalidsal";
+  const isValid = await bcrypt.compare(password, validHash);
+  if (!user || !isValid) {
+    throw Object.assign(new Error("Email o contraseña incorrectos."), {
+      status: 401,
+    });
+  }
+  return user;
+}
+
+// ── Shared session-create helper ──────────────────────────────────────────────
+// Returns a Promise so callers can await it and catch errors properly.
+// A 5-second timeout guarantees the HTTP response is always sent even if the
+// session-store callback never fires (e.g. DB connection drop).
+function createSession(
+  req: express.Request,
+  res: express.Response,
+  user: { id: number; username: string; role: string },
+  statusCode = 200
+): Promise<void> {
+  return new Promise((resolve) => {
+    const timeout = setTimeout(() => {
+      if (!res.headersSent) {
+        console.error("[Session] Timeout guardando sesión — respondiendo sin cookie");
+        res.status(200).json({ user: { id: user.id, username: user.username, role: user.role } });
+      }
+      resolve();
+    }, 5000);
+
+    req.session.regenerate((err) => {
+      if (err) {
+        clearTimeout(timeout);
+        if (!res.headersSent)
+          res.status(500).json({ error: "Error al crear la sesión." });
+        return resolve();
+      }
+      req.session.userId = user.id;
+      req.session.username = user.username;
+      req.session.role = user.role;
+      req.session.save((saveErr) => {
+        clearTimeout(timeout);
+        if (!res.headersSent) {
+          if (saveErr) {
+            console.error("[Session] Error guardando sesión:", saveErr);
+            // Still return the user — auth succeeded, session persistence failed
+            res.status(200).json({ user: { id: user.id, username: user.username, role: user.role } });
+          } else {
+            res.status(statusCode).json({ user: { id: user.id, username: user.username, role: user.role } });
+          }
+        }
+        resolve();
+      });
+    });
+  });
+}
+
+// ── Register ──────────────────────────────────────────────────────────────────
+app.post("/api/auth/neon-register", async (req, res) => {
+  try {
+    const { email, password, name } = req.body || {};
+    if (typeof email !== "string" || typeof password !== "string") {
+      return res.status(400).json({ error: "Email y contraseña son requeridos." });
+    }
+    if (!email.includes("@")) {
+      return res.status(400).json({ error: "Email inválido." });
+    }
+    if (password.length < 8) {
+      return res.status(400).json({ error: "La contraseña debe tener al menos 8 caracteres." });
+    }
+
+    if (NEON_AUTH_BASE) {
+      // ── Path A: Neon Auth as identity provider ──────────────────────────────
+      // Always hash locally so we can fall back if email verification is required
+      const localHash = await bcrypt.hash(password, 12);
+      console.log("[NeonAuth] Registrando via Neon Auth REST API");
+      const appOrigin = process.env.APP_URL || "https://clientum.com.ar";
+      const neonRes = await fetch(`${NEON_AUTH_BASE}/sign-up/email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Origin": appOrigin,
+        },
+        body: JSON.stringify({ email, password, name: name?.trim() || "" }),
+      });
+      const rawText = await neonRes.text();
+      let neonData: any = {};
+      try { if (rawText) neonData = JSON.parse(rawText); } catch { /* non-JSON body */ }
+      console.log("[NeonAuth] sign-up status:", neonRes.status, "body:", rawText.slice(0, 300));
+
+      // 409 or 422 = already registered in Neon Auth.
+      // Update the local password_hash so the email-not-verified fallback works,
+      // then create a session (works even when password_hash was previously empty).
+      const alreadyExists =
+        neonRes.status === 409 ||
+        neonRes.status === 422 ||
+        (rawText.includes("USER_ALREADY_EXISTS") || rawText.includes("user_already_exists"));
+      if (alreadyExists) {
+        console.log("[NeonAuth] Usuario ya existe en Neon Auth — actualizando hash local");
+        const existing = await pgPool.query(
+          "SELECT id, username, role FROM users WHERE email = $1 LIMIT 1",
+          [email.toLowerCase()]
+        );
+        if ((existing.rowCount ?? 0) === 0) {
+          return res.status(409).json({ error: "Ya existe una cuenta con ese email." });
+        }
+        const localUser = existing.rows[0];
+        // Store/refresh the bcrypt hash so local fallback can verify future logins
+        await pgPool.query("UPDATE users SET password_hash = $1 WHERE id = $2", [localHash, localUser.id]);
+        return createSession(req, res, localUser, 200);
+      }
+
+      if (!neonRes.ok) {
+        const msg =
+          neonData?.message ||
+          neonData?.error?.message ||
+          neonData?.error ||
+          rawText.slice(0, 200) ||
+          "Error al registrarse en Neon Auth.";
+        return res.status(neonRes.status < 500 ? neonRes.status : 400).json({ error: String(msg) });
+      }
+
+      // neonData.user contains { id, email, name, ... }
+      const neonUser = neonData.user ?? neonData;
+      const localUser = await upsertNeonAuthUser({
+        id: neonUser.id,
+        email: neonUser.email ?? email,
+        name: neonUser.name ?? name,
+        passwordHash: localHash,
+      });
+      return createSession(req, res, localUser, 201);
+    } else {
+      // ── Path B: Local-only fallback ─────────────────────────────────────────
+      console.log("[NeonAuth] NEON_AUTH_BASE no configurado — usando auth local");
+      const localUser = await localNeonRegister(email.toLowerCase(), password, name);
+      return createSession(req, res, localUser, 201);
+    }
+  } catch (error: any) {
+    console.error("Error en /api/auth/neon-register:", error);
+    const status = error.status ?? 500;
+    return res
+      .status(status)
+      .json({ error: error.message || "Ocurrió un error al registrar la cuenta." });
+  }
+});
+
+// ── Login ─────────────────────────────────────────────────────────────────────
+app.post("/api/auth/neon-login", async (req, res) => {
+  try {
+    const { email, password } = req.body || {};
+    if (typeof email !== "string" || typeof password !== "string") {
+      return res.status(400).json({ error: "Email y contraseña son requeridos." });
+    }
+
+    // ── Local-first: try bcrypt immediately (skips the ~4s Neon Auth round-trip)
+    // Local hash is stored during registration. If it exists and matches,
+    // we skip Neon Auth entirely. Only call Neon Auth when local hash is missing.
+    const emailLower = email.toLowerCase();
+    const localRow = await pgPool.query(
+      "SELECT id, username, password_hash, role FROM users WHERE email = $1 LIMIT 1",
+      [emailLower]
+    );
+    const localDbUser = localRow.rows[0];
+
+    if (localDbUser?.password_hash && localDbUser.password_hash.length > 10) {
+      // Local hash present — verify without hitting Neon Auth
+      const isValid = await bcrypt.compare(password, localDbUser.password_hash);
+      if (!isValid) {
+        return res.status(401).json({ error: "Email o contraseña incorrectos." });
+      }
+      console.log("[Auth] Login local exitoso para", emailLower);
+      return createSession(req, res, { id: localDbUser.id, username: localDbUser.username, role: localDbUser.role }, 200);
+    }
+
+    if (NEON_AUTH_BASE) {
+      // ── No local hash: call Neon Auth as fallback ────────────────────────────
+      console.log("[NeonAuth] Sin hash local — intentando Neon Auth");
+      const appOrigin = process.env.APP_URL || "https://clientum.com.ar";
+      const neonRes = await fetch(`${NEON_AUTH_BASE}/sign-in/email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Origin": appOrigin },
+        body: JSON.stringify({ email, password }),
+      });
+      const rawText = await neonRes.text();
+      let neonData: any = {};
+      try { if (rawText) neonData = JSON.parse(rawText); } catch { /* non-JSON body */ }
+      console.log("[NeonAuth] sign-in status:", neonRes.status, "body:", rawText.slice(0, 200));
+
+      if (!neonRes.ok) {
+        const isEmailNotVerified = neonRes.status === 403 && rawText.includes("EMAIL_NOT_VERIFIED");
+        if (isEmailNotVerified) {
+          return res.status(403).json({
+            error: "Registrate primero con el botón 'Registrarse' para sincronizar el acceso.",
+          });
+        }
+        const msg = neonData?.message || neonData?.error || rawText.slice(0, 200) || "Email o contraseña incorrectos.";
+        return res.status(401).json({ error: String(msg) });
+      }
+
+      const neonUser = neonData.user ?? neonData;
+      const upserted = await upsertNeonAuthUser({ id: neonUser.id, email: neonUser.email ?? email, name: neonUser.name });
+      return createSession(req, res, upserted, 200);
+    }
+
+    return res.status(401).json({ error: "Email o contraseña incorrectos." });
+  } catch (error: any) {
+    console.error("Error en /api/auth/neon-login:", error);
+    const status = error.status ?? 500;
+    return res
+      .status(status)
+      .json({ error: error.message || "Ocurrió un error al iniciar sesión." });
+  }
+});
+
+// POST /api/auth/forgot-password
+// Body: { email }
+// Generates a secure reset token, stores a bcrypt hash, and sends an email.
+app.post("/api/auth/forgot-password", async (req, res) => {
+  const { email } = req.body ?? {};
+  if (typeof email !== "string" || !email.includes("@")) {
+    return res.status(400).json({ error: "Email inválido." });
+  }
+  try {
+    const userRes = await pgPool.query(
+      "SELECT id, email FROM users WHERE LOWER(email) = LOWER($1)",
+      [email.trim()]
+    );
+    // Always respond OK — never reveal if the email exists
+    if (!userRes.rows[0]) {
+      return res.json({ ok: true, message: "Si el email existe, recibirás un correo en breve." });
+    }
+    const userId = userRes.rows[0].id;
+
+    // Invalidate any previous unused tokens for this user
+    await pgPool.query(
+      "UPDATE password_reset_tokens SET used_at = NOW() WHERE user_id = $1 AND used_at IS NULL",
+      [userId]
+    );
+
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
+
+    await pgPool.query(
+      `INSERT INTO password_reset_tokens (user_id, token_hash, expires_at)
+       VALUES ($1, $2, NOW() + INTERVAL '1 hour')`,
+      [userId, tokenHash]
+    );
+
+    await sendPasswordResetEmail(email.trim(), rawToken);
+    console.log(`[Auth] Token de reseteo enviado a ${email}`);
+    return res.json({ ok: true, message: "Si el email existe, recibirás un correo en breve." });
+  } catch (err: any) {
+    console.error("[Auth] Error en forgot-password:", err.message);
+    return res.status(500).json({ error: "Error al procesar la solicitud. Intentá de nuevo." });
+  }
+});
+
+// POST /api/auth/reset-password
+// Body: { token, newPassword }
+app.post("/api/auth/reset-password", async (req, res) => {
+  const { token, newPassword } = req.body ?? {};
+  if (typeof token !== "string" || token.length < 32) {
+    return res.status(400).json({ error: "Token inválido." });
+  }
+  if (typeof newPassword !== "string" || newPassword.length < 8) {
+    return res.status(400).json({ error: "La contraseña debe tener al menos 8 caracteres." });
+  }
+  try {
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+    const tokenRes = await pgPool.query(
+      `SELECT id, user_id FROM password_reset_tokens
+       WHERE token_hash = $1 AND expires_at > NOW() AND used_at IS NULL`,
+      [tokenHash]
+    );
+    if (!tokenRes.rows[0]) {
+      return res.status(400).json({ error: "El enlace expiró o ya fue usado. Solicitá uno nuevo." });
+    }
+    const { id: tokenId, user_id: userId } = tokenRes.rows[0];
+
+    const hash = await bcrypt.hash(newPassword, 12);
+    await pgPool.query("UPDATE users SET password_hash = $1 WHERE id = $2", [hash, userId]);
+    await pgPool.query(
+      "UPDATE password_reset_tokens SET used_at = NOW() WHERE id = $1",
+      [tokenId]
+    );
+    // Destroy any active sessions for this user (force re-login with new password)
+    await pgPool.query("DELETE FROM session WHERE sess::text LIKE $1", [`%"userId":${userId}%`]);
+
+    console.log(`[Auth] Contraseña restablecida para user_id=${userId}`);
+    return res.json({ ok: true, message: "Contraseña actualizada. Ya podés iniciar sesión." });
+  } catch (err: any) {
+    console.error("[Auth] Error en reset-password:", err.message);
+    return res.status(500).json({ error: "Error al restablecer la contraseña." });
+  }
 });
 
 app.get("/api/auth/me", async (req, res) => {
@@ -352,6 +911,68 @@ async function generateContentWithFallback(
   }
   
   throw lastError || new Error("Error: Fallaron todos los intentos con todos los modelos disponibles.");
+}
+
+// ── Free AI fallback: Groq → OpenRouter (used when Gemini quota is exhausted) ─
+async function tryFreeAI(prompt: string): Promise<string | null> {
+  // 1. Groq — fastest, generous free tier
+  const groqKey = process.env.GROQ_API_KEY;
+  if (groqKey) {
+    try {
+      console.log("[FreeAI] Intentando Groq llama-3.3-70b-versatile...");
+      const gr = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${groqKey}` },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.7,
+          max_tokens: 4096,
+        }),
+      });
+      if (gr.ok) {
+        const d = await gr.json();
+        const text = d.choices?.[0]?.message?.content?.trim();
+        if (text) { console.log("[FreeAI] Groq respondió con éxito."); return text; }
+      } else {
+        console.warn("[FreeAI] Groq falló con status:", gr.status, await gr.text().catch(() => ""));
+      }
+    } catch (e: any) { console.warn("[FreeAI] Groq error:", e.message); }
+  }
+
+  // 2. OpenRouter — free-tier models
+  const orKey = process.env.OPENROUTER_API_KEY;
+  if (orKey) {
+    const orModels = [
+      "meta-llama/llama-3.3-70b-instruct:free",
+      "deepseek/deepseek-r1:free",
+      "google/gemini-2.0-flash-exp:free",
+    ];
+    for (const model of orModels) {
+      try {
+        console.log(`[FreeAI] Intentando OpenRouter ${model}...`);
+        const or = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${orKey}`,
+            "HTTP-Referer": "https://clientum.com.ar",
+            "X-Title": "Clientum CRM",
+          },
+          body: JSON.stringify({ model, messages: [{ role: "user", content: prompt }], max_tokens: 4096 }),
+        });
+        if (or.ok) {
+          const d = await or.json();
+          const text = d.choices?.[0]?.message?.content?.trim();
+          if (text) { console.log(`[FreeAI] OpenRouter ${model} respondió con éxito.`); return text; }
+        } else {
+          console.warn(`[FreeAI] OpenRouter ${model} falló con status:`, or.status);
+        }
+      } catch (e: any) { console.warn(`[FreeAI] OpenRouter ${model} error:`, e.message); }
+    }
+  }
+
+  return null;
 }
 
 // API Routes
@@ -1551,7 +2172,12 @@ IMPORTANTE: Devuelve exclusivamente el objeto JSON sin markdown.`;
 
         return res.json({ result: JSON.parse(response.text || "{}") });
       } catch (geminiError: any) {
-        console.warn("[Gemini Fallback] Quota exhaustion / error generating copy. Using mock template for industry:", industry);
+        console.warn("[Gemini Fallback] Quota exhaustion / error generating copy. Trying free AI...");
+        const freeText = await tryFreeAI(prompt);
+        if (freeText) {
+          try { return res.json({ result: JSON.parse(freeText) }); } catch { /* not valid JSON */ }
+        }
+        console.warn("[FreeAI] También falló. Usando plantilla local para rubro:", industry);
         const fallbackData = getMockIndustryCopy(industry);
         return res.json({ result: fallbackData, isFallback: true });
       }
@@ -1573,6 +2199,8 @@ Consulta del usuario: "${message}"`;
         const response = await generateContentWithFallback(ai, { contents: systemPrompt });
         return res.json({ result: response.text?.trim() });
       } catch (err: any) {
+        const freeText = await tryFreeAI(systemPrompt);
+        if (freeText) return res.json({ result: freeText });
         return res.json({ result: "¡Hola! Estoy en modo offline por alta demanda. Escribime tu consulta de nuevo en un momento." });
       }
     }
@@ -1601,7 +2229,9 @@ Responde de forma directa, vendedora y simpática.`;
 
         return res.json({ result: response.text?.trim() });
       } catch (geminiError: any) {
-        console.warn("[Gemini Fallback] Quota exhaustion / error generating chatbot answer. Using smart local assistant.");
+        console.warn("[Gemini Fallback] Quota exhaustion / error generating chatbot answer. Trying free AI...");
+        const freeText = await tryFreeAI(prompt);
+        if (freeText) return res.json({ result: freeText });
         const fallbackAnswer = getMockChatbotAnswer(payload);
         return res.json({ result: fallbackAnswer, isFallback: true });
       }
@@ -1622,7 +2252,9 @@ Texto a optimizar:
 
         return res.json({ result: response.text?.trim() });
       } catch (geminiError: any) {
-        console.warn("[Gemini Fallback] Quota exhaustion / error in optimizeCopy. Running local enhancer.");
+        console.warn("[Gemini Fallback] Quota exhaustion / error in optimizeCopy. Trying free AI...");
+        const freeText = await tryFreeAI(prompt);
+        if (freeText) return res.json({ result: freeText });
         const fallbackAnswer = getMockOptimizeCopy(text, goal);
         return res.json({ result: fallbackAnswer, isFallback: true });
       }
@@ -1648,7 +2280,11 @@ Devuelve únicamente el objeto JSON con las traducciones mapeadas con las mismas
 
         return res.json({ result: JSON.parse(response.text || "{}") });
       } catch (geminiError: any) {
-        console.warn("[Gemini Fallback] Quota exhaustion / error in translateBrochure. Running local translator.");
+        console.warn("[Gemini Fallback] Quota exhaustion / error in translateBrochure. Trying free AI...");
+        const freeText = await tryFreeAI(prompt);
+        if (freeText) {
+          try { return res.json({ result: JSON.parse(freeText) }); } catch { /* not valid JSON */ }
+        }
         const fallbackAnswer = getMockTranslateBrochure(texts, targetLanguage);
         return res.json({ result: fallbackAnswer, isFallback: true });
       }
@@ -1835,7 +2471,11 @@ IMPORTANTE: Devuelve exclusivamente el objeto JSON sin markdown.`;
 
         return res.json({ result: JSON.parse(response.text || "{}") });
       } catch (geminiError: any) {
-        console.warn("[Gemini Fallback] Quota exhaustion / error in buildICP. Generating local mock ICP.");
+        console.warn("[Gemini Fallback] Quota exhaustion / error in buildICP. Trying free AI...");
+        const freeText = await tryFreeAI(prompt);
+        if (freeText) {
+          try { return res.json({ result: JSON.parse(freeText) }); } catch { /* not valid JSON */ }
+        }
         const fallbackAnswer = getMockICP(industry, acv);
         return res.json({ result: fallbackAnswer, isFallback: true });
       }
@@ -1913,7 +2553,11 @@ IMPORTANTE: Devuelve exclusivamente el objeto JSON sin markdown.`;
 
         return res.json({ result: JSON.parse(response.text || "{}") });
       } catch (geminiError: any) {
-        console.warn("[Gemini Fallback] Quota exhaustion / error in researchProspect. Generating local mock research report.");
+        console.warn("[Gemini Fallback] Quota exhaustion / error in researchProspect. Trying free AI...");
+        const freeText = await tryFreeAI(prompt);
+        if (freeText) {
+          try { return res.json({ result: JSON.parse(freeText) }); } catch { /* not valid JSON */ }
+        }
         const fallbackAnswer = getMockResearch(company, industry);
         return res.json({ result: fallbackAnswer, isFallback: true });
       }
@@ -1972,7 +2616,11 @@ IMPORTANTE: Devuelve exclusivamente el objeto JSON sin markdown.`;
 
         return res.json({ result: JSON.parse(response.text || "{}") });
       } catch (geminiError: any) {
-        console.warn("[Gemini Fallback] Quota exhaustion / error in generateOutreach. Generating local mock outreach sequence.");
+        console.warn("[Gemini Fallback] Quota exhaustion / error in generateOutreach. Trying free AI...");
+        const freeText = await tryFreeAI(prompt);
+        if (freeText) {
+          try { return res.json({ result: JSON.parse(freeText) }); } catch { /* not valid JSON */ }
+        }
         const fallbackAnswer = getMockOutreach(company, contact, title, industry, painPoint);
         return res.json({ result: fallbackAnswer, isFallback: true });
       }
@@ -2004,7 +2652,9 @@ Proporciona consejos estratégicos, creativos y prácticos. Usa el voseo argenti
 
         return res.json({ result: response.text?.trim() });
       } catch (geminiError: any) {
-        console.warn("[Gemini Fallback] Quota exhaustion or error in salesAdvisorAnswer. Running local advisory fallback.");
+        console.warn("[Gemini Fallback] Quota exhaustion or error in salesAdvisorAnswer. Trying free AI...");
+        const freeText = await tryFreeAI(prompt);
+        if (freeText) return res.json({ result: freeText });
         const fallbackAdvice = `¡Hola! Como tu consultor de ventas en Clientum para el rubro de "${industry || "tu negocio"}", te recomiendo asegurarte de que cada página tenga un solo objetivo de conversión. Por ejemplo, en la sección de chatbot destaca que 'responde consultas automáticas en 10 segundos'. ¡Eso acelera un 70% el interés inicial!`;
         return res.json({ result: fallbackAdvice, isFallback: true });
       }
@@ -2155,12 +2805,31 @@ async function initUsersTable() {
     CREATE TABLE IF NOT EXISTS users (
       id            SERIAL PRIMARY KEY,
       username      VARCHAR(32) NOT NULL UNIQUE,
-      password_hash TEXT NOT NULL,
+      password_hash TEXT NOT NULL DEFAULT '',
       role          VARCHAR(20) NOT NULL DEFAULT 'user',
       created_at    TIMESTAMP NOT NULL DEFAULT NOW()
     );
   `);
+  // Migrations for Neon Auth columns (idempotent)
+  await pgPool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS email        VARCHAR(255) UNIQUE`);
+  await pgPool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS neon_auth_id TEXT        UNIQUE`);
   console.log("[Auth] Tabla users lista.");
+}
+
+async function initPasswordResetTokensTable() {
+  await pgPool.query(`
+    CREATE TABLE IF NOT EXISTS password_reset_tokens (
+      id          SERIAL PRIMARY KEY,
+      user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      token_hash  TEXT NOT NULL UNIQUE,
+      expires_at  TIMESTAMP NOT NULL,
+      used_at     TIMESTAMP,
+      created_at  TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_prt_token_hash ON password_reset_tokens(token_hash);
+    CREATE INDEX IF NOT EXISTS idx_prt_user_id    ON password_reset_tokens(user_id);
+  `);
+  console.log("[Auth] Tabla password_reset_tokens lista.");
 }
 
 // ---------------------------------------------------------------------------
@@ -2471,6 +3140,122 @@ app.post("/api/leads/:id/notes", requireApiKey, async (req, res) => {
   }
 });
 
+// ─── ORQUESTADOR IA ──────────────────────────────────────────────────────────
+app.post("/api/orchestrator", requireAuth, async (req, res) => {
+  try {
+    const { message, history = [] } = req.body;
+    if (!message?.trim()) return res.status(400).json({ error: "message requerido" });
+
+    const ai = getAI();
+    if (!ai) return res.status(503).json({ error: "IA no disponible — GEMINI_API_KEY no configurada" });
+
+    // Gather real-time DB context for the orchestrator
+    const [leadsResult, chatbotResult, pipelineResult] = await Promise.all([
+      pgPool.query(`SELECT status, COUNT(*) as count FROM santi_leads GROUP BY status`),
+      pgPool.query(`SELECT status, COUNT(*) as count FROM chatbot_leads GROUP BY status`),
+      pgPool.query(`
+        SELECT
+          COUNT(*) as total,
+          COALESCE(SUM(amount_ars), 0) as total_ars,
+          COALESCE(AVG(meddic_score), 0) as avg_meddic,
+          COALESCE(AVG(fit_score), 0) as avg_fit
+        FROM santi_leads
+      `),
+    ]);
+
+    const leadsByStatus: Record<string, number> = {};
+    leadsResult.rows.forEach((r: any) => { leadsByStatus[r.status] = parseInt(r.count); });
+
+    const chatbotByStatus: Record<string, number> = {};
+    chatbotResult.rows.forEach((r: any) => { chatbotByStatus[r.status] = parseInt(r.count); });
+
+    const pipeline = pipelineResult.rows[0];
+    const today = new Date().toLocaleDateString("es-AR", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+
+    const contextData = `
+DATOS EN TIEMPO REAL DE CLIENTUM (${today}):
+
+📊 Pipeline SDR Santi (santi_leads):
+- Pendientes (no contactados): ${leadsByStatus["pendiente"] ?? 0}
+- Contactados: ${leadsByStatus["contactado"] ?? 0}
+- Calientes: ${leadsByStatus["caliente"] ?? 0}
+- Tibios: ${leadsByStatus["tibio"] ?? 0}
+- Fríos: ${leadsByStatus["frio"] ?? 0}
+- Agendados: ${leadsByStatus["agendado"] ?? 0}
+- TOTAL LEADS: ${pipeline.total ?? 0}
+- Valor total pipeline: ${Number(pipeline.total_ars ?? 0).toLocaleString("es-AR")} ARS
+- MEDDIC score promedio: ${parseFloat(pipeline.avg_meddic ?? "0").toFixed(1)}/100
+- Fit score promedio: ${parseFloat(pipeline.avg_fit ?? "0").toFixed(1)}/10
+
+💬 Chatbot Leads (asesor IA del sitio web):
+- Nuevos (sin gestionar): ${chatbotByStatus["nuevo"] ?? 0}
+- Contactados: ${chatbotByStatus["contactado"] ?? 0}
+- Calificados: ${chatbotByStatus["calificado"] ?? 0}
+- Descartados: ${chatbotByStatus["descartado"] ?? 0}
+- TOTAL: ${Object.values(chatbotByStatus).reduce((a, b) => a + b, 0)}
+`.trim();
+
+    const systemPrompt = `Sos el Orquestador IA de Clientum, el asistente central de Jonathan (dueño y CEO de Clientum).
+
+Clientum es un CRM B2B con IA orientado a pymes de la Patagonia argentina. Permite descubrir prospectos vía Google Maps y Apify, calificarlos con MEDDIC, generar brochures PDF personalizados por industria, y automatizar el outreach por WhatsApp a través del agente SDR "Santi".
+
+Tu rol: Recibís mensajes de Jonathan y respondés como el agente departamental más apropiado. Tenés acceso a datos reales de la base de datos.
+
+AGENTES DISPONIBLES (elegí el más adecuado según el contexto):
+1. [AGENTE: Ventas] — Pipeline, leads de Santi, estrategia comercial, cierre, MEDDIC scoring, outreach
+2. [AGENTE: Técnico] — Producto, features, bugs, código, infra, DB, deploys, mejoras técnicas
+3. [AGENTE: Marketing] — Contenido, SEO, chatbot leads, campañas, copy, landing pages
+4. [AGENTE: Customer Success] — Clientes activos, onboarding, churn, satisfacción, seguimiento
+5. [AGENTE: Operaciones] — Métricas, reportes ejecutivos, MRR, KPIs, finanzas, análisis
+
+${contextData}
+
+INSTRUCCIONES DE RESPUESTA:
+- Empezá SIEMPRE con [AGENTE: NombreDelAgente] en la primera línea
+- Usá los datos reales de la DB cuando sean relevantes para la respuesta
+- Respondé en español rioplatense, tono directo y profesional
+- Tratá a Jonathan de "vos"
+- Máximo 400 palabras
+- Usá **negrita** para destacar números y puntos clave
+- Al final de la respuesta, sugerí 1-2 próximos pasos concretos si aplica
+- Si el pedido no corresponde a ningún agente específico, respondés vos como Orquestador coordinando
+
+REGLAS:
+- Nunca inventés datos: si no tenés info suficiente, decilo
+- Si Jonathan pide ejecutar algo (mandar mensaje, scraping, etc.), describí qué haría el agente y pedí confirmación
+- Si la pregunta es estratégica y abarca múltiples áreas, coordiná una respuesta integradora como Orquestador`;
+
+    // Build Gemini chat with conversation history
+    const geminiHistory = (history as Array<{role: string; content: string}>)
+      .slice(-12)
+      .map((m) => ({
+        role: m.role === "assistant" ? "model" : "user",
+        parts: [{ text: m.content }],
+      }));
+
+    const chat = ai.chats.create({
+      model: "gemini-2.0-flash",
+      config: { systemInstruction: systemPrompt, temperature: 0.7 },
+      history: geminiHistory,
+    });
+
+    const result = await chat.sendMessage({ message });
+    const rawText = result.text ?? "";
+
+    // Extract agent tag and clean response
+    const agentMatch = rawText.match(/\[AGENTE:\s*([^\]]+)\]/i);
+    const agentName = agentMatch ? agentMatch[1].trim() : "Orquestador";
+    const cleanResponse = rawText.replace(/^\[AGENTE:\s*[^\]]+\]\s*/i, "").trim();
+
+    console.log(`[Orchestrator] Agente: ${agentName} | Tokens: ~${Math.round(rawText.length / 4)}`);
+    res.json({ ok: true, response: cleanResponse, agent: agentName });
+
+  } catch (error: any) {
+    console.error("[Orchestrator Error]:", error);
+    res.status(500).json({ error: error.message || "Error en el orquestador IA" });
+  }
+});
+
 // Configure Vite or Static Files
 async function setupServer() {
   const isProd = process.env.NODE_ENV === "production";
@@ -2506,11 +3291,19 @@ async function setupServer() {
 
   // Init DB tables after port is bound — failures here won't block responses.
   await initUsersTable();
+  await initPasswordResetTokensTable();
   await initChatbotLeadsTable();
   await initSantiTables();
 
   // In dev, attach Vite middleware after DB init.
+  // Dynamic import (not a static top-level import) so that in production
+  // (Vercel) the "vite" package — and the "rollup" native binary it pulls
+  // in — is never loaded at all. A static import would load it on module
+  // init regardless of NODE_ENV, which is what was crashing the /api/index
+  // serverless function on Vercel with "Cannot find module
+  // @rollup/rollup-linux-x64-gnu".
   if (!isProd) {
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: {
         middlewareMode: true,

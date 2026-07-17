@@ -3,7 +3,7 @@ import { MapPin, Phone, Clock, Plus, Pencil, Check, X, Building2, Server } from 
 import { Branch } from './crmTypes';
 
 interface BranchCardProps { branch: Branch; onEdit: (b: Branch) => void; index: number }
-const BranchCard = ({ branch, onEdit, index }: BranchCardProps) => (
+const BranchCard: React.FC<BranchCardProps> = ({ branch, onEdit, index }) => (
   <div className={`cockpit-panel overflow-hidden group flex flex-col justify-between animate-slide-up`} style={{ animationDelay: `${index * 50}ms` }}>
     <div>
       <div className="bg-[#0A101F] border-b border-[#1E293B] p-4 relative overflow-hidden">

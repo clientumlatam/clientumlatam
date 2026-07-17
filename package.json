@@ -9,11 +9,12 @@
   },
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
+    "build": "vite build && esbuild server.ts --bundle --platform=node --format=esm --packages=external --sourcemap --outfile=dist/server.mjs",
     "build:wp": "bash clientum-wp-theme/clientum-ai-prospector/build-for-wp.sh",
-    "start": "NODE_ENV=production node dist/server.cjs",
+    "start": "NODE_ENV=production node dist/server.mjs",
     "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "doctor": "node scripts/doctor.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
@@ -24,6 +25,7 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/connect-pg-simple": "^7.0.3",
     "@types/express-session": "^1.19.0",
+    "@types/nodemailer": "^8.0.1",
     "@types/pg": "^8.20.0",
     "@vitejs/plugin-react": "^5.0.4",
     "apify-client": "^2.23.4",
@@ -36,12 +38,15 @@
     "express": "^4.21.2",
     "express-session": "^1.19.0",
     "html2canvas-pro": "^2.2.3",
+    "jose": "^6.2.3",
     "jspdf": "^4.2.1",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
+    "nodemailer": "^9.0.3",
     "pg": "^8.22.0",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
+    "react-router-dom": "^7.18.1",
     "recharts": "^3.9.2",
     "tailwind-merge": "^3.6.0",
     "vite": "^6.2.3"
@@ -54,5 +59,24 @@
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2"
-  }
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@google/genai",
+      "core-js",
+      "esbuild",
+      "protobufjs"
+    ],
+    "supportedArchitectures": {
+      "os": [
+        "current",
+        "linux"
+      ],
+      "cpu": [
+        "current",
+        "x64"
+      ]
+    }
+  },
+  "packageManager": "pnpm@10.26.1"
 }

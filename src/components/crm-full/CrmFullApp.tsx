@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, Users, Package, Building2, MessageSquare, MessagesSquare, Bot, Database, Blocks, UserPlus } from 'lucide-react';
+import { LayoutDashboard, Users, Package, Building2, MessageSquare, MessagesSquare, Bot, Database, Blocks, UserPlus, MapPin, MessageCircle, Settings2, Cpu, Network } from 'lucide-react';
 import CrmFullDashboard from './CrmFullDashboard';
 import CrmFullPipeline from './CrmFullPipeline';
 import CrmFullProducts from './CrmFullProducts';
@@ -10,6 +10,11 @@ import CrmFullBotConfig from './CrmFullBotConfig';
 import CrmFullCMDB from './CrmFullCMDB';
 import CrmFullUseCases from './CrmFullUseCases';
 import CrmFullLeads from './CrmFullLeads';
+import CrmFullAgentes from './CrmFullAgentes';
+import CrmFullGoogleMaps from './CrmFullGoogleMaps';
+import CrmFullWhatsApp from './CrmFullWhatsApp';
+import CrmFullConfig from './CrmFullConfig';
+import OrganigramaClientum from '../OrganigramaClientum';
 import { Conversation, Seller, Branch, Product } from './crmTypes';
 import {
   initialConversations,
@@ -18,19 +23,24 @@ import {
   initialProducts,
 } from './crmInitialData';
 
-type SubTab = 'dashboard' | 'crm' | 'products' | 'usecases' | 'sellers' | 'branches' | 'conversations' | 'leads' | 'bot' | 'cmdb';
+type SubTab = 'dashboard' | 'crm' | 'products' | 'usecases' | 'sellers' | 'branches' | 'conversations' | 'leads' | 'bot' | 'cmdb' | 'agentes' | 'maps' | 'whatsapp' | 'config' | 'organigrama';
 
 const tabs: { id: SubTab; label: string; icon: React.ReactNode }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
   { id: 'crm', label: 'CRM', icon: <MessagesSquare className="w-4 h-4" /> },
+  { id: 'leads', label: 'Leads', icon: <UserPlus className="w-4 h-4" /> },
+  { id: 'maps', label: 'Maps IA', icon: <MapPin className="w-4 h-4" /> },
+  { id: 'whatsapp', label: 'WhatsApp', icon: <MessageCircle className="w-4 h-4" /> },
+  { id: 'agentes', label: 'Agentes IA', icon: <Cpu className="w-4 h-4" /> },
   { id: 'products', label: 'Productos', icon: <Package className="w-4 h-4" /> },
   { id: 'usecases', label: 'Casos de Uso', icon: <Blocks className="w-4 h-4" /> },
   { id: 'sellers', label: 'Vendedores', icon: <Users className="w-4 h-4" /> },
   { id: 'branches', label: 'Sucursales', icon: <Building2 className="w-4 h-4" /> },
   { id: 'conversations', label: 'Conversaciones', icon: <MessageSquare className="w-4 h-4" /> },
-  { id: 'leads', label: 'Leads', icon: <UserPlus className="w-4 h-4" /> },
   { id: 'bot', label: 'Bot', icon: <Bot className="w-4 h-4" /> },
   { id: 'cmdb', label: 'Infraestructura', icon: <Database className="w-4 h-4" /> },
+  { id: 'config', label: 'Config', icon: <Settings2 className="w-4 h-4" /> },
+  { id: 'organigrama', label: 'Organigrama', icon: <Network className="w-4 h-4" /> },
 ];
 
 function loadOrDefault<T>(key: string, defaultValue: T): T {
@@ -127,10 +137,20 @@ export default function CrmFullApp({ activeTabOverride, hideNav = false }: CrmFu
         return <CrmFullConversations conversations={conversations} />;
       case 'leads':
         return <CrmFullLeads />;
+      case 'agentes':
+        return <CrmFullAgentes />;
+      case 'maps':
+        return <CrmFullGoogleMaps />;
+      case 'whatsapp':
+        return <CrmFullWhatsApp />;
+      case 'config':
+        return <CrmFullConfig />;
       case 'bot':
         return <CrmFullBotConfig />;
       case 'cmdb':
         return <CrmFullCMDB />;
+      case 'organigrama':
+        return <OrganigramaClientum />;
       default:
         return null;
     }

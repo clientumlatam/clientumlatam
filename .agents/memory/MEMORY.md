@@ -2,3 +2,7 @@
 - [Session role staleness](session-role-staleness.md) — role changes made directly in the DB don't propagate to already-logged-in sessions unless the read path re-queries the DB.
 - [Clientum services catalog source](clientum-services-catalog-source.md) — raw master catalog (2147 rows) lives in the `nzip2` GitHub repo; app's JSON is a curated derivative, re-derive from source rather than hand-editing.
 - [Vercel external DB/secrets gap](vercel-external-db-secrets.md) — this project also deploys to Vercel (clientum.com.ar); DATABASE_URL is Replit's internal host and secrets don't propagate there, breaking auth.
+- [Vercel cookie cache stripping](vercel-cookie-cache-stripping.md) — Vercel's default Cache-Control lets its edge CDN strip Set-Cookie; API responses must force `Cache-Control: no-store`.
+- [Clientum arquitectura completa](clientum-architecture.md) — stack, rutas, DB schema, env vars, flujo dev→Vercel; ver docs/ARCHITECTURE.md en el repo.
+- [Public repo secret leak](public-repo-secret-leak.md) — gitignored attached_assets isn't enough; tracked root files leaked real keys to the public GitHub origin.
+- [Neon Auth proxy integration](neon-auth-proxy.md) — SDK blocked by firewall; proxy via Express backend with Origin header required; fallback to local bcrypt if URL not set.

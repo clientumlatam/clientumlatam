@@ -1,0 +1,2 @@
+docs-zips/capturas.zip filter=lfs diff=lfs merge=lfs -text
+referencia-tecnica/docs-zips/capturas.zip filter=lfs diff=lfs merge=lfs -text
