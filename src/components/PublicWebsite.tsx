@@ -524,6 +524,8 @@ export default function PublicWebsite({
       year: "2023",
       type: "E-Commerce + CRM Inteligente",
       industry: "retail",
+      logo: "/logos/morgado-hogar.webp",
+      darkLogo: false,
       img: "/clientes/morgado-hogar-web.png",
       desc: "Tienda online con catálogo de muebles y deco sincronizado con stock físico. Pipeline de ventas y seguimiento automático de presupuestos por WhatsApp."
     },
@@ -533,17 +535,10 @@ export default function PublicWebsite({
       year: "2023",
       type: "Bot WhatsApp + Gestión de Stock",
       industry: "salud",
-      img: "/clientes/farmacia-san-martin-web.webp",
+      logo: "/logos/farmacia-san-martin.png",
+      darkLogo: false,
+      img: "/clientes/farmacia-san-martin-web.png",
       desc: "Bot 24/7 que responde consultas de disponibilidad de medicamentos, agenda turnos y envía recordatorios. Stock integrado con facturación AFIP."
-    },
-    {
-      id: "p3",
-      name: "Mafacha Ferretería Pinturería",
-      year: "2022",
-      type: "E-Commerce + Facturación AFIP",
-      industry: "retail",
-      img: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=600&q=80",
-      desc: "Catálogo online de más de 3.000 productos con precios actualizados, carrito de compras y emisión automática de facturas A/B/C desde el CRM."
     },
     {
       id: "p4",
@@ -551,6 +546,8 @@ export default function PublicWebsite({
       year: "2023",
       type: "CRM Inmobiliario + Bot WhatsApp",
       industry: "inmobiliaria",
+      logo: "/logos/terbay.png",
+      darkLogo: true,
       img: "/clientes/terbay-web.png",
       desc: "Bot califica interesados, envía planos y fotos, y agenda visitas automáticamente. Pipeline de operaciones con seguimiento de cada cliente hasta el cierre."
     },
@@ -560,6 +557,8 @@ export default function PublicWebsite({
       year: "2022",
       type: "ERP + AFIP + Cartas de Porte",
       industry: "agroindustria",
+      logo: null,
+      darkLogo: false,
       img: "/logos/forestal-norte.jpg",
       desc: "Digitalización de operaciones forestales: cartas de porte electrónicas, liquidaciones automáticas y trazabilidad de carga desde el campo hasta la planta."
     },
@@ -569,8 +568,10 @@ export default function PublicWebsite({
       year: "2023",
       type: "Portal Institucional + Gestión de Turnos",
       industry: "agroindustria",
+      logo: null,
+      darkLogo: false,
       img: "/clientes/consorcio-riego-web.png",
-      desc: "Portal institucional con gestión de turnos de agua, calendario de riegos, pagos online integrados y comunicaciones automáticas a los regantes del Alto Valle."
+      desc: "Portal con gestión de turnos de agua, calendario de riegos, pagos online integrados y comunicaciones automáticas a los regantes del Alto Valle."
     },
     {
       id: "p14",
@@ -578,8 +579,10 @@ export default function PublicWebsite({
       year: "2024",
       type: "Sitio Web + CRM Inmobiliario",
       industry: "inmobiliaria",
+      logo: null,
+      darkLogo: false,
       img: "/clientes/habitat-sur-web.png",
-      desc: "Sitio inmobiliario con listado de propiedades, filtros avanzados y formulario de contacto conectado al CRM. Automatización de seguimiento de interesados por WhatsApp."
+      desc: "Sitio inmobiliario con listado de propiedades, filtros, ficha de contacto y catálogo de cotizaciones conectado al CRM. Automatización de seguimiento de cotizaciones."
     },
     {
       id: "p15",
@@ -587,6 +590,8 @@ export default function PublicWebsite({
       year: "2024",
       type: "Portal Municipal + Gestión de Trámites",
       industry: "institucional",
+      logo: "/logos/municipio-25-de-mayo.png",
+      darkLogo: false,
       img: "/clientes/municipio-25-de-mayo-web.png",
       desc: "Portal de gobierno digital con acceso a trámites, novedades municipales, contacto ciudadano y gestión de contenidos desde un panel administrable."
     },
@@ -596,6 +601,8 @@ export default function PublicWebsite({
       year: "2022",
       type: "Portal Web + Streaming Digital",
       industry: "medios",
+      logo: "/logos/canal10.webp",
+      darkLogo: true,
       img: "/clientes/canal10-web.png",
       desc: "Rediseño del portal de noticias con integración de streaming en vivo, gestión de contenidos y automatización de publicaciones en redes sociales."
     },
@@ -605,8 +612,10 @@ export default function PublicWebsite({
       year: "2023",
       type: "E-Commerce + CRM Automotriz",
       industry: "automotriz",
+      logo: "/logos/cabarcos-motores-cropped.png",
+      darkLogo: true,
       img: "/clientes/cabarcos-motores-web.png",
-      desc: "Catálogo de vehículos y repuestos online con reservas digitales. CRM con seguimiento de consultas, test drives y posventa integrado a WhatsApp."
+      desc: "Catálogo de vehículos y repuestos online con reservas digitales. CRM con seguimiento de consultas, test drives y posventa integrada a WhatsApp."
     },
     {
       id: "p8",
@@ -614,6 +623,8 @@ export default function PublicWebsite({
       year: "2023",
       type: "ERP + Rastreo de Flota",
       industry: "logística",
+      logo: "/logos/kj-logistica.webp",
+      darkLogo: true,
       img: "/clientes/kj-logistica-web.png",
       desc: "Sistema de gestión de viajes, control de flota y liquidación de conductores. Reportes automáticos de kilómetros, combustible y rentabilidad por unidad."
     },
@@ -623,6 +634,8 @@ export default function PublicWebsite({
       year: "2024",
       type: "Sitio Web + CRM de Distribución Zonal",
       industry: "industrial",
+      logo: null,
+      darkLogo: false,
       img: "/clientes/poliservice-web.png",
       desc: "Sitio institucional con representación y distribución zonal, ficha de importador y catálogo de clientes. CRM para seguimiento de cotizaciones industriales."
     },
@@ -632,8 +645,10 @@ export default function PublicWebsite({
       year: "2024",
       type: "Sitio Web + Catálogo de Servicios",
       industry: "industrial",
+      logo: "/logos/sct-patagonia.png",
+      darkLogo: true,
       img: "/clientes/sct-patagonia-web.png",
-      desc: "Rediseño de sitio con catálogo de servicios de cintas transportadoras, video institucional y formulario de contacto conectado al CRM comercial."
+      desc: "Rediseño del sitio con catálogo de servicios de cintas transportadoras, video institucional y formulario de contacto conectado al CRM comercial."
     },
     {
       id: "p11",
@@ -641,8 +656,10 @@ export default function PublicWebsite({
       year: "2024",
       type: "E-Commerce + Catálogo de Productos",
       industry: "industrial",
+      logo: "/logos/afp-service.png",
+      darkLogo: true,
       img: "/clientes/afp-service-web.png",
-      desc: "Tienda online de ferretería industrial y unidades modulares con buscador de productos, catálogo descargable y gestión de pedidos integrada al stock."
+      desc: "Tienda online de ferretería industrial y unidades modulares con buscador inteligente, catálogo descargable y gestión de pedidos integrada al stock."
     },
     {
       id: "p12",
@@ -650,8 +667,10 @@ export default function PublicWebsite({
       year: "2024",
       type: "Portal Institucional + Gestión de Novedades",
       industry: "institucional",
+      logo: "/logos/cec-general-roca.png",
+      darkLogo: false,
       img: "/clientes/cec-web.png",
-      desc: "Portal gremial con beneficios destacados, novedades, escalas salariales y accesos directos a OSECAC y afiliación. Panel de noticias actualizable por el gremio."
+      desc: "Portal gremial con beneficios destacados, novedades, escalas salariales y accesos directos a OSECAC y afiliación. Clientum nos ahorró un empleado administrativo."
     }
   ];
 
@@ -2980,7 +2999,7 @@ export default function PublicWebsite({
                         <p className="text-[10px] font-mono text-white/60 uppercase tracking-wider mt-0.5">Sector público y gremial</p>
                       </div>
                       <p className="text-slate-300 text-xs leading-relaxed">
-                        Organismos como Canal 10 y el Municipio de General Roca pasaron de ser portales informativos a centros de servicios digitales que requieren alta disponibilidad, seguridad y gestión de contenidos permanente.
+                        Organismos como Canal 10, el Municipio de 25 de Mayo y el CEC pasaron de ser portales informativos a centros de servicios digitales que requieren alta disponibilidad, seguridad y gestión de contenidos permanente.
                       </p>
                     </div>
                     <div className="bg-emerald-700 text-white rounded-2xl p-6 flex flex-col gap-4">
@@ -3024,7 +3043,6 @@ export default function PublicWebsite({
                     {[
                       { name: "Canal 10 TV",               rubro: "Medios Públicos",            url: "canal10rn.tv",          icon: Monitor,   logo: "/logos/canal10.webp" },
                       { name: "Diario 10",                  rubro: "Medios Digitales",           url: "diario10.com.ar",        icon: BookOpen,  logo: "/logos/diario-10.webp" },
-                      { name: "Municipio de General Roca",  rubro: "Gobierno Municipal · Río Negro",  url: "generalroca.gob.ar", icon: Building, logo: null },
                       { name: "Municipio de 25 de Mayo",    rubro: "Gobierno Municipal · La Pampa",   url: "25demayo.gob.ar",   icon: Building, logo: "/logos/municipio-25-de-mayo.png" },
                       { name: "Municipio de Maquinchao",    rubro: "Gobierno Municipal · Río Negro",  url: null,                icon: Building, logo: "/logos/maquinchao.png" },
                     ].map(({ name, rubro, url, icon: Icon, logo }) => (
@@ -3076,7 +3094,7 @@ export default function PublicWebsite({
                     icon: Home,
                     clientes: [
                        { name: "Aitue Propiedades",  rubro: "Inmobiliaria",   url: "aitue.com.ar",             logo: null,                        darkLogo: false },
-                       { name: "Terbay Propiedades", rubro: "Inmobiliaria",   url: "terbaypropiedades.com.ar", logo: "/logos/terbay.png",          darkLogo: false },
+                       { name: "Terbay Propiedades", rubro: "Inmobiliaria",   url: "terbaypropiedades.com.ar", logo: "/logos/terbay.png",          darkLogo: true },
                        { name: "Hábitat Sur",         rubro: "Real Estate / Construcción", url: null,         logo: "/logos/habitat-sur.jpg",     darkLogo: false },
                     ]
                   },
@@ -3097,7 +3115,6 @@ export default function PublicWebsite({
                     clientes: [
                        { name: "Lubrano Hogar",              rubro: "Electrodomésticos / Retail", url: "lubranohogar.com.ar",      logo: "/logos/lubrano-hogar.png",  darkLogo: false },
                        { name: "Morgado Hogar",              rubro: "Hogar / Retail",             url: "morgadohogar.com.ar",      logo: "/logos/morgado-hogar.webp", darkLogo: false },
-                       { name: "Mafacha Ferretería Pinturería", rubro: "Ferretería / Retail",    url: "mafacha.com.ar",           logo: "/logos/mafacha.png",        darkLogo: false },
                        { name: "Growlife Patagonia",         rubro: "Comercio / Growshop",        url: "growlifepatagonia.com.ar", logo: null,                        darkLogo: false },
                        { name: "Bauleras Roca",              rubro: "Guardamuebles / Almacenaje", url: null,                      logo: null,                        darkLogo: false },
                        { name: "AKBAR SRL",                  rubro: "Comercio",                  url: null,                      logo: null,                        darkLogo: false },
@@ -3110,7 +3127,7 @@ export default function PublicWebsite({
                     color: "bg-rose-500",
                     icon: Stethoscope,
                     clientes: [
-                       { name: "Farmacia San Martín",  rubro: "Farmacia",           url: null, logo: null, darkLogo: false },
+                       { name: "Farmacia San Martín",  rubro: "Farmacia",           url: null, logo: "/logos/farmacia-san-martin.png", darkLogo: false },
                        { name: "Coe Consultorio",       rubro: "Consultorio Médico", url: null, logo: null, darkLogo: false },
                        { name: "Consultorio Cerol",     rubro: "Consultorio Médico", url: null, logo: null, darkLogo: false },
                        { name: "Grupo Bio",             rubro: "Salud / Bienestar",  url: null, logo: null, darkLogo: false },
@@ -3140,7 +3157,7 @@ export default function PublicWebsite({
                        { name: "Grupo de Asesores",       rubro: "Consultoría",               url: null,                logo: null, darkLogo: false },
                        { name: "Anmerica",                rubro: "Servicios",                 url: null,                logo: null, darkLogo: false },
                        { name: "Agua Wass",               rubro: "Agua / Servicios",          url: null,                logo: null, darkLogo: false },
-                       { name: "SCT Patagonia",           rubro: "Servicios / Construcción",  url: null,                logo: "/logos/sct-patagonia.png", darkLogo: false },
+                       { name: "SCT Patagonia",           rubro: "Servicios / Construcción",  url: null,                logo: "/logos/sct-patagonia.png", darkLogo: true },
                        { name: "Poliservice Suministros", rubro: "Suministros Industriales",  url: null,                logo: "/logos/poliservice.jpg",   darkLogo: false },
                     ]
                   },
@@ -3252,41 +3269,48 @@ export default function PublicWebsite({
                 </div>
 
                 {/* Grid Projects */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredProjects.map((p) => (
                     <motion.div
                       layout
                       key={p.id}
-                      className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
+                      className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all flex flex-col justify-between group"
                     >
                       <div>
-                        <div className="h-44 overflow-hidden relative border-b border-slate-100">
+                        <div className="h-40 overflow-hidden relative border-b border-slate-100">
                           <img
                             src={p.img}
-                            alt={p.name}
-                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                            alt={`Sitio web ${p.name}`}
+                            className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
                           />
-                          <span className="absolute bottom-3 left-3 bg-slate-900/90 text-white text-[9px] font-bold px-2 py-0.5 rounded font-mono uppercase tracking-wider">
+                          <span className="absolute bottom-2 left-2 bg-slate-900/85 text-white text-[9px] font-bold px-2 py-0.5 rounded-full font-mono uppercase tracking-wider backdrop-blur-sm">
                             {p.industry}
                           </span>
+                          <span className="absolute top-2 right-2 bg-white/90 text-slate-500 text-[9px] font-bold px-2 py-0.5 rounded-full backdrop-blur-sm">
+                            {p.year}
+                          </span>
                         </div>
-                        <div className="p-6">
-                          <div className="flex items-center justify-between">
-                            <h3 className="font-bold text-slate-950 text-base">{p.name}</h3>
-                            <span className="text-[10px] text-slate-400 font-bold">{p.year}</span>
+                        {(p as any).logo && (
+                          <div className={`flex items-center px-4 py-2.5 border-b border-slate-100 ${(p as any).darkLogo ? "bg-slate-900" : "bg-white"}`}>
+                            <img src={(p as any).logo} alt={`Logo ${p.name}`} className="h-7 max-w-[140px] object-contain" />
                           </div>
-                          <span className="text-[10px] text-emerald-600 font-semibold block mt-1">{p.type}</span>
-                          <p className="text-xs text-slate-500 mt-3 leading-relaxed">{p.desc}</p>
+                        )}
+                        <div className="p-5">
+                          {!(p as any).logo && (
+                            <h3 className="font-bold text-slate-950 text-sm leading-snug mb-1">{p.name}</h3>
+                          )}
+                          <span className="text-[10px] text-emerald-600 font-bold block uppercase tracking-wider">{p.type}</span>
+                          <p className="text-xs text-slate-500 mt-2.5 leading-relaxed">{p.desc}</p>
                         </div>
                       </div>
-                      <div className="px-6 pb-6 pt-0 border-t border-slate-50">
+                      <div className="px-5 pb-5 pt-0">
                         <button
                           onClick={() => {
                             setDemoForm({ ...demoForm, mensaje: `Hola, vi el caso de éxito de ${p.name} (${p.type}) y me gustaría implementar algo similar en mi negocio.` });
                             setActiveTab("contacto");
                             window.scrollTo({ top: 0, behavior: "smooth" });
                           }}
-                          className="mt-4 text-xs font-bold text-emerald-600 hover:text-emerald-800 transition-colors flex items-center gap-1"
+                          className="text-xs font-bold text-emerald-600 hover:text-emerald-800 transition-colors flex items-center gap-1"
                         >
                           Solicitar solución similar →
                         </button>
@@ -3328,25 +3352,27 @@ export default function PublicWebsite({
                   />
                 </div>
 
-                {/* Brief cases testimonials — clientes reales */}
-                <div className="bg-slate-100 border border-slate-200 rounded-2xl p-8 grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
-                  <div className="flex flex-col gap-2">
-                    <span className="text-xs font-bold text-[#1A3461]">Terbay Propiedades</span>
-                    <p className="text-xs text-slate-500 leading-relaxed italic">
-                      "El bot califica los interesados, les envía las fotos y los planos, y agenda las visitas solo. Nosotros entramos a cerrar. Fue un cambio total en la forma de trabajar."
-                    </p>
+                {/* Testimonios Destacados — 4 casos reales del brochure */}
+                <div className="flex flex-col gap-4">
+                  <div className="text-center">
+                    <span className="text-[#1A3461] font-mono text-[10px] uppercase tracking-widest font-bold">Testimonios Destacados</span>
                   </div>
-                  <div className="flex flex-col gap-2">
-                    <span className="text-xs font-bold text-[#1A3461]">Farmacia San Martín</span>
-                    <p className="text-xs text-slate-500 leading-relaxed italic">
-                      "Antes el teléfono no paraba. Ahora el bot responde si tenemos el medicamento, da el precio y reserva. Liberamos horas de mostrador que usamos para atención personalizada."
-                    </p>
                   </div>
-                  <div className="flex flex-col gap-2">
-                    <span className="text-xs font-bold text-[#1A3461]">Forestal Norte</span>
-                    <p className="text-xs text-slate-500 leading-relaxed italic">
-                      "Las cartas de porte y la liquidación AFIP se hacen solas. Lo que nos llevaba medio día de oficina ahora tarda minutos. Clientum nos ahorró un empleado administrativo."
-                    </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {[
+                      { quote: "Implementamos Clientum en 5 días. El bot de WhatsApp nos generó 40% más de consultas en el primer mes que las que llevaba nadie. Los reportes automáticos cambiaron la forma en que tomamos decisiones.", author: "Martín B.", company: "Distribuidora del Sur S.A. — Neuquén" },
+                      { quote: "El bot califica los interesados, les envía las fotos y los planos, y agenda las visitas solo. Nosotros entramos a cerrar. Fue un cambio total en la forma de trabajar.", author: "Equipo comercial", company: "Terbay Propiedades" },
+                      { quote: "Antes el teléfono no paraba. Ahora el bot responde si tenemos el medicamento, da el precio y reserva. Liberamos horas del mostrador que usamos para atención personalizada.", author: "Administración", company: "Farmacia San Martín" },
+                      { quote: "Las cartas de porte y la liquidación AFIP se hacen solas. Lo que nos llevaba medio día de oficina ahora tarda minutos. Clientum nos ahorró un empleado administrativo.", author: "Gerencia", company: "Forestal Norte" },
+                    ].map(({ quote, author, company }) => (
+                      <div key={company} className="bg-slate-50 border border-slate-200 rounded-xl p-5 flex flex-col gap-3">
+                        <p className="text-xs text-slate-600 leading-relaxed italic">"{quote}"</p>
+                        <div>
+                          <span className="text-[10px] font-bold text-[#1A3461] block">{author}</span>
+                          <span className="text-[10px] text-slate-400">{company}</span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
