@@ -435,7 +435,7 @@ export default function SalesProspectorDashboard({
   }, [searchProv]);
 
   // ── Employee Scraper state ────────────────────────────────────────────────
-  type EmpContact = { name: string; email: string; position: string; confidence: number; linkedin?: string | null };
+  type EmpContact = { name: string | null; email: string | null; position: string; confidence: number; linkedin?: string | null };
   type EmpResult  = { loading?: boolean; contacts?: EmpContact[]; organization?: string; source?: string; error?: string };
   const [empResults,     setEmpResults]     = useState<Record<string, EmpResult>>({});
   const [empExpanded,    setEmpExpanded]    = useState<Set<string>>(new Set());
@@ -697,7 +697,7 @@ export default function SalesProspectorDashboard({
       const result = empResults[deal.id];
       if (result?.contacts && result.contacts.length > 0) {
         result.contacts.forEach((c: EmpContact) => {
-          rows.push([deal.company, deal.industry ?? "", deal.city ?? "", c.name, c.position, c.email, c.confidence ? `${c.confidence}` : "0", c.linkedin ?? "", result.source ?? ""]);
+          rows.push([deal.company, deal.industry ?? "", deal.city ?? "", c.name ?? "", c.position, c.email ?? "", c.confidence ? `${c.confidence}` : "0", c.linkedin ?? "", result.source ?? ""]);
         });
       } else {
         rows.push([deal.company, deal.industry ?? "", deal.city ?? "", "", "", "", "", "", "Sin datos"]);
@@ -3384,10 +3384,11 @@ export default function SalesProspectorDashboard({
         const filteredDeals = deals.filter(d =>
           !empFilter || d.company.toLowerCase().includes(empFilter.toLowerCase()) || (d.industry ?? "").toLowerCase().includes(empFilter.toLowerCase())
         );
-        const totalContacts = Object.values(empResults).reduce((s, r) => s + (r.contacts?.length ?? 0), 0);
-        const hunterCount  = Object.values(empResults).filter(r => r.source === "hunter").length;
-        const aiCount      = Object.values(empResults).filter(r => r.source === "ai").length;
-        const scraped      = Object.values(empResults).filter(r => !r.loading).length;
+        const empVals = Object.values(empResults) as EmpResult[];
+        const totalContacts = empVals.reduce((s, r) => s + (r.contacts?.length ?? 0), 0);
+        const hunterCount  = empVals.filter(r => r.source === "hunter").length;
+        const aiCount      = empVals.filter(r => r.source === "ai").length;
+        const scraped      = empVals.filter(r => !r.loading).length;
 
         const sourceLabel = (src?: string) =>
           src === "hunter" ? { text: "Hunter.io", cls: "bg-emerald-100 text-emerald-700 border-emerald-200" }
@@ -3398,8 +3399,8 @@ export default function SalesProspectorDashboard({
         const confidenceColor = (n: number) =>
           n >= 70 ? "bg-emerald-400" : n >= 40 ? "bg-amber-400" : "bg-slate-300";
 
-        const initials = (name: string) =>
-          name.split(" ").slice(0, 2).map(w => w[0]?.toUpperCase() ?? "").join("");
+        const initials = (name: string | null) =>
+          name ? name.split(" ").slice(0, 2).map(w => w[0]?.toUpperCase() ?? "").join("") : "";
 
         return (
           <div className="flex-1 flex flex-col gap-4 max-w-5xl mx-auto w-full">
@@ -3582,7 +3583,7 @@ export default function SalesProspectorDashboard({
                                   <Mail className="w-3 h-3 text-slate-400 shrink-0" />
                                   <span className="text-[10px] text-slate-600 font-mono truncate">{c.email}</span>
                                   <button
-                                    onClick={() => navigator.clipboard.writeText(c.email)}
+                                    onClick={() => c.email && navigator.clipboard.writeText(c.email)}
                                     className="text-slate-300 hover:text-slate-500 transition cursor-pointer"
                                     title="Copiar email"
                                   >
