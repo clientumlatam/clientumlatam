@@ -222,7 +222,7 @@ hermes secrets set SANTI_API_KEY "<la misma key del Replit Secret>"
 
 ## Skill de Santi
 
-La carpeta `hermes-santi/` en la raíz de este proyecto contiene todos los archivos de la skill:
+La carpeta `docs/ia/build/hermes-santi/` contiene todos los archivos de la skill:
 
 | Archivo | Descripción |
 |---|---|
@@ -240,7 +240,7 @@ La carpeta `hermes-santi/` en la raíz de este proyecto contiene todos los archi
 
 Para instalar la skill en Hermes:
 ```bash
-cp -r hermes-santi ~/.hermes/skills/santi-sdr
+cp -r docs/ia/build/hermes-santi ~/.hermes/skills/santi-sdr
 ```
 
 ---
