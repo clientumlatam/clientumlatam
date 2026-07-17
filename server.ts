@@ -99,14 +99,15 @@ declare module "express-session" {
   }
 }
 
+const SESSION_SECRET = process.env.SESSION_SECRET ?? "clientum-dev-fallback-secret-change-in-prod";
 if (!process.env.SESSION_SECRET) {
-  throw new Error("SESSION_SECRET no está configurado. Es requerido para las sesiones de autenticación.");
+  console.warn("[Session] SESSION_SECRET no está configurado — usando fallback de desarrollo. Configurar en producción.");
 }
 
 app.use(
   session({
     store: new PgSession({ pool: pgPool, tableName: "session", createTableIfMissing: true }),
-    secret: process.env.SESSION_SECRET,
+    secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
