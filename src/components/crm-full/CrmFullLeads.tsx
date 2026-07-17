@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { UserPlus, Phone, Mail, Building2, Clock, RefreshCw, MessageSquare, ChevronDown, ChevronUp, Zap, CheckSquare, Square } from 'lucide-react';
+import { UserPlus, Phone, Mail, Building2, Clock, RefreshCw, MessageSquare, ChevronDown, ChevronUp, Zap, CheckSquare, Square, Search } from 'lucide-react';
 import { Card, CardContent } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { format } from 'date-fns';
@@ -18,7 +18,7 @@ interface ChatbotLead {
 }
 
 const statusColors: Record<string, string> = {
-  nuevo: 'bg-blue-100 text-blue-700',
+  nuevo:      'bg-blue-100 text-blue-700',
   contactado: 'bg-yellow-100 text-yellow-700',
   calificado: 'bg-green-100 text-green-700',
   descartado: 'bg-gray-100 text-gray-600',
@@ -27,11 +27,16 @@ const statusColors: Record<string, string> = {
 const STATUSES: ChatbotLead['status'][] = ['nuevo', 'contactado', 'calificado', 'descartado'];
 
 export default function CrmFullLeads() {
-  const [leads, setLeads] = useState<ChatbotLead[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [leads, setLeads]             = useState<ChatbotLead[]>([]);
+  const [loading, setLoading]         = useState(true);
+  const [error, setError]             = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState('all');
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [expanded, setExpanded]       = useState<Record<string, boolean>>({});
+
+  // Bulk enrich state
+  const [selected, setSelected]         = useState<Set<string>>(new Set());
+  const [enriching, setEnriching]        = useState(false);
+  const [enrichResult, setEnrichResult]  = useState<string | null>(null);
 
   const loadLeads = async () => {
     setLoading(true);
@@ -48,9 +53,7 @@ export default function CrmFullLeads() {
     }
   };
 
-  useEffect(() => {
-    loadLeads();
-  }, []);
+  useEffect(() => { loadLeads(); }, []);
 
   const handleStatusChange = async (id: string, status: ChatbotLead['status']) => {
     setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status } : l)));
@@ -62,19 +65,59 @@ export default function CrmFullLeads() {
       });
       if (!res.ok) throw new Error();
     } catch {
-      // revert on failure by reloading from server
       loadLeads();
     }
   };
 
+  const toggleSelect = (id: string) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    const noEmail = filtered.filter(l => !l.email).map(l => l.id);
+    if (selected.size === noEmail.length && noEmail.every(id => selected.has(id))) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(noEmail));
+    }
+  };
+
+  const handleBulkEnrich = async () => {
+    if (selected.size === 0) return;
+    setEnriching(true);
+    setEnrichResult(null);
+    try {
+      const res = await fetch('/api/leads/bulk-enrich', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: Array.from(selected) }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error al enriquecer');
+      setEnrichResult(`✅ ${data.enriched} email${data.enriched !== 1 ? 's' : ''} encontrado${data.enriched !== 1 ? 's' : ''} de ${data.total} leads procesados.`);
+      setSelected(new Set());
+      await loadLeads();
+    } catch (err: any) {
+      setEnrichResult(`❌ ${err.message}`);
+    } finally {
+      setEnriching(false);
+    }
+  };
+
   const filtered = statusFilter === 'all' ? leads : leads.filter((l) => l.status === statusFilter);
-  const counts = STATUSES.reduce<Record<string, number>>((acc, s) => {
+  const counts   = STATUSES.reduce<Record<string, number>>((acc, s) => {
     acc[s] = leads.filter((l) => l.status === s).length;
     return acc;
   }, {});
+  const canEnrich = filtered.filter(l => !l.email);
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-3xl font-bold text-foreground mb-1 flex items-center gap-2">
@@ -85,16 +128,53 @@ export default function CrmFullLeads() {
             Contactos reales capturados desde el Asesor Comercial IA · {leads.length} total
           </p>
         </div>
-        <button
-          onClick={loadLeads}
-          disabled={loading}
-          className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 bg-muted hover:bg-muted/80 rounded-xl px-3 py-2 transition-all disabled:opacity-50"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-          Actualizar
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={loadLeads}
+            disabled={loading}
+            className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 bg-muted hover:bg-muted/80 rounded-xl px-3 py-2 transition-all disabled:opacity-50"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            Actualizar
+          </button>
+        </div>
       </div>
 
+      {/* Bulk enrich toolbar */}
+      {canEnrich.length > 0 && (
+        <div className="flex flex-wrap items-center gap-3 p-3 bg-violet-50 border border-violet-200 rounded-xl">
+          <button
+            onClick={toggleAll}
+            className="flex items-center gap-1.5 text-xs text-violet-600 hover:text-violet-800 font-medium"
+          >
+            {selected.size > 0 && selected.size === canEnrich.length
+              ? <CheckSquare className="w-4 h-4" />
+              : <Square className="w-4 h-4" />}
+            {selected.size > 0 ? `${selected.size} seleccionados` : `Seleccionar sin email (${canEnrich.length})`}
+          </button>
+          {selected.size > 0 && (
+            <button
+              onClick={handleBulkEnrich}
+              disabled={enriching}
+              className="flex items-center gap-1.5 text-xs font-semibold bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white rounded-lg px-3 py-1.5 transition-colors"
+            >
+              {enriching
+                ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                : <Search className="w-3.5 h-3.5" />}
+              {enriching ? 'Buscando emails...' : `Enriquecer con Hunter.io (${selected.size})`}
+            </button>
+          )}
+          <span className="text-xs text-violet-500">Hunter.io busca el email corporativo usando el nombre de empresa.</span>
+        </div>
+      )}
+
+      {enrichResult && (
+        <div className={`p-3 rounded-xl text-sm font-medium border ${enrichResult.startsWith('✅') ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-600'}`}>
+          {enrichResult}
+        </div>
+      )}
+
+      {/* Status filters */}
       <div className="flex flex-wrap gap-2">
         <button
           onClick={() => setStatusFilter('all')}
@@ -134,10 +214,25 @@ export default function CrmFullLeads() {
       ) : (
         <div className="space-y-3">
           {filtered.map((lead) => (
-            <Card key={lead.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
+            <Card
+              key={lead.id}
+              className={`border-0 shadow-sm hover:shadow-md transition-shadow ${selected.has(lead.id) ? 'ring-2 ring-violet-400' : ''}`}
+            >
               <CardContent className="p-5">
                 <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-4 flex-1 min-w-0">
+                  {/* Checkbox (only for leads without email) */}
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    {!lead.email && (
+                      <button
+                        onClick={() => toggleSelect(lead.id)}
+                        className="mt-1 flex-shrink-0 text-violet-400 hover:text-violet-600"
+                        title="Seleccionar para enriquecer"
+                      >
+                        {selected.has(lead.id)
+                          ? <CheckSquare className="w-4 h-4" />
+                          : <Square className="w-4 h-4" />}
+                      </button>
+                    )}
                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                       <UserPlus className="w-5 h-5 text-primary" />
                     </div>
@@ -152,17 +247,53 @@ export default function CrmFullLeads() {
                         {lead.phone && (
                           <span className="flex items-center gap-1"><Phone className="w-3 h-3" /> {lead.phone}</span>
                         )}
-                        {lead.email && (
-                          <span className="flex items-center gap-1"><Mail className="w-3 h-3" /> {lead.email}</span>
+                        {lead.email ? (
+                          <span className="flex items-center gap-1 text-violet-600 font-medium">
+                            <Mail className="w-3 h-3" /> {lead.email}
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1 text-slate-300 italic">
+                            <Mail className="w-3 h-3" /> sin email
+                          </span>
                         )}
                         {lead.company && (
                           <span className="flex items-center gap-1"><Building2 className="w-3 h-3" /> {lead.company}</span>
                         )}
                       </div>
+                      {/* Enrich individual */}
+                      {!lead.email && lead.company && (
+                        <button
+                          onClick={async () => {
+                            setSelected(new Set([lead.id]));
+                            setEnriching(true);
+                            setEnrichResult(null);
+                            try {
+                              const res = await fetch('/api/leads/bulk-enrich', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ ids: [lead.id] }),
+                              });
+                              const data = await res.json();
+                              setEnrichResult(data.enriched > 0 ? `✅ Email encontrado para ${lead.name}.` : `⚠️ No se encontró email para ${lead.name}.`);
+                              await loadLeads();
+                            } catch (e: any) {
+                              setEnrichResult(`❌ ${e.message}`);
+                            } finally {
+                              setEnriching(false);
+                              setSelected(new Set());
+                            }
+                          }}
+                          disabled={enriching}
+                          className="flex items-center gap-1 text-xs text-violet-500 hover:text-violet-700 disabled:opacity-50 transition-colors"
+                        >
+                          <Zap className="w-3 h-3" />
+                          Buscar email con Hunter.io
+                        </button>
+                      )}
                       {lead.conversation && (
                         <button
                           onClick={() => setExpanded((e) => ({ ...e, [lead.id]: !e[lead.id] }))}
-                          className="flex items-center gap-1 text-xs text-primary hover:underline"
+                          className="flex items-center gap-1 text-xs text-primary hover:underline mt-1"
                         >
                           <MessageSquare className="w-3 h-3" />
                           {expanded[lead.id] ? 'Ocultar conversación' : 'Ver conversación'}
