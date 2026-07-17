@@ -114,3 +114,9 @@ id = "qBPnLwL8-kqM1w2Zs8VeT"
 uri = "file://docs/informe-docs.csv"
 type = "table"
 title = "Informe de documentación — docs/ completo"
+
+[[outputs]]
+id = "C9_9pvqUg1C_fEqQPlBPY"
+uri = "file://docs/informe-sitio.csv"
+type = "table"
+title = "Informe docs/ raíz + docs/sitio/ — 28 archivos"
