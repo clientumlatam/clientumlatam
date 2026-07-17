@@ -1764,6 +1764,55 @@ function getMockOutreach(company: string, contact: string, title: string, indust
 // Google Maps often stores an Instagram / Facebook page as the business website.
 // We separate them so the frontend can show them with the right icon and label.
 // --------------------------------------------------------------------------
+
+// Patagonian city reference coordinates for distance calculation.
+const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
+  "General Roca": { lat: -39.0333, lng: -67.5833 },
+  "Neuquén": { lat: -38.9516, lng: -68.0591 },
+  "San Carlos de Bariloche": { lat: -41.1335, lng: -71.3103 },
+  "Bariloche": { lat: -41.1335, lng: -71.3103 },
+  "Cipolletti": { lat: -38.9333, lng: -67.9833 },
+  "Allen": { lat: -38.9819, lng: -67.8328 },
+  "Centenario": { lat: -38.8333, lng: -68.1333 },
+  "Villa Regina": { lat: -39.1000, lng: -67.0667 },
+  "Roca": { lat: -39.0333, lng: -67.5833 },
+  "Viedma": { lat: -40.8135, lng: -62.9967 },
+  "San Martín de los Andes": { lat: -40.1574, lng: -71.3567 },
+  "Junín de los Andes": { lat: -39.9500, lng: -71.0667 },
+  "Zapala": { lat: -38.8994, lng: -70.0647 },
+  "Cutral-Có": { lat: -38.9333, lng: -69.2333 },
+  "Plaza Huincul": { lat: -38.9167, lng: -69.2167 },
+  "Chos Malal": { lat: -37.3833, lng: -70.2667 },
+  "Plottier": { lat: -38.9556, lng: -68.2231 },
+  "Cinco Saltos": { lat: -38.8308, lng: -68.0628 },
+  "Fernández Oro": { lat: -38.9667, lng: -67.9000 },
+  "General Fernández Oro": { lat: -38.9667, lng: -67.9000 },
+};
+
+/** Haversine distance in km between two lat/lng pairs. */
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+/** Map Google Places priceLevel enum → 1-4 integer (null if unknown). */
+function mapPriceLevel(level: string | undefined | null): number | null {
+  const MAP: Record<string, number> = {
+    PRICE_LEVEL_FREE: 0,
+    PRICE_LEVEL_INEXPENSIVE: 1,
+    PRICE_LEVEL_MODERATE: 2,
+    PRICE_LEVEL_EXPENSIVE: 3,
+    PRICE_LEVEL_VERY_EXPENSIVE: 4,
+  };
+  return level ? (MAP[level] ?? null) : null;
+}
 const SOCIAL_DOMAINS: Record<string, string> = {
   "instagram.com":  "instagram",
   "facebook.com":   "facebook",
@@ -1807,7 +1856,7 @@ async function fetchGooglePlacesAPI(city: string, industry: string, apiKey: stri
       headers: {
         "Content-Type": "application/json",
         "X-Goog-Api-Key": apiKey,
-        "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.rating,places.websiteUri,places.googleMapsUri,places.types,places.userRatingCount"
+        "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.rating,places.websiteUri,places.googleMapsUri,places.types,places.userRatingCount,places.priceLevel,places.location"
       },
       body: JSON.stringify({
         textQuery: query,
@@ -1824,6 +1873,8 @@ async function fetchGooglePlacesAPI(city: string, industry: string, apiKey: stri
     const places = data.places || [];
     console.log(`[Google Places API Success] Encontrados ${places.length} resultados.`);
 
+    const cityRef = CITY_COORDS[city] ?? null;
+
     return places.slice(0, 20).map((place: any, index: number) => {
       const companyName = place.displayName?.text || `Comercio en ${city}`;
       const rating = place.rating || null;
@@ -1834,6 +1885,17 @@ async function fetchGooglePlacesAPI(city: string, industry: string, apiKey: stri
       const { website, socialUrl, socialPlatform } = classifyWebsite(rawWebsiteUri);
       const googleMapsUri = place.googleMapsUri || null;
       const types = place.types || [];
+
+      // Real priceLevel from Google (1–4), null if not provided
+      const priceLevel = mapPriceLevel(place.priceLevel);
+
+      // Real distance in km from city center, null if coords not available
+      let distance: number | null = null;
+      if (cityRef && place.location?.latitude != null && place.location?.longitude != null) {
+        distance = parseFloat(
+          haversineKm(cityRef.lat, cityRef.lng, place.location.latitude, place.location.longitude).toFixed(1)
+        );
+      }
 
       let painPoint = "Excelente presencia de marca en Google pero carece de un canal automático de cotizaciones y CRM para agendar reuniones de ventas 24/7.";
       let score = 7;
@@ -1883,7 +1945,9 @@ async function fetchGooglePlacesAPI(city: string, industry: string, apiKey: stri
         reviewCount: reviewCount,
         website: website,       // null if it's a social media URL
         socialUrl: socialUrl,   // Instagram / Facebook / etc.
-        socialPlatform: socialPlatform  // "instagram" | "facebook" | null
+        socialPlatform: socialPlatform,  // "instagram" | "facebook" | null
+        priceLevel: priceLevel,           // 0-4 real from Google, null if not available
+        distance: distance,               // km from city center, null if no coords
       };
     });
   } catch (error: any) {
@@ -2200,6 +2264,16 @@ app.post("/api/scrape-employees-bulk", requireAuth, async (req, res) => {
   }
 });
 
+// ── GET /api/config/has-google-maps ─────────────────────────────────────────
+// Tells the frontend whether the server has a valid Google Maps Platform key.
+// Safe to call without auth — only returns a boolean, no key material.
+app.get("/api/config/has-google-maps", (_req, res) => {
+  const key = process.env.GOOGLE_MAPS_PLATFORM_KEY || process.env.GOOGLE_MAPS_API_KEY || "";
+  const hasKey = Boolean(key && key.trim() !== "" && key !== "YOUR_API_KEY");
+  res.set("Cache-Control", "no-store");
+  return res.json({ hasKey });
+});
+
 app.post("/api/scrape-places", requireAuth, async (req, res) => {
   try {
     const { city, industry } = req.body;
@@ -2440,10 +2514,12 @@ Investiga, prioriza y encuentra 20 empresas u organizaciones locales verdaderas 
 Para cada negocio real encontrado:
 1. Obtén el nombre exacto de la empresa o local comercial ("company").
 2. Obtén su dirección real aproximada en la ciudad ("address").
-3. Obtén su teléfono real o formato local de contacto real ("phone").
+3. Obtén su teléfono real o formato local de contacto real ("phone") — si no está disponible, usa null.
 4. Deduce o asocia un dolor digital realista ("painPoint"), por ejemplo: procesos analógicos de reserva, falta de automatización, nula presencia web o problemas respondiendo consultas rápido en WhatsApp.
 5. Estima un monto mensual razonable de contrato en pesos ARS para la implementación del CRM ("amount") entre 120000 y 480000.
 6. Proporciona o construye el enlace URL real o de búsqueda en Guía Cores para este comercio ("guiacoresUrl"). Si no se encuentra el enlace exacto, genera una URL de búsqueda en Google restringida al sitio como "https://www.google.com/search?q=site:guiacores.com.ar+" seguido del nombre del negocio codificado.
+
+IMPORTANTE: El campo "contact" DEBE ser null siempre — los contactos reales se enriquecen por separado con Hunter.io. Nunca inventes nombres de personas.
 
 Debes devolver un objeto JSON con la siguiente estructura de datos:
 {
@@ -2455,7 +2531,7 @@ Debes devolver un objeto JSON con la siguiente estructura de datos:
       "city": "${city}",
       "address": "Calle y número real de la ciudad de ${city}",
       "phone": "Teléfono real o prefijo local (ej. +54 298 4423456 o +54 299 4782345)",
-      "contact": "Dueño/Gerente/Contacto estimado o real (ej. Sr. Martinez, Luciana S.)",
+      "contact": null,
       "painPoint": "Dolor específico e inteligente adaptado al negocio real encontrado.",
       "score": 8,
       "guiacoresUrl": "https://www.google.com/search?q=site:guiacores.com.ar+Nombre+Del+Negocio"
@@ -2485,7 +2561,6 @@ IMPORTANTE: Devuelve exclusivamente el objeto JSON sin markdown.`;
                       city: { type: Type.STRING },
                       address: { type: Type.STRING },
                       phone: { type: Type.STRING },
-                      contact: { type: Type.STRING },
                       painPoint: { type: Type.STRING },
                       score: { type: Type.INTEGER },
                       guiacoresUrl: { type: Type.STRING }
@@ -2497,7 +2572,6 @@ IMPORTANTE: Devuelve exclusivamente el objeto JSON sin markdown.`;
                       "city",
                       "address",
                       "phone",
-                      "contact",
                       "painPoint",
                       "score",
                       "guiacoresUrl"
@@ -2510,12 +2584,21 @@ IMPORTANTE: Devuelve exclusivamente el objeto JSON sin markdown.`;
           }
         });
 
-        return res.json({ result: JSON.parse(response.text || "{}") });
+        const parsed = JSON.parse(response.text || "{}");
+        // Force contact: null on every prospect — real contacts come via Hunter.io only
+        if (parsed.prospects) {
+          parsed.prospects = parsed.prospects.map((p: any) => ({ ...p, contact: null }));
+        }
+        return res.json({ result: parsed });
       } catch (geminiError: any) {
         console.warn("[Gemini Fallback] Quota exhaustion / error in prospectLeads. Trying free AI...");
         const freeProspects = await tryFreeAI(prompt, { jsonMode: true });
         if (freeProspects) {
-          try { return res.json({ result: JSON.parse(extractJSON(freeProspects)) }); } catch { /* not valid JSON */ }
+          try {
+            const fp = JSON.parse(extractJSON(freeProspects));
+            if (fp.prospects) fp.prospects = fp.prospects.map((p: any) => ({ ...p, contact: null }));
+            return res.json({ result: fp });
+          } catch { /* not valid JSON */ }
         }
         return res.json({ result: getMockProspects(city, industry), isFallback: true });
       }
