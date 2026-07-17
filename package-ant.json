@@ -9,9 +9,9 @@
   },
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "vite build && esbuild server.ts --bundle --platform=node --format=esm --packages=external --sourcemap --outfile=dist/server.mjs",
+    "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
     "build:wp": "bash clientum-wp-theme/clientum-ai-prospector/build-for-wp.sh",
-    "start": "NODE_ENV=production node dist/server.mjs",
+    "start": "NODE_ENV=production node dist/server.cjs",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit"
   },
@@ -54,13 +54,5 @@
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@google/genai",
-      "core-js",
-      "esbuild",
-      "protobufjs"
-    ]
   }
 }
