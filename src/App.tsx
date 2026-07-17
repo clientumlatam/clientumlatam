@@ -1,62 +1,48 @@
 import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate, Navigate, Route, Routes } from "react-router-dom";
-import { useAuth } from "@neondatabase/neon-js/auth/react";
-import { AuthView, AccountView as NeonAccountView } from "@neondatabase/neon-js/auth/react/ui";
-import { useParams } from "react-router-dom";
 import PublicWebsite from "./components/PublicWebsite";
 import SalesProspectorDashboard from "./components/SalesProspectorDashboard";
+import NeonAuthGate from "./components/NeonAuthGate";
 import { DEFAULT_BROCHURE_DATA, INDUSTRY_PRESETS } from "./data";
 import { BrochureData, CustomTemplate } from "./types";
 import { exportBrochureToPDF } from "./utils/pdfGenerator";
 
-// ── SDK-style page wrappers (thin, match Neon Auth docs) ─────────────────────
-function AuthPage() {
-  const { pathname } = useParams<{ pathname: string }>();
-  return <AuthView pathname={pathname} />;
-}
-
-function AccountPage() {
-  const { pathname } = useParams<{ pathname: string }>();
-  return <NeonAccountView pathname={pathname} />;
-}
-
 export default function App() {
-  const location = useLocation();
-  const navigate = useNavigate();
+  const [viewMode, setViewMode] = useState<"website" | "prospector">("website");
 
-  // Derive viewMode from URL
-  const pathToMode = (p: string): "website" | "prospector" | "account" | "auth" => {
-    if (p === "/auth" || p.startsWith("/auth/")) return "auth";
-    if (p === "/account" || p.startsWith("/account/")) return "account";
-    if (p.startsWith("/prospector") || p.startsWith("/crm")) return "prospector";
-    return "website";
-  };
+  // Auth state for the CRM/dashboard section only. The public website stays open.
+  const [authUser, setAuthUser] = useState<string | null>(null);
+  const [authRole, setAuthRole] = useState<string | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
 
-  const [viewMode, setViewMode] = useState<"website" | "prospector" | "account" | "auth">(
-    () => pathToMode(location.pathname)
-  );
-
-  // Keep URL in sync when viewMode is changed programmatically
-  const goTo = (mode: "website" | "prospector" | "account" | "auth") => {
-    setViewMode(mode);
-    const path = mode === "auth" ? "/auth" : mode === "account" ? "/account" : mode === "prospector" ? "/prospector" : "/";
-    if (location.pathname !== path) navigate(path, { replace: false });
-  };
-
-  // Sync viewMode if the user navigates via browser back/forward
   useEffect(() => {
-    const mode = pathToMode(location.pathname);
-    setViewMode(mode);
-  }, [location.pathname]);
-
-  // ── Auth state from NeonAuthUIProvider context ─────────────────────────────
-  const { user: neonUser, isLoaded: authChecked, isSignedIn, signOut } = useAuth();
-  const authUser = neonUser?.username ?? null;
-  const authRole = neonUser?.role ?? null;
+    let cancelled = false;
+    fetch("/api/auth/me")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && data?.user?.username) {
+          setAuthUser(data.user.username);
+          setAuthRole(data.user.role || "user");
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setAuthChecked(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleLogout = async () => {
-    await signOut();
-    goTo("website");
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch (e) {
+      console.error("Error al cerrar sesión", e);
+    } finally {
+      setAuthUser(null);
+      setAuthRole(null);
+      setViewMode("website");
+    }
   };
 
   // Which industry solution page is being shown on the public website home ("general" = Default Clientum)
@@ -272,36 +258,24 @@ export default function App() {
     }
   };
 
-  // ── Loading state (context not ready yet) ─────────────────────────────────
-  if (!authChecked && (viewMode === "account" || viewMode === "prospector")) {
-    return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-[#0B131D]">
-        <div className="text-zinc-500 text-sm">Cargando…</div>
-      </div>
-    );
-  }
-
-  // ── /auth and /auth/:pathname — SDK-style AuthView ──────────────────────
-  if (viewMode === "auth") {
-    if (isSignedIn) {
-      // Already logged in — go straight to the CRM
-      return <Navigate to="/prospector" replace />;
-    }
-    // pathname comes from the URL, e.g. /auth/sign-in → "sign-in"
-    const authPathname = location.pathname.replace(/^\/auth\/?/, "") || "sign-in";
-    return <AuthPage />;
-  }
-
-  // ── /account and /account/:pathname — SDK-style AccountView ────────────
-  if (viewMode === "account") {
-    if (!isSignedIn) return <Navigate to="/auth/sign-in" replace />;
-    return <AccountPage />;
-  }
-
-  // ── /prospector — CRM dashboard (requires auth) ─────────────────────────
   if (viewMode === "prospector") {
-    if (!isSignedIn) {
-      return <Navigate to="/auth/sign-in" replace />;
+    if (!authChecked) {
+      return (
+        <div className="min-h-screen w-full flex items-center justify-center bg-slate-950">
+          <div className="text-slate-500 text-sm">Cargando…</div>
+        </div>
+      );
+    }
+
+    if (!authUser) {
+      return (
+        <NeonAuthGate
+          onAuthenticated={(username, role) => {
+            setAuthUser(username);
+            setAuthRole(role || "user");
+          }}
+        />
+      );
     }
 
     return (
@@ -311,7 +285,7 @@ export default function App() {
         currentUserRole={authRole || "user"}
         brochureData={brochureData}
         hidePrices={hidePrices}
-        onBack={() => goTo("website")}
+        onBack={() => setViewMode("website")}
         onChangeDeals={(newDeals) => {
           setBrochureData((prev) => ({
             ...prev,
@@ -345,16 +319,31 @@ export default function App() {
     );
   }
 
-  // Default: website (viewMode === "website" or any other)
+  if (viewMode === "website") {
+    return (
+      <PublicWebsite
+        onBackToEditor={() => setViewMode("prospector")}
+        brochureData={brochureData}
+        colorTheme={colorTheme}
+        contactInfo={contactInfo}
+        hidePrices={hidePrices}
+        authUser={authUser}
+        onOpenLogin={() => setViewMode("prospector")}
+        onLogout={handleLogout}
+      />
+    );
+  }
+
+  // Fallback: should not normally be reached since viewMode is only "website" | "prospector".
   return (
     <PublicWebsite
-      onBackToEditor={() => goTo("prospector")}
+      onBackToEditor={() => setViewMode("prospector")}
       brochureData={brochureData}
       colorTheme={colorTheme}
       contactInfo={contactInfo}
       hidePrices={hidePrices}
       authUser={authUser}
-      onOpenLogin={() => goTo("prospector")}
+      onOpenLogin={() => setViewMode("prospector")}
       onLogout={handleLogout}
     />
   );

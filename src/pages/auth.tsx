@@ -1,11 +1,12 @@
-import { AuthView } from "@neondatabase/neon-js/auth/react/ui";
-import { useParams } from "react-router-dom";
+// Auth page — uses our custom NeonAuthGate which proxies to Neon Auth
+// (the @neondatabase/neon-js SDK is blocked by the Replit firewall; our
+// backend proxy achieves the same identity-provider integration via REST)
+import NeonAuthGate from "../components/NeonAuthGate";
 
-export function Auth() {
-  const { pathname } = useParams();
-  return (
-    <div className="flex justify-center items-center min-h-screen">
-      <AuthView pathname={pathname} />
-    </div>
-  );
+interface AuthPageProps {
+  onAuthenticated: (username: string, role?: string) => void;
+}
+
+export function AuthPage({ onAuthenticated }: AuthPageProps) {
+  return <NeonAuthGate onAuthenticated={onAuthenticated} />;
 }
