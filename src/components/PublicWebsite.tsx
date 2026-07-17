@@ -524,6 +524,8 @@ export default function PublicWebsite({
       year: "2023",
       type: "E-Commerce + CRM Inteligente",
       industry: "retail",
+      logo: "/logos/morgado-hogar.webp",
+      darkLogo: false,
       img: "/clientes/morgado-hogar-web.png",
       desc: "Tienda online con catálogo de muebles y deco sincronizado con stock físico. Pipeline de ventas y seguimiento automático de presupuestos por WhatsApp."
     },
@@ -533,17 +535,10 @@ export default function PublicWebsite({
       year: "2023",
       type: "Bot WhatsApp + Gestión de Stock",
       industry: "salud",
-      img: "/clientes/farmacia-san-martin-web.webp",
+      logo: "/logos/farmacia-san-martin.png",
+      darkLogo: false,
+      img: "/clientes/farmacia-san-martin-web.png",
       desc: "Bot 24/7 que responde consultas de disponibilidad de medicamentos, agenda turnos y envía recordatorios. Stock integrado con facturación AFIP."
-    },
-    {
-      id: "p3",
-      name: "Mafacha Ferretería Pinturería",
-      year: "2022",
-      type: "E-Commerce + Facturación AFIP",
-      industry: "retail",
-      img: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=600&q=80",
-      desc: "Catálogo online de más de 3.000 productos con precios actualizados, carrito de compras y emisión automática de facturas A/B/C desde el CRM."
     },
     {
       id: "p4",
@@ -551,6 +546,8 @@ export default function PublicWebsite({
       year: "2023",
       type: "CRM Inmobiliario + Bot WhatsApp",
       industry: "inmobiliaria",
+      logo: "/logos/terbay.png",
+      darkLogo: true,
       img: "/clientes/terbay-web.png",
       desc: "Bot califica interesados, envía planos y fotos, y agenda visitas automáticamente. Pipeline de operaciones con seguimiento de cada cliente hasta el cierre."
     },
@@ -560,6 +557,8 @@ export default function PublicWebsite({
       year: "2022",
       type: "ERP + AFIP + Cartas de Porte",
       industry: "agroindustria",
+      logo: null,
+      darkLogo: false,
       img: "/logos/forestal-norte.jpg",
       desc: "Digitalización de operaciones forestales: cartas de porte electrónicas, liquidaciones automáticas y trazabilidad de carga desde el campo hasta la planta."
     },
@@ -569,8 +568,10 @@ export default function PublicWebsite({
       year: "2023",
       type: "Portal Institucional + Gestión de Turnos",
       industry: "agroindustria",
+      logo: null,
+      darkLogo: false,
       img: "/clientes/consorcio-riego-web.png",
-      desc: "Portal institucional con gestión de turnos de agua, calendario de riegos, pagos online integrados y comunicaciones automáticas a los regantes del Alto Valle."
+      desc: "Portal con gestión de turnos de agua, calendario de riegos, pagos online integrados y comunicaciones automáticas a los regantes del Alto Valle."
     },
     {
       id: "p14",
@@ -578,8 +579,10 @@ export default function PublicWebsite({
       year: "2024",
       type: "Sitio Web + CRM Inmobiliario",
       industry: "inmobiliaria",
+      logo: null,
+      darkLogo: false,
       img: "/clientes/habitat-sur-web.png",
-      desc: "Sitio inmobiliario con listado de propiedades, filtros avanzados y formulario de contacto conectado al CRM. Automatización de seguimiento de interesados por WhatsApp."
+      desc: "Sitio inmobiliario con listado de propiedades, filtros, ficha de contacto y catálogo de cotizaciones conectado al CRM. Automatización de seguimiento de cotizaciones."
     },
     {
       id: "p15",
@@ -587,6 +590,8 @@ export default function PublicWebsite({
       year: "2024",
       type: "Portal Municipal + Gestión de Trámites",
       industry: "institucional",
+      logo: "/logos/municipio-25-de-mayo.png",
+      darkLogo: false,
       img: "/clientes/municipio-25-de-mayo-web.png",
       desc: "Portal de gobierno digital con acceso a trámites, novedades municipales, contacto ciudadano y gestión de contenidos desde un panel administrable."
     },
@@ -596,6 +601,8 @@ export default function PublicWebsite({
       year: "2022",
       type: "Portal Web + Streaming Digital",
       industry: "medios",
+      logo: "/logos/canal10.webp",
+      darkLogo: true,
       img: "/clientes/canal10-web.png",
       desc: "Rediseño del portal de noticias con integración de streaming en vivo, gestión de contenidos y automatización de publicaciones en redes sociales."
     },
@@ -605,8 +612,10 @@ export default function PublicWebsite({
       year: "2023",
       type: "E-Commerce + CRM Automotriz",
       industry: "automotriz",
+      logo: "/logos/cabarcos-motores-cropped.png",
+      darkLogo: true,
       img: "/clientes/cabarcos-motores-web.png",
-      desc: "Catálogo de vehículos y repuestos online con reservas digitales. CRM con seguimiento de consultas, test drives y posventa integrado a WhatsApp."
+      desc: "Catálogo de vehículos y repuestos online con reservas digitales. CRM con seguimiento de consultas, test drives y posventa integrada a WhatsApp."
     },
     {
       id: "p8",
@@ -614,6 +623,8 @@ export default function PublicWebsite({
       year: "2023",
       type: "ERP + Rastreo de Flota",
       industry: "logística",
+      logo: "/logos/kj-logistica.webp",
+      darkLogo: true,
       img: "/clientes/kj-logistica-web.png",
       desc: "Sistema de gestión de viajes, control de flota y liquidación de conductores. Reportes automáticos de kilómetros, combustible y rentabilidad por unidad."
     },
@@ -623,6 +634,8 @@ export default function PublicWebsite({
       year: "2024",
       type: "Sitio Web + CRM de Distribución Zonal",
       industry: "industrial",
+      logo: null,
+      darkLogo: false,
       img: "/clientes/poliservice-web.png",
       desc: "Sitio institucional con representación y distribución zonal, ficha de importador y catálogo de clientes. CRM para seguimiento de cotizaciones industriales."
     },
@@ -632,8 +645,10 @@ export default function PublicWebsite({
       year: "2024",
       type: "Sitio Web + Catálogo de Servicios",
       industry: "industrial",
+      logo: "/logos/sct-patagonia.png",
+      darkLogo: true,
       img: "/clientes/sct-patagonia-web.png",
-      desc: "Rediseño de sitio con catálogo de servicios de cintas transportadoras, video institucional y formulario de contacto conectado al CRM comercial."
+      desc: "Rediseño del sitio con catálogo de servicios de cintas transportadoras, video institucional y formulario de contacto conectado al CRM comercial."
     },
     {
       id: "p11",
@@ -641,8 +656,10 @@ export default function PublicWebsite({
       year: "2024",
       type: "E-Commerce + Catálogo de Productos",
       industry: "industrial",
+      logo: "/logos/afp-service.png",
+      darkLogo: true,
       img: "/clientes/afp-service-web.png",
-      desc: "Tienda online de ferretería industrial y unidades modulares con buscador de productos, catálogo descargable y gestión de pedidos integrada al stock."
+      desc: "Tienda online de ferretería industrial y unidades modulares con buscador inteligente, catálogo descargable y gestión de pedidos integrada al stock."
     },
     {
       id: "p12",
@@ -650,8 +667,10 @@ export default function PublicWebsite({
       year: "2024",
       type: "Portal Institucional + Gestión de Novedades",
       industry: "institucional",
+      logo: "/logos/cec-general-roca.png",
+      darkLogo: false,
       img: "/clientes/cec-web.png",
-      desc: "Portal gremial con beneficios destacados, novedades, escalas salariales y accesos directos a OSECAC y afiliación. Panel de noticias actualizable por el gremio."
+      desc: "Portal gremial con beneficios destacados, novedades, escalas salariales y accesos directos a OSECAC y afiliación. Clientum nos ahorró un empleado administrativo."
     }
   ];
 
