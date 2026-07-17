@@ -1,0 +1,54 @@
+name: Agentes Clientum — Loop Autónomo
+
+# Corre cada 15 min y también se puede disparar a mano.
+# No requiere presupuesto: usa el free tier de GitHub Actions + Gemini API.
+#
+# Para darle trabajo:
+#   A) Crear Issue con label "agente:orquestador" — instrucción en texto libre.
+#      El Orquestador elige el sub-agente correcto y re-etiqueta.
+#   B) Asignación directa: label "agente:ventas/santi-sdr", "agente:tecnico/backend-infra", etc.
+#
+# El workflow lee fichas de docs/referencia-tecnica/agentes/fichas/
+# y commitea las secciones ## Memoria actualizadas de vuelta al repo.
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {}
+
+# Necesario para comentar, etiquetar y cerrar issues, y para pushear memoria.
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: agentes-clientum-loop
+  cancel-in-progress: false
+
+jobs:
+  correr-agentes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Ejecutar agentes sobre issues abiertos
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: node docs/referencia-tecnica/agentes/scripts/run-agentes.mjs
+
+      - name: Commitear memoria actualizada de fichas
+        run: |
+          git config user.name "orquestador-ia"
+          git config user.email "agentes@clientum.com.ar"
+          git add docs/referencia-tecnica/agentes/fichas/
+          git diff --cached --quiet || git commit -m "chore(agentes): actualizar memoria [skip ci]"
+          git push

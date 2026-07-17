@@ -106,7 +106,8 @@ app.use(
   })
 );
 
-const USERNAME_RE = /^[a-zA-Z0-9_.-]{3,32}$/;
+// Accepts classic usernames (letters/numbers/._-) OR email addresses.
+const USERNAME_RE = /^[a-zA-Z0-9_.@+\-]{3,64}$/;
 
 // ---------------------------------------------------------------------------
 // Email — Gmail SMTP via nodemailer
@@ -251,16 +252,23 @@ app.post("/api/auth/register", async (req, res) => {
       return res.status(400).json({ error: "Usuario y contraseña son requeridos." });
     }
     if (!USERNAME_RE.test(username)) {
-      return res.status(400).json({ error: "El usuario debe tener entre 3 y 32 caracteres (letras, números, . _ -)." });
+      return res.status(400).json({ error: "El usuario debe tener entre 3 y 64 caracteres (letras, números, . _ - @) o ser un email válido." });
     }
     if (password.length < 8) {
       return res.status(400).json({ error: "La contraseña debe tener al menos 8 caracteres." });
     }
 
-    const existing = await pgPool.query("SELECT id FROM users WHERE username = $1", [username]);
+    const existing = await pgPool.query(
+      "SELECT id FROM users WHERE username = $1 OR (email IS NOT NULL AND LOWER(email) = LOWER($1))",
+      [username]
+    );
     if ((existing.rowCount ?? 0) > 0) {
       return res.status(409).json({ error: "Ese usuario ya existe." });
     }
+
+    // If the username looks like an email, persist it also in the email column
+    // so the forgot-password flow can find the account by email later.
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(username);
 
     const passwordHash = await bcrypt.hash(password, 12);
     // The very first account created becomes admin so there's always someone
@@ -275,7 +283,9 @@ app.post("/api/auth/register", async (req, res) => {
       const { rows: countRows } = await client.query("SELECT COUNT(*)::int AS count FROM users");
       const role = countRows[0]?.count === 0 ? "admin" : "user";
       const inserted = await client.query(
-        "INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3) RETURNING id, username, role",
+        isEmail
+          ? "INSERT INTO users (username, password_hash, role, email) VALUES ($1, $2, $3, $1) RETURNING id, username, role"
+          : "INSERT INTO users (username, password_hash, role) VALUES ($1, $2, $3) RETURNING id, username, role",
         [username, passwordHash, role]
       );
       user = inserted.rows[0];
@@ -316,7 +326,11 @@ app.post("/api/auth/login", async (req, res) => {
       return res.status(400).json({ error: "Usuario y contraseña son requeridos." });
     }
 
-    const result = await pgPool.query("SELECT id, username, password_hash, role FROM users WHERE username = $1", [username]);
+    // Accept username or email in the username field
+    const result = await pgPool.query(
+      "SELECT id, username, password_hash, role FROM users WHERE username = $1 OR (email IS NOT NULL AND LOWER(email) = LOWER($1)) LIMIT 1",
+      [username]
+    );
     const user = result.rows[0];
     // Always run a hash comparison to reduce username-enumeration timing signal.
     const validHash = user?.password_hash || "$2a$12$invalidsaltinvalidsaltinvalidsaltinvalidsaltinvalidsal";
