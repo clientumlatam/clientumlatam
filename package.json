@@ -77,5 +77,6 @@
         "x64"
       ]
     }
-  }
+  },
+  "packageManager": "pnpm@10.26.1"
 }
