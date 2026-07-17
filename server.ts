@@ -11,6 +11,15 @@ import crypto from "crypto";
 
 dotenv.config();
 
+// ── Typed fetch wrapper ──────────────────────────────────────────────────────
+// @types/node and @types/express both declare a global `Response` that shadows
+// the Fetch API Response, causing TS2339 on .ok / .status / .json() / .text().
+// This cast fixes all call sites without touching each one individually.
+const apiFetch = fetch as (
+  url: string | URL | Request,
+  init?: RequestInit,
+) => Promise<{ ok: boolean; status: number; json<T = any>(): Promise<T>; text(): Promise<string> }>;
+
 const app = express();
 app.use(express.json({ limit: "10mb" }));
 
@@ -47,12 +56,12 @@ async function resolveDatabaseUrl(): Promise<string> {
   const neonProjectId = process.env.NEON_PROJECT_ID;
   if (neonApiKey && neonProjectId) {
     const headers = { Authorization: `Bearer ${neonApiKey}`, Accept: "application/json" };
-    const branchesRes = await fetch(`https://console.neon.tech/api/v2/projects/${neonProjectId}/branches`, { headers });
+    const branchesRes = await apiFetch(`https://console.neon.tech/api/v2/projects/${neonProjectId}/branches`, { headers });
     if (!branchesRes.ok) throw new Error(`No se pudo listar branches de Neon (${branchesRes.status})`);
     const branches = await branchesRes.json();
     const branchId = branches.branches?.find((b: any) => b.default)?.id ?? branches.branches?.[0]?.id;
     if (!branchId) throw new Error("El proyecto Neon no tiene branches.");
-    const uriRes = await fetch(
+    const uriRes = await apiFetch(
       `https://console.neon.tech/api/v2/projects/${neonProjectId}/connection_uri?branch_id=${branchId}&database_name=neondb&role_name=neondb_owner&pooled=true`,
       { headers }
     );
@@ -595,7 +604,7 @@ app.post("/api/auth/neon-register", async (req, res) => {
       const localHash = await bcrypt.hash(password, 12);
       console.log("[NeonAuth] Registrando via Neon Auth REST API");
       const appOrigin = process.env.APP_URL || "https://clientum.com.ar";
-      const neonRes = await fetch(`${NEON_AUTH_BASE}/sign-up/email`, {
+      const neonRes = await apiFetch(`${NEON_AUTH_BASE}/sign-up/email`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -696,7 +705,7 @@ app.post("/api/auth/neon-login", async (req, res) => {
       // ── No local hash: call Neon Auth as fallback ────────────────────────────
       console.log("[NeonAuth] Sin hash local — intentando Neon Auth");
       const appOrigin = process.env.APP_URL || "https://clientum.com.ar";
-      const neonRes = await fetch(`${NEON_AUTH_BASE}/sign-in/email`, {
+      const neonRes = await apiFetch(`${NEON_AUTH_BASE}/sign-in/email`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Origin": appOrigin },
         body: JSON.stringify({ email, password }),
@@ -929,7 +938,7 @@ async function tryFreeAI(prompt: string): Promise<string | null> {
   if (groqKey) {
     try {
       console.log("[FreeAI] Intentando Groq llama-3.3-70b-versatile...");
-      const gr = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      const gr = await apiFetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${groqKey}` },
         body: JSON.stringify({
@@ -960,7 +969,7 @@ async function tryFreeAI(prompt: string): Promise<string | null> {
     for (const model of orModels) {
       try {
         console.log(`[FreeAI] Intentando OpenRouter ${model}...`);
-        const or = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        const or = await apiFetch("https://openrouter.ai/api/v1/chat/completions", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -1627,7 +1636,7 @@ async function fetchGooglePlacesAPI(city: string, industry: string, apiKey: stri
   console.log(`[Google Places API] Iniciando consulta para: "${query}"...`);
 
   try {
-    const response = await fetch("https://places.googleapis.com/v1/places:searchText", {
+    const response = await apiFetch("https://places.googleapis.com/v1/places:searchText", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -1734,7 +1743,7 @@ async function fetchApifyGooglePlaces(city: string, industry: string): Promise<a
       limit: 20,
     };
 
-    const response = await fetch(url, {
+    const response = await apiFetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -1768,7 +1777,7 @@ async function fetchApifyGooglePlaces(city: string, industry: string): Promise<a
         maxCrawledPlacesPerSearch: 20,
       };
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1806,7 +1815,7 @@ async function fetchApifyGooglePlaces(city: string, industry: string): Promise<a
         limit: 20,
       };
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1906,7 +1915,7 @@ async function enrichWithHunter(domain: string): Promise<{
 
   try {
     const url = `https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(cleanDomain)}&limit=5&api_key=${encodeURIComponent(apiKey)}`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    const res = await apiFetch(url, { signal: AbortSignal.timeout(8000) });
     if (!res.ok) {
       console.warn(`[Hunter] HTTP ${res.status} for domain ${cleanDomain}`);
       return null;
@@ -2011,7 +2020,7 @@ app.post("/api/generate", async (req, res, next) => {
       }
       try {
         console.log(`[Google Places Validation] Validando clave provista...`);
-        const response = await fetch("https://places.googleapis.com/v1/places:searchText", {
+        const response = await apiFetch("https://places.googleapis.com/v1/places:searchText", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -3724,7 +3733,7 @@ app.post("/api/agent/run/enrich", async (req, res) => {
     // Step 2: Firecrawl website analysis (if website exists)
     if (website) {
       try {
-        const fcRes = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        const fcRes = await apiFetch("https://api.firecrawl.dev/v1/scrape", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

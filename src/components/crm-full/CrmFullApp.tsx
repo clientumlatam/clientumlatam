@@ -33,19 +33,20 @@ import CreacionRapidaCRM  from './CreacionRapidaCRM';
 import ActividadCRM       from './ActividadCRM';
 import BrochureCRM        from './BrochureCRM';
 import CopiloIAPanel      from './CopiloIAPanel';
+import Propuestas          from './Propuestas';
 
 import { Conversation, Seller, Branch, Product } from './crmTypes';
 import { initialConversations, initialSellers, initialBranches, initialProducts } from './crmInitialData';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type SubTab =
-  | 'icp'      | 'maps'                                       // PROSPECCIÓN
-  | 'crm'      | 'meddic'   | 'outreach' | 'rapida' | 'actividad' // PIPELINE
-  | 'conversations' | 'bot'                                   // COMUNICACIÓN
-  | 'products' | 'sellers'  | 'branches'                     // CATÁLOGO
-  | 'brochure' | 'contenido' | 'config'  | 'copiloto'        // BROCHURE
-  | 'wp_leads' | 'wp_config' | 'wp_modulos'                  // WORDPRESS
-  | 'orquestador';                                            // ORQUESTADOR
+  | 'icp'      | 'maps'                                                    // PROSPECCIÓN
+  | 'crm'      | 'meddic'   | 'outreach' | 'propuestas' | 'rapida' | 'actividad' // PIPELINE
+  | 'conversations' | 'bot'                                                // COMUNICACIÓN
+  | 'products' | 'sellers'  | 'branches'                                   // CATÁLOGO
+  | 'brochure' | 'contenido' | 'config'  | 'copiloto'                     // BROCHURE
+  | 'wp_leads' | 'wp_config' | 'wp_modulos'                               // WORDPRESS
+  | 'orquestador';                                                          // ORQUESTADOR
 
 // ─── Nav definition ──────────────────────────────────────────────────────────
 interface NavItem { id: SubTab; label: string; icon: React.ReactNode; desc?: string; }
@@ -64,8 +65,9 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: 'crm',      label: 'CRM Pipeline',        icon: <MessagesSquare className="w-4 h-4" /> },
       { id: 'meddic',   label: 'Calificación MEDDIC', icon: <Award className="w-4 h-4" />,         desc: 'Audita el potencial de cada lead' },
-      { id: 'outreach', label: 'Outreach Campaigns',  icon: <Megaphone className="w-4 h-4" />,     desc: 'Generá campañas de contacto' },
-      { id: 'rapida',   label: 'Creación Rápida',     icon: <Zap className="w-4 h-4" /> },
+      { id: 'outreach',   label: 'Outreach Campaigns',    icon: <Megaphone className="w-4 h-4" />, desc: 'Generá campañas de contacto' },
+      { id: 'propuestas', label: 'Propuestas',          icon: <FileText className="w-4 h-4" />, desc: 'Propuestas comerciales por empresa' },
+      { id: 'rapida',     label: 'Creación Rápida',     icon: <Zap className="w-4 h-4" /> },
       { id: 'actividad',label: 'Actividad',           icon: <Activity className="w-4 h-4" /> },
     ],
   },
@@ -162,6 +164,7 @@ export default function CrmFullApp({ activeTabOverride, hideNav = false }: CrmFu
       case 'crm':           return <CrmFullPipeline conversations={conversations} sellers={sellers} onUpdateConversation={handleUpdateConversation} />;
       case 'meddic':        return <MeddicCalificacion />;
       case 'outreach':      return <OutreachCampaigns />;
+      case 'propuestas':    return <Propuestas />;
       case 'rapida':        return <CreacionRapidaCRM />;
       case 'actividad':     return <ActividadCRM />;
       case 'conversations': return <CrmFullConversations conversations={conversations} />;
