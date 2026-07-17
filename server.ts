@@ -12,7 +12,10 @@ import crypto from "crypto";
 
 dotenv.config();
 // En un Remix recién configurado, los secrets vienen de .env.local (generado por pull-secrets.mjs)
-dotenv.config({ path: ".env.local", override: true });
+// .env.local fills in any values not already set by Replit Secrets.
+// override:false keeps real Replit Secret values intact; dotenvx-encrypted
+// blobs in .env.local are handled by isDotenvxBlob() in resolveDatabaseUrl.
+dotenv.config({ path: ".env.local", override: false });
 
 const app = express();
 // Trust Vercel's (and any other reverse proxy's) X-Forwarded-* headers so
@@ -45,13 +48,21 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT) : 5000;
 // from Neon's API (avoids hand-copying a connection string that can go
 // stale if it's ever rotated). Otherwise falls back to DATABASE_URL
 // (Replit's own internal Postgres) for local-only setups.
+// Returns true when a value is a dotenvx-encrypted blob (not yet decrypted).
+// These values are unusable as connection strings / API keys.
+function isDotenvxBlob(val: string | undefined): boolean {
+  if (!val) return false;
+  try { return val.startsWith("eyJ2IjoidjIi"); } catch { return false; }
+}
+
 async function resolveDatabaseUrl(): Promise<string> {
   // Prefer an explicit connection string when available — fastest path.
-  if (process.env.NEON_DATABASE_URL) {
+  // Skip dotenvx-encrypted blobs that haven't been decrypted yet.
+  if (process.env.NEON_DATABASE_URL && !isDotenvxBlob(process.env.NEON_DATABASE_URL)) {
     return process.env.NEON_DATABASE_URL;
   }
-  const neonApiKey = process.env.NEON_API_KEY;
-  const neonProjectId = process.env.NEON_PROJECT_ID;
+  const neonApiKey = isDotenvxBlob(process.env.NEON_API_KEY) ? undefined : process.env.NEON_API_KEY;
+  const neonProjectId = isDotenvxBlob(process.env.NEON_PROJECT_ID) ? undefined : process.env.NEON_PROJECT_ID;
   if (neonApiKey && neonProjectId) {
     const headers = { Authorization: `Bearer ${neonApiKey}`, Accept: "application/json" };
     const branchesRes = await fetch(`https://console.neon.tech/api/v2/projects/${neonProjectId}/branches`, { headers });
@@ -68,23 +79,32 @@ async function resolveDatabaseUrl(): Promise<string> {
     if (!data.uri) throw new Error("Neon no devolvió un connection string.");
     return data.uri;
   }
-  return process.env.DATABASE_URL ?? "";
+  const dbUrl = isDotenvxBlob(process.env.DATABASE_URL) ? "" : (process.env.DATABASE_URL ?? "");
+  return dbUrl;
 }
 
 const databaseUrl = await resolveDatabaseUrl();
-// When no connection string is resolved (e.g. DATABASE_URL/Neon secrets not
-// set), `pg` falls back to PGHOST/PGUSER/PGPASSWORD/PGDATABASE/PGPORT, which
-// point at Replit's own built-in Postgres for local development. That
-// instance does not support SSL, so SSL must only be forced when we actually
-// have an external (Neon) connection string that doesn't opt out via
-// sslmode=disable.
+// If PGPASSWORD is a dotenvx-encrypted blob it's useless; remove it so pg
+// doesn't try to auth with garbage and instead falls to a clear error.
+if (isDotenvxBlob(process.env.PGPASSWORD)) {
+  delete process.env.PGPASSWORD;
+}
+// When no connection string is resolved, pg falls back to
+// PGHOST/PGUSER/PGPASSWORD/PGDATABASE/PGPORT env vars.
+// Neon (external host) requires SSL; local Replit Postgres does not.
+const pgHostIsExternal =
+  process.env.PGHOST &&
+  process.env.PGHOST !== "localhost" &&
+  process.env.PGHOST !== "127.0.0.1";
 const pgPool = new Pool(
   databaseUrl
     ? {
         connectionString: databaseUrl,
         ssl: /sslmode=disable/i.test(databaseUrl) ? false : { rejectUnauthorized: false },
       }
-    : {}
+    : pgHostIsExternal
+      ? { ssl: { rejectUnauthorized: false } }
+      : {}
 );
 const PgSession = connectPgSimple(session);
 

@@ -6,3 +6,4 @@
 - [Clientum arquitectura completa](clientum-architecture.md) — stack, rutas, DB schema, env vars, flujo dev→Vercel; ver docs/ARCHITECTURE.md en el repo.
 - [Public repo secret leak](public-repo-secret-leak.md) — gitignored attached_assets isn't enough; tracked root files leaked real keys to the public GitHub origin.
 - [Neon Auth proxy integration](neon-auth-proxy.md) — SDK blocked by firewall; proxy via Express backend with Origin header required; fallback to local bcrypt if URL not set.
+- [dotenvx + Replit Secrets setup](dotenvx-replit-secrets-setup.md) — blobs cifrados de Vercel rompen el Pool; detectar con isDotenvxBlob(); solo NEON_DATABASE_URL manual desbloquea la DB.

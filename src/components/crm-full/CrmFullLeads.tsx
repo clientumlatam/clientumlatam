@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { UserPlus, Phone, Mail, Building2, Clock, RefreshCw, MessageSquare, ChevronDown, ChevronUp } from 'lucide-react';
+import { UserPlus, Phone, Mail, Building2, Clock, RefreshCw, MessageSquare, ChevronDown, ChevronUp, Zap, CheckSquare, Square } from 'lucide-react';
 import { Card, CardContent } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { format } from 'date-fns';
