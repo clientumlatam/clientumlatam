@@ -145,12 +145,9 @@ const DEFAULT_CHECKLIST = [
   { id: "task-5", text: "Enviar correos de seguimiento a leads fríos", checked: false }
 ];
 
-const API_KEY =
-  process.env.GOOGLE_MAPS_PLATFORM_KEY ||
-  (import.meta as any).env?.VITE_GOOGLE_MAPS_PLATFORM_KEY ||
-  (globalThis as any).GOOGLE_MAPS_PLATFORM_KEY ||
-  "";
-const hasValidKey = Boolean(API_KEY) && API_KEY !== "YOUR_API_KEY" && API_KEY.trim() !== "";
+// NOTE: process.env is not available in browser — key presence is checked server-side.
+const API_KEY = "";
+const hasValidKey = false; // always false in browser; real check is via /api/config/has-google-maps
 
 export default function SalesProspectorDashboard({
   brochureData,
@@ -291,7 +288,15 @@ export default function SalesProspectorDashboard({
   const [validationSuccess, setValidationSuccess] = useState<boolean>(false);
 
   const isKeyActive = Boolean(customApiKey) && customApiKey !== "YOUR_API_KEY" && customApiKey.trim() !== "";
-  const hasActiveValidKey = hasValidKey || isKeyActive;
+  // Check server-side whether the server has a Google Maps Platform key configured.
+  const [serverHasGoogleMaps, setServerHasGoogleMaps] = useState<boolean>(false);
+  useEffect(() => {
+    fetch("/api/config/has-google-maps")
+      .then(r => r.json())
+      .then(d => setServerHasGoogleMaps(Boolean(d.hasKey)))
+      .catch(() => setServerHasGoogleMaps(false));
+  }, []);
+  const hasActiveValidKey = serverHasGoogleMaps || isKeyActive;
 
   // CRM deals management — shared across every tab (Pipeline, Patagonia
   // Explorer, Creación Rápida, Actividad) via the sharedStore event bus.
@@ -358,16 +363,20 @@ export default function SalesProspectorDashboard({
   const [selectedProspectIndex, setSelectedProspectIndex] = useState<number>(0);
 
   // Derived state: Filtered Search Results
+  // Whether current results have real distance/priceLevel data from Google Places
+  const hasDistanceData = searchResults.some(p => p.distance != null);
+  const hasPriceLevelData = searchResults.some(p => p.priceLevel != null);
+
   const filteredSearchResults = searchResults.filter((p) => {
-    // Distance filter
-    if (filterDistance !== "any") {
+    // Distance filter — only apply when real distance data exists
+    if (filterDistance !== "any" && hasDistanceData) {
       const maxDistance = parseFloat(filterDistance);
-      if (p.distance && p.distance > maxDistance) return false;
+      if (p.distance != null && p.distance > maxDistance) return false;
     }
-    // Price filter
-    if (filterPrice !== "any") {
+    // Price filter — only apply when real priceLevel data exists
+    if (filterPrice !== "any" && hasPriceLevelData) {
       const targetPrice = parseInt(filterPrice, 10);
-      if (p.priceLevel && p.priceLevel !== targetPrice) return false;
+      if (p.priceLevel != null && p.priceLevel !== targetPrice) return false;
     }
     // Min Rating filter
     if (filterMinRating !== "any") {
@@ -562,14 +571,11 @@ export default function SalesProspectorDashboard({
       if (data.error) throw new Error(data.error);
       if (data.result && data.result.prospects) {
         const enriched = data.result.prospects.map((p: any, index: number) => {
-          const rating = typeof p.rating === "number" ? p.rating : parseFloat((3.5 + (index * 0.33) % 1.5).toFixed(1));
-          const priceLevel = p.priceLevel || ((index % 3) + 1);
-          const distance = p.distance || parseFloat((0.2 + (index * 1.7) % 9.3).toFixed(1));
+          // Only use real data returned by the server — never invent rating, priceLevel or distance.
           return {
             ...p,
-            rating,
-            priceLevel,
-            distance,
+            // Force contact to null — real contacts come via Hunter.io Scraper tab only
+            contact: null,
             _idx: index,
           };
         });
@@ -2019,105 +2025,65 @@ export default function SalesProspectorDashboard({
                   Filtros Dinámicos (Google Places)
                 </span>
                 
-                {/* Filtro Distancia */}
-                <div className="flex flex-col gap-1 bg-slate-50/50 p-2 rounded-lg border border-slate-150">
-                  <span className="text-[9px] font-bold text-slate-500 font-mono">Distancia Máxima</span>
+                {/* Filtro Distancia — solo activo con datos reales de Google Places */}
+                <div className={`flex flex-col gap-1 bg-slate-50/50 p-2 rounded-lg border border-slate-150 ${!hasDistanceData && searchResults.length > 0 ? "opacity-50" : ""}`}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] font-bold text-slate-500 font-mono">Distancia Máxima</span>
+                    {!hasDistanceData && searchResults.length > 0 && (
+                      <span className="text-[8px] text-slate-400 italic">Sin datos GPS</span>
+                    )}
+                  </div>
                   <div className="flex flex-col gap-1 text-[10px] text-slate-600 mt-1">
-                    <label className="flex items-center gap-1.5 cursor-pointer hover:text-emerald-700 transition">
-                      <input
-                        type="radio"
-                        name="filterDistance"
-                        value="any"
-                        checked={filterDistance === "any"}
-                        onChange={() => setFilterDistance("any")}
-                        className="accent-emerald-600 cursor-pointer"
-                      />
-                      <span>Cualquier distancia</span>
-                    </label>
-                    <label className="flex items-center gap-1.5 cursor-pointer hover:text-emerald-700 transition">
-                      <input
-                        type="radio"
-                        name="filterDistance"
-                        value="2"
-                        checked={filterDistance === "2"}
-                        onChange={() => setFilterDistance("2")}
-                        className="accent-emerald-600 cursor-pointer"
-                      />
-                      <span>Menos de 2 km</span>
-                    </label>
-                    <label className="flex items-center gap-1.5 cursor-pointer hover:text-emerald-700 transition">
-                      <input
-                        type="radio"
-                        name="filterDistance"
-                        value="5"
-                        checked={filterDistance === "5"}
-                        onChange={() => setFilterDistance("5")}
-                        className="accent-emerald-600 cursor-pointer"
-                      />
-                      <span>Menos de 5 km</span>
-                    </label>
-                    <label className="flex items-center gap-1.5 cursor-pointer hover:text-emerald-700 transition">
-                      <input
-                        type="radio"
-                        name="filterDistance"
-                        value="10"
-                        checked={filterDistance === "10"}
-                        onChange={() => setFilterDistance("10")}
-                        className="accent-emerald-600 cursor-pointer"
-                      />
-                      <span>Menos de 10 km</span>
-                    </label>
+                    {[
+                      { value: "any", label: "Cualquier distancia" },
+                      { value: "2", label: "Menos de 2 km" },
+                      { value: "5", label: "Menos de 5 km" },
+                      { value: "10", label: "Menos de 10 km" },
+                    ].map(opt => (
+                      <label key={opt.value} className="flex items-center gap-1.5 cursor-pointer hover:text-emerald-700 transition">
+                        <input
+                          type="radio"
+                          name="filterDistance"
+                          value={opt.value}
+                          checked={filterDistance === opt.value}
+                          onChange={() => setFilterDistance(opt.value)}
+                          disabled={!hasDistanceData && opt.value !== "any" && searchResults.length > 0}
+                          className="accent-emerald-600 cursor-pointer disabled:opacity-40"
+                        />
+                        <span>{opt.label}</span>
+                      </label>
+                    ))}
                   </div>
                 </div>
 
-                {/* Filtro Rango Precios */}
-                <div className="flex flex-col gap-1 bg-slate-50/50 p-2 rounded-lg border border-slate-150">
-                  <span className="text-[9px] font-bold text-slate-500 font-mono">Rango de Precios (Google)</span>
+                {/* Filtro Rango Precios — solo activo con datos reales de Google Places */}
+                <div className={`flex flex-col gap-1 bg-slate-50/50 p-2 rounded-lg border border-slate-150 ${!hasPriceLevelData && searchResults.length > 0 ? "opacity-50" : ""}`}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] font-bold text-slate-500 font-mono">Rango de Precios (Google)</span>
+                    {!hasPriceLevelData && searchResults.length > 0 && (
+                      <span className="text-[8px] text-slate-400 italic">Sin datos</span>
+                    )}
+                  </div>
                   <div className="flex flex-col gap-1 text-[10px] text-slate-600 mt-1">
-                    <label className="flex items-center gap-1.5 cursor-pointer hover:text-emerald-700 transition">
-                      <input
-                        type="radio"
-                        name="filterPrice"
-                        value="any"
-                        checked={filterPrice === "any"}
-                        onChange={() => setFilterPrice("any")}
-                        className="accent-emerald-600 cursor-pointer"
-                      />
-                      <span>Todos los niveles</span>
-                    </label>
-                    <label className="flex items-center gap-1.5 cursor-pointer hover:text-emerald-700 transition">
-                      <input
-                        type="radio"
-                        name="filterPrice"
-                        value="1"
-                        checked={filterPrice === "1"}
-                        onChange={() => setFilterPrice("1")}
-                        className="accent-emerald-600 cursor-pointer"
-                      />
-                      <span>$ (Económico)</span>
-                    </label>
-                    <label className="flex items-center gap-1.5 cursor-pointer hover:text-emerald-700 transition">
-                      <input
-                        type="radio"
-                        name="filterPrice"
-                        value="2"
-                        checked={filterPrice === "2"}
-                        onChange={() => setFilterPrice("2")}
-                        className="accent-emerald-600 cursor-pointer"
-                      />
-                      <span>$$ (Moderado)</span>
-                    </label>
-                    <label className="flex items-center gap-1.5 cursor-pointer hover:text-emerald-700 transition">
-                      <input
-                        type="radio"
-                        name="filterPrice"
-                        value="3"
-                        checked={filterPrice === "3"}
-                        onChange={() => setFilterPrice("3")}
-                        className="accent-emerald-600 cursor-pointer"
-                      />
-                      <span>$$$ (Premium / Corp)</span>
-                    </label>
+                    {[
+                      { value: "any", label: "Todos los niveles" },
+                      { value: "1", label: "$ (Económico)" },
+                      { value: "2", label: "$ (Moderado)" },
+                      { value: "3", label: "$$ (Premium / Corp)" },
+                    ].map(opt => (
+                      <label key={opt.value} className="flex items-center gap-1.5 cursor-pointer hover:text-emerald-700 transition">
+                        <input
+                          type="radio"
+                          name="filterPrice"
+                          value={opt.value}
+                          checked={filterPrice === opt.value}
+                          onChange={() => setFilterPrice(opt.value)}
+                          disabled={!hasPriceLevelData && opt.value !== "any" && searchResults.length > 0}
+                          className="accent-emerald-600 cursor-pointer disabled:opacity-40"
+                        />
+                        <span>{opt.label}</span>
+                      </label>
+                    ))}
                   </div>
                 </div>
 
