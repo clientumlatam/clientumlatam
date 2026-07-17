@@ -3357,7 +3357,6 @@ export default function PublicWebsite({
                   <div className="text-center">
                     <span className="text-[#1A3461] font-mono text-[10px] uppercase tracking-widest font-bold">Testimonios Destacados</span>
                   </div>
-                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {[
                       { quote: "Implementamos Clientum en 5 días. El bot de WhatsApp nos generó 40% más de consultas en el primer mes que las que llevaba nadie. Los reportes automáticos cambiaron la forma en que tomamos decisiones.", author: "Martín B.", company: "Distribuidora del Sur S.A. — Neuquén" },
