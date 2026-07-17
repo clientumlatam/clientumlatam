@@ -13,7 +13,8 @@
     "build:wp": "bash clientum-wp-theme/clientum-ai-prospector/build-for-wp.sh",
     "start": "NODE_ENV=production node dist/server.mjs",
     "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "doctor": "node scripts/doctor.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
