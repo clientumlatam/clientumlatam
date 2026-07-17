@@ -3,124 +3,124 @@ import {
   Target, Mountain, MessagesSquare, Award, Megaphone, Zap, Activity,
   MessageSquare, Bot, Package, Users, Building2,
   FileText, PenTool, Settings2, Sparkles,
-  Globe, Plug, Blocks,
-  UserPlus, LogOut, Download, ChevronRight, Network,
-  LayoutDashboard,
+  Globe, Plug, Blocks, UserPlus, LogOut, Download,
+  ChevronRight, LayoutDashboard, Network, Cpu,
 } from 'lucide-react';
 
-// Existing components
-import CrmFullPipeline    from './CrmFullPipeline';
-import CrmFullProducts    from './CrmFullProducts';
-import CrmFullSellers     from './CrmFullSellers';
-import CrmFullBranches    from './CrmFullBranches';
+import CrmFullPipeline      from './CrmFullPipeline';
+import CrmFullProducts      from './CrmFullProducts';
+import CrmFullSellers       from './CrmFullSellers';
+import CrmFullBranches      from './CrmFullBranches';
 import CrmFullConversations from './CrmFullConversations';
-import CrmFullBotConfig   from './CrmFullBotConfig';
-import CrmFullConfig      from './CrmFullConfig';
-import CrmFullLeads       from './CrmFullLeads';
-import CrmFullGoogleMaps  from './CrmFullGoogleMaps';
-import WpContenido        from './WpContenido';
-import OrquestadorIA      from '../OrquestadorIA';
-
-// WordPress components
-import WpModulos  from '../wordpress/WpModulos';
-import WpSetup    from '../wordpress/WpSetup';
-
-// New components
-import IcpBuilder        from './IcpBuilder';
-import MeddicCalificacion from './MeddicCalificacion';
-import OutreachCampaigns  from './OutreachCampaigns';
-import CreacionRapidaCRM  from './CreacionRapidaCRM';
-import ActividadCRM       from './ActividadCRM';
-import BrochureCRM        from './BrochureCRM';
-import CopiloIAPanel      from './CopiloIAPanel';
-import Propuestas          from './Propuestas';
+import CrmFullBotConfig     from './CrmFullBotConfig';
+import CrmFullConfig        from './CrmFullConfig';
+import CrmFullLeads         from './CrmFullLeads';
+import CrmFullGoogleMaps    from './CrmFullGoogleMaps';
+import WpContenido          from './WpContenido';
+import OrquestadorIA        from '../OrquestadorIA';
+import WpModulos            from '../wordpress/WpModulos';
+import WpSetup              from '../wordpress/WpSetup';
+import IcpBuilder           from './IcpBuilder';
+import MeddicCalificacion   from './MeddicCalificacion';
+import OutreachCampaigns    from './OutreachCampaigns';
+import CreacionRapidaCRM    from './CreacionRapidaCRM';
+import ActividadCRM         from './ActividadCRM';
+import BrochureCRM          from './BrochureCRM';
+import CopiloIAPanel        from './CopiloIAPanel';
+import Propuestas           from './Propuestas';
 
 import { Conversation, Seller, Branch, Product } from './crmTypes';
 import { initialConversations, initialSellers, initialBranches, initialProducts } from './crmInitialData';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Types ─────────────────────────────────────────────────────────────────
 type SubTab =
-  | 'icp'      | 'maps'                                                    // PROSPECCIÓN
-  | 'crm'      | 'meddic'   | 'outreach' | 'propuestas' | 'rapida' | 'actividad' // PIPELINE
-  | 'conversations' | 'bot'                                                // COMUNICACIÓN
-  | 'products' | 'sellers'  | 'branches'                                   // CATÁLOGO
-  | 'brochure' | 'contenido' | 'config'  | 'copiloto'                     // BROCHURE
-  | 'wp_leads' | 'wp_config' | 'wp_modulos'                               // WORDPRESS
-  | 'orquestador';                                                          // ORQUESTADOR
+  | 'icp'      | 'maps'
+  | 'crm'      | 'meddic'   | 'propuestas'
+  | 'outreach' | 'rapida'   | 'actividad'
+  | 'conversations' | 'bot'
+  | 'brochure' | 'contenido' | 'copiloto'
+  | 'products' | 'sellers'  | 'branches' | 'config'
+  | 'wp_leads' | 'wp_config' | 'wp_modulos'
+  | 'orquestador';
 
-// ─── Nav definition ──────────────────────────────────────────────────────────
+type SectionId = 'prospectar' | 'pipeline' | 'outreach' | 'comunicacion' | 'contenido' | 'sistema' | 'agente';
+
 interface NavItem { id: SubTab; label: string; icon: React.ReactNode; desc?: string; }
-interface NavGroup { id: string; label: string; icon: React.ReactNode; items: NavItem[]; }
+interface Section { id: SectionId; label: string; icon: React.ReactNode; items: NavItem[]; }
 
-const NAV_GROUPS: NavGroup[] = [
+// ─── Navigation structure ──────────────────────────────────────────────────
+const SECTIONS: Section[] = [
   {
-    id: 'prospeccion', label: 'Prospección', icon: <Target className="w-3 h-3" />,
+    id: 'prospectar', label: 'Prospectar', icon: <Target className="w-4 h-4" />,
     items: [
-      { id: 'icp',  label: 'ICP Builder',        icon: <Target className="w-4 h-4" />,   desc: 'Definí tu cliente ideal' },
-      { id: 'maps', label: 'Patagonia Explorer',  icon: <Mountain className="w-4 h-4" />, desc: 'Buscá y califica leads reales' },
+      { id: 'icp',  label: 'ICP Builder',       icon: <Target className="w-4 h-4" />,   desc: 'Definí tu cliente ideal con IA' },
+      { id: 'maps', label: 'Patagonia Explorer', icon: <Mountain className="w-4 h-4" />, desc: 'Buscá y calificá leads reales' },
     ],
   },
   {
-    id: 'pipeline', label: 'Pipeline de Ventas', icon: <MessagesSquare className="w-3 h-3" />,
+    id: 'pipeline', label: 'Pipeline', icon: <MessagesSquare className="w-4 h-4" />,
     items: [
-      { id: 'crm',      label: 'CRM Pipeline',        icon: <MessagesSquare className="w-4 h-4" /> },
-      { id: 'meddic',   label: 'Calificación MEDDIC', icon: <Award className="w-4 h-4" />,         desc: 'Audita el potencial de cada lead' },
-      { id: 'outreach',   label: 'Outreach Campaigns',    icon: <Megaphone className="w-4 h-4" />, desc: 'Generá campañas de contacto' },
-      { id: 'propuestas', label: 'Propuestas',          icon: <FileText className="w-4 h-4" />, desc: 'Propuestas comerciales por empresa' },
-      { id: 'rapida',     label: 'Creación Rápida',     icon: <Zap className="w-4 h-4" /> },
-      { id: 'actividad',label: 'Actividad',           icon: <Activity className="w-4 h-4" /> },
+      { id: 'crm',       label: 'CRM Pipeline',        icon: <MessagesSquare className="w-4 h-4" />, desc: 'Gestión de oportunidades' },
+      { id: 'meddic',    label: 'Calificación MEDDIC', icon: <Award className="w-4 h-4" />,          desc: 'Score y auditoría de leads' },
+      { id: 'propuestas',label: 'Propuestas',           icon: <FileText className="w-4 h-4" />,       desc: 'Propuestas comerciales por empresa' },
     ],
   },
   {
-    id: 'comunicacion', label: 'Comunicación', icon: <MessageSquare className="w-3 h-3" />,
+    id: 'outreach', label: 'Outreach', icon: <Megaphone className="w-4 h-4" />,
     items: [
-      { id: 'conversations', label: 'Conversaciones', icon: <MessageSquare className="w-4 h-4" /> },
-      { id: 'bot',           label: 'Bot',            icon: <Bot className="w-4 h-4" /> },
+      { id: 'outreach', label: 'Campañas',       icon: <Megaphone className="w-4 h-4" />, desc: 'Campañas de contacto automatizadas' },
+      { id: 'rapida',   label: 'Creación Rápida',icon: <Zap className="w-4 h-4" />,       desc: 'Acción rápida sobre leads' },
+      { id: 'actividad',label: 'Actividad',      icon: <Activity className="w-4 h-4" />,  desc: 'Feed en tiempo real del sistema' },
     ],
   },
   {
-    id: 'catalogo', label: 'Catálogo & Equipo', icon: <Package className="w-3 h-3" />,
+    id: 'comunicacion', label: 'Comunicación', icon: <MessageSquare className="w-4 h-4" />,
     items: [
-      { id: 'products', label: 'Productos',   icon: <Package className="w-4 h-4" /> },
-      { id: 'sellers',  label: 'Vendedores',  icon: <Users className="w-4 h-4" /> },
-      { id: 'branches', label: 'Sucursales',  icon: <Building2 className="w-4 h-4" /> },
+      { id: 'conversations', label: 'Conversaciones', icon: <MessageSquare className="w-4 h-4" />, desc: 'Historial de chats y mensajes' },
+      { id: 'bot',           label: 'Bot IA',          icon: <Bot className="w-4 h-4" />,           desc: 'Configuración del chatbot' },
     ],
   },
   {
-    id: 'brochure', label: 'Brochure & Contenido', icon: <FileText className="w-3 h-3" />,
+    id: 'contenido', label: 'Contenido', icon: <PenTool className="w-4 h-4" />,
     items: [
-      { id: 'brochure',  label: 'Brochure',     icon: <FileText className="w-4 h-4" /> },
-      { id: 'contenido', label: 'Contenido',    icon: <PenTool className="w-4 h-4" /> },
-      { id: 'config',    label: 'Configuración',icon: <Settings2 className="w-4 h-4" /> },
-      { id: 'copiloto',  label: 'Copiloto IA',  icon: <Sparkles className="w-4 h-4" /> },
+      { id: 'brochure',  label: 'Brochure',    icon: <FileText className="w-4 h-4" />,  desc: 'Generador de brochures con IA' },
+      { id: 'contenido', label: 'Blog / Web',  icon: <PenTool className="w-4 h-4" />,   desc: 'Artículos y contenido WordPress' },
+      { id: 'copiloto',  label: 'Copiloto IA', icon: <Sparkles className="w-4 h-4" />,  desc: 'Asistente de redacción y copy' },
     ],
   },
   {
-    id: 'wordpress', label: 'WordPress', icon: <Globe className="w-3 h-3" />,
+    id: 'sistema', label: 'Sistema', icon: <Settings2 className="w-4 h-4" />,
     items: [
-      { id: 'wp_leads',   label: 'Leads del Chatbot', icon: <UserPlus className="w-4 h-4" />, desc: 'Leads capturados por el plugin' },
-      { id: 'wp_config',  label: 'Configuración',     icon: <Plug className="w-4 h-4" />,     desc: 'Instalación y setup del plugin' },
-      { id: 'wp_modulos', label: 'Módulos del Plugin',icon: <Blocks className="w-4 h-4" />,   desc: 'AI Marketing Expert v2' },
+      { id: 'products',   label: 'Productos',        icon: <Package className="w-4 h-4" />,   desc: 'Catálogo de productos y servicios' },
+      { id: 'sellers',    label: 'Vendedores',        icon: <Users className="w-4 h-4" />,     desc: 'Equipo comercial y roles' },
+      { id: 'branches',   label: 'Sucursales',        icon: <Building2 className="w-4 h-4" />, desc: 'Puntos de venta y ubicaciones' },
+      { id: 'config',     label: 'Configuración',     icon: <Settings2 className="w-4 h-4" />, desc: 'Ajustes generales del CRM' },
+      { id: 'wp_leads',   label: 'Leads WordPress',   icon: <UserPlus className="w-4 h-4" />,  desc: 'Leads capturados por el plugin' },
+      { id: 'wp_config',  label: 'Plugin Setup',      icon: <Plug className="w-4 h-4" />,      desc: 'Instalación y webhooks' },
+      { id: 'wp_modulos', label: 'Módulos del Plugin',icon: <Blocks className="w-4 h-4" />,    desc: 'AI Marketing Expert v2' },
     ],
   },
 ];
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+const AGENTE_SECTION: Section = {
+  id: 'agente', label: 'Agente OS', icon: <Cpu className="w-4 h-4" />,
+  items: [{ id: 'orquestador', label: 'Orquestador IA', icon: <Cpu className="w-4 h-4" />, desc: 'Chat con el staff de agentes IA' }],
+};
+
+function getSectionForTab(tab: SubTab): SectionId {
+  for (const s of SECTIONS) {
+    if (s.items.some(i => i.id === tab)) return s.id;
+  }
+  return 'agente';
+}
+
+// ─── State helpers ─────────────────────────────────────────────────────────
 function loadOrDefault<T>(key: string, def: T): T {
   try { const s = localStorage.getItem(key); if (s) return JSON.parse(s) as T; } catch {}
   return def;
 }
 
-function getBreadcrumb(tab: SubTab): { group: string; item: string } {
-  for (const g of NAV_GROUPS) {
-    const found = g.items.find(i => i.id === tab);
-    if (found) return { group: g.label.toUpperCase(), item: found.label.toUpperCase() };
-  }
-  if (tab === 'orquestador') return { group: 'ORQUESTADOR IA', item: 'ORQUESTADOR IA' };
-  return { group: '', item: '' };
-}
-
-// ─── Component ───────────────────────────────────────────────────────────────
+// ─── Component ─────────────────────────────────────────────────────────────
 interface CrmFullAppProps {
   activeTabOverride?: SubTab;
   hideNav?: boolean;
@@ -129,8 +129,22 @@ interface CrmFullAppProps {
 export default function CrmFullApp({ activeTabOverride, hideNav = false }: CrmFullAppProps = {}) {
   const [internalActiveTab, setInternalActiveTab] = useState<SubTab>('icp');
   const activeTab = activeTabOverride ?? internalActiveTab;
-  const setActiveTab = (t: SubTab) => { setInternalActiveTab(t); };
 
+  const [activeSection, setActiveSection] = useState<SectionId>(
+    getSectionForTab(activeTabOverride ?? 'icp')
+  );
+
+  const setActiveTab = (t: SubTab) => {
+    setInternalActiveTab(t);
+    setActiveSection(getSectionForTab(t));
+  };
+
+  const handleSectionClick = (section: Section) => {
+    setActiveSection(section.id);
+    setActiveTab(section.items[0].id);
+  };
+
+  // Data state
   const [conversations, setConversations] = useState<Conversation[]>(() =>
     loadOrDefault('clientum_crmfull_conversations', initialConversations));
   const [sellers, setSellers] = useState<Seller[]>(() => {
@@ -153,9 +167,9 @@ export default function CrmFullApp({ activeTabOverride, hideNav = false }: CrmFu
 
   const handleUpdateConversation = (id: string, data: Partial<Conversation>) =>
     setConversations(prev => prev.map(c => c.id === id ? { ...c, ...data } : c));
-  const handleSaveSeller  = (s: Seller)  => setSellers(prev => { const e = prev.find(x => x.id === s.id); return e ? prev.map(x => x.id === s.id ? s : x) : [...prev, s]; });
-  const handleSaveBranch  = (b: Branch)  => setBranches(prev => { const e = prev.find(x => x.id === b.id); return e ? prev.map(x => x.id === b.id ? b : x) : [...prev, b]; });
-  const handleSaveProduct = (p: Product) => setProducts(prev => { const e = prev.find(x => x.id === p.id); return e ? prev.map(x => x.id === p.id ? p : x) : [...prev, p]; });
+  const handleSaveSeller  = (s: Seller)  => setSellers(prev =>  { const e = prev.find(x => x.id === s.id); return e ? prev.map(x => x.id === s.id ? s : x)  : [...prev, s];  });
+  const handleSaveBranch  = (b: Branch)  => setBranches(prev => { const e = prev.find(x => x.id === b.id); return e ? prev.map(x => x.id === b.id ? b : x)  : [...prev, b];  });
+  const handleSaveProduct = (p: Product) => setProducts(prev =>  { const e = prev.find(x => x.id === p.id); return e ? prev.map(x => x.id === p.id ? p : x) : [...prev, p]; });
 
   const renderContent = () => {
     switch (activeTab) {
@@ -184,144 +198,166 @@ export default function CrmFullApp({ activeTabOverride, hideNav = false }: CrmFu
     }
   };
 
-  const bc = getBreadcrumb(activeTab);
+  // Current section object
+  const allSections = [...SECTIONS, AGENTE_SECTION];
+  const currentSection = allSections.find(s => s.id === activeSection) ?? SECTIONS[0];
+  const currentItem = currentSection.items.find(i => i.id === activeTab) ?? currentSection.items[0];
 
-  // ─── Full-screen layout with sidebar ─────────────────────────────────────
+  if (hideNav) {
+    return (
+      <div className="h-screen overflow-y-auto bg-[#060b14]">
+        <div className={`mx-auto px-5 py-6 ${activeTab === 'orquestador' ? 'h-full max-w-5xl' : 'max-w-[1400px]'}`}>
+          {renderContent()}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex h-screen overflow-hidden bg-[#080C14] font-sans">
+    <div className="flex flex-col h-screen overflow-hidden bg-[#060b14] font-sans">
 
-      {/* ── Sidebar ──────────────────────────────────────────────────────── */}
-      {!hideNav && (
-        <aside className="w-[210px] flex-shrink-0 bg-[#0A0E1A] border-r border-[#1A2332] flex flex-col overflow-hidden">
+      {/* ── TOP BAR ──────────────────────────────────────────────────────── */}
+      <header className="flex-shrink-0 h-12 bg-[#08111e] border-b border-[#1A3461]/50 flex items-center gap-0 px-0 z-20">
 
-          {/* Brand */}
-          <div className="px-4 pt-4 pb-3 border-b border-[#1A2332] flex-shrink-0">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 bg-[#10B981] rounded-lg flex items-center justify-center flex-shrink-0">
-                <Target className="w-4 h-4 text-white" />
-              </div>
-              <div className="min-w-0">
-                <div className="text-[11px] font-black text-white uppercase tracking-tight leading-tight">AI Client</div>
-                <div className="text-[11px] font-black text-[#10B981] uppercase tracking-tight leading-tight">Prospector</div>
-              </div>
+        {/* Logo */}
+        <div className="flex items-center gap-3 px-4 h-full border-r border-[#1A3461]/40 flex-shrink-0 min-w-[200px]">
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+               style={{ background: 'linear-gradient(135deg,#1A3461,#254f8f)' }}>
+            <Target className="w-4 h-4 text-white" />
+          </div>
+          <div className="min-w-0">
+            <div className="text-[11px] font-black text-white uppercase tracking-tight leading-none">Clientum</div>
+            <div className="text-[10px] font-semibold text-[#10B981] leading-none mt-0.5">AI Sales OS</div>
+          </div>
+          <span className="ml-1 text-[8px] bg-[#1A3461]/80 text-[#10B981] border border-[#10B981]/30 px-1.5 py-0.5 rounded font-bold tracking-wider flex-shrink-0">PRO</span>
+        </div>
+
+        {/* Main section tabs */}
+        <nav className="flex-1 flex items-center h-full overflow-x-auto scrollbar-none px-2">
+          {SECTIONS.map(section => {
+            const isActive = activeSection === section.id;
+            return (
+              <button
+                key={section.id}
+                onClick={() => handleSectionClick(section)}
+                className={`relative flex items-center gap-1.5 px-3.5 h-full text-[12px] font-semibold whitespace-nowrap transition-all flex-shrink-0 ${
+                  isActive
+                    ? 'text-white'
+                    : 'text-slate-500 hover:text-slate-300 hover:bg-[#1A3461]/10'
+                }`}
+              >
+                <span className={isActive ? 'text-[#10B981]' : ''}>{section.icon}</span>
+                {section.label}
+                {/* Active underline */}
+                {isActive && (
+                  <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#10B981] to-[#34D399] rounded-t-full" />
+                )}
+              </button>
+            );
+          })}
+
+          {/* Separator */}
+          <div className="w-px h-5 bg-[#1A3461]/40 mx-1 flex-shrink-0" />
+
+          {/* Agente OS tab (special) */}
+          <button
+            onClick={() => { setActiveSection('agente'); setActiveTab('orquestador'); }}
+            className={`relative flex items-center gap-1.5 px-3.5 h-full text-[12px] font-semibold whitespace-nowrap transition-all flex-shrink-0 ${
+              activeSection === 'agente'
+                ? 'text-white'
+                : 'text-slate-500 hover:text-slate-300 hover:bg-[#1A3461]/10'
+            }`}
+          >
+            <span className={`text-base ${activeSection === 'agente' ? '' : 'opacity-60'}`}>🤖</span>
+            Agente OS
+            {activeSection === 'agente' && (
+              <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#10B981] to-[#34D399] rounded-t-full" />
+            )}
+          </button>
+        </nav>
+
+        {/* Right actions */}
+        <div className="flex items-center gap-1.5 px-3 flex-shrink-0 h-full border-l border-[#1A3461]/40">
+          <button
+            onClick={() => { setActiveSection('agente'); setActiveTab('orquestador'); }}
+            className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400 hover:text-[#10B981] border border-[#1A3461]/50 hover:border-[#10B981]/40 px-2.5 py-1.5 rounded-lg transition-all hover:bg-[#10B981]/5"
+          >
+            <Bot className="w-3 h-3" /> Asistente IA
+          </button>
+          <button className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400 hover:text-slate-200 border border-[#1A3461]/50 px-2.5 py-1.5 rounded-lg hover:bg-[#1A3461]/20 transition-all">
+            <Download className="w-3 h-3" /> Exportar CSV
+          </button>
+          <div className="w-px h-5 bg-[#1A3461]/40" />
+          <button
+            onClick={() => { window.location.href = '/'; }}
+            className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 hover:text-rose-400 border border-transparent hover:border-rose-500/20 px-2.5 py-1.5 rounded-lg hover:bg-rose-500/5 transition-all"
+          >
+            <LogOut className="w-3 h-3" /> Salir
+          </button>
+        </div>
+      </header>
+
+      {/* ── BODY (sidebar + content) ──────────────────────────────────────── */}
+      <div className="flex flex-1 overflow-hidden">
+
+        {/* ── LEFT SIDEBAR ───────────────────────────────────────────────── */}
+        <aside className="w-[200px] flex-shrink-0 bg-[#07101b] border-r border-[#1A3461]/40 flex flex-col overflow-hidden">
+
+          {/* Section header */}
+          <div className="px-4 pt-3 pb-2 flex-shrink-0">
+            <div className="flex items-center gap-2">
+              <span className="text-[#10B981]">{currentSection.icon}</span>
+              <span className="text-[11px] font-black text-white uppercase tracking-widest">
+                {currentSection.label}
+              </span>
             </div>
-            <div className="mt-2 flex items-center gap-1.5">
-              <span className="text-[9px] bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/30 px-1.5 py-0.5 rounded font-bold tracking-wider">v2.x PRO</span>
-            </div>
+            <div className="mt-1.5 h-px bg-gradient-to-r from-[#1A3461]/60 to-transparent" />
           </div>
 
-          {/* Nav groups */}
-          <nav className="flex-1 overflow-y-auto py-2 scrollbar-none">
-            {NAV_GROUPS.map(group => (
-              <div key={group.id} className="mb-1">
-                {/* Group header */}
-                <div className="px-3 pt-2.5 pb-1">
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600 flex items-center gap-1.5">
-                    <span className="text-slate-600">{group.icon}</span>
-                    {group.label}
+          {/* Sub-items */}
+          <nav className="flex-1 overflow-y-auto py-1 scrollbar-none">
+            {currentSection.items.map(item => {
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`w-full flex items-start gap-3 px-3 py-2.5 text-left transition-all duration-150 border-l-2 ${
+                    isActive
+                      ? 'bg-[#1A3461]/40 border-l-[#10B981] text-[#10B981]'
+                      : 'border-l-transparent text-slate-500 hover:text-slate-200 hover:bg-[#1A3461]/20'
+                  }`}
+                >
+                  <span className={`flex-shrink-0 mt-0.5 ${isActive ? 'text-[#10B981]' : 'text-slate-600'}`}>
+                    {item.icon}
                   </span>
-                </div>
-
-                {/* Items */}
-                {group.items.map(item => {
-                  const isActive = activeTab === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => setActiveTab(item.id)}
-                      className={`w-full flex items-start gap-2.5 px-3 py-2 text-left transition-all duration-150 border-l-2 ${
-                        isActive
-                          ? 'bg-[#10B981]/10 border-l-[#10B981] text-[#10B981]'
-                          : 'border-l-transparent text-slate-500 hover:text-slate-200 hover:bg-white/[0.03]'
-                      }`}
-                    >
-                      <span className={`flex-shrink-0 mt-0.5 transition-colors ${isActive ? 'text-[#10B981]' : 'text-slate-600'}`}>
-                        {item.icon}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <div className={`text-[12px] font-semibold leading-tight ${isActive ? 'text-[#10B981]' : ''}`}>{item.label}</div>
-                        {item.desc && (
-                          <div className={`text-[10px] leading-tight mt-0.5 ${isActive ? 'text-[#10B981]/70' : 'text-slate-600'}`}>{item.desc}</div>
-                        )}
+                  <div className="min-w-0 flex-1">
+                    <div className={`text-[12px] font-semibold leading-tight ${isActive ? 'text-[#10B981]' : ''}`}>
+                      {item.label}
+                    </div>
+                    {item.desc && (
+                      <div className={`text-[10px] leading-snug mt-0.5 ${isActive ? 'text-[#10B981]/60' : 'text-slate-600'}`}>
+                        {item.desc}
                       </div>
-                    </button>
-                  );
-                })}
-              </div>
-            ))}
-
-            {/* Spacer */}
-            <div className="h-2" />
+                    )}
+                  </div>
+                </button>
+              );
+            })}
           </nav>
 
-          {/* Orquestador IA — pinned at bottom */}
-          <div className="border-t border-[#1A2332] p-2 flex-shrink-0">
-            <div className="px-1 pb-1">
-              <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600">Orquestador IA</span>
+          {/* Bottom: current item breadcrumb */}
+          <div className="border-t border-[#1A3461]/40 px-3 py-2 flex-shrink-0">
+            <div className="flex items-center gap-1.5 text-[10px] text-slate-600">
+              <span className="text-[#1A3461]">{currentSection.icon}</span>
+              <ChevronRight className="w-3 h-3" />
+              <span className="text-slate-400 font-medium truncate">{currentItem.label}</span>
             </div>
-            <button
-              onClick={() => setActiveTab('orquestador')}
-              className={`w-full flex items-center gap-2.5 px-2 py-2.5 rounded-xl transition-all border ${
-                activeTab === 'orquestador'
-                  ? 'bg-[#10B981]/10 border-[#10B981]/30 text-[#10B981]'
-                  : 'border-transparent text-slate-500 hover:text-slate-200 hover:bg-white/[0.03]'
-              }`}
-            >
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-base transition-all ${
-                activeTab === 'orquestador' ? 'bg-[#10B981]/20' : 'bg-[#1A2332]'
-              }`}>
-                🤖
-              </div>
-              <div className="min-w-0 text-left">
-                <div className="text-[12px] font-semibold leading-tight">Orquestador IA</div>
-                <div className={`text-[10px] leading-tight mt-0.5 ${activeTab === 'orquestador' ? 'text-[#10B981]/70' : 'text-slate-600'}`}>
-                  Chat con el staff de agentes
-                </div>
-              </div>
-            </button>
           </div>
         </aside>
-      )}
 
-      {/* ── Main area ────────────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-
-        {/* Top bar */}
-        {!hideNav && (
-          <header className="flex-shrink-0 h-11 bg-[#080C14] border-b border-[#1A2332] flex items-center px-4 gap-3">
-            {/* Breadcrumb */}
-            <div className="flex-1 flex items-center gap-1.5 min-w-0">
-              {bc.group && bc.group !== bc.item && (
-                <>
-                  <span className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">{bc.group}</span>
-                  <ChevronRight className="w-3 h-3 text-slate-700 flex-shrink-0" />
-                </>
-              )}
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap truncate">{bc.item}</span>
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center gap-1.5 flex-shrink-0">
-              <button
-                onClick={() => setActiveTab('orquestador')}
-                className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400 hover:text-[#10B981] border border-[#1A2332] hover:border-[#10B981]/30 px-2.5 py-1.5 rounded-lg transition-all">
-                <Bot className="w-3 h-3" /> Asistente IA
-              </button>
-              <button className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400 hover:text-slate-200 border border-[#1A2332] px-2.5 py-1.5 rounded-lg hover:bg-white/5 transition-all">
-                <Download className="w-3 h-3" /> Exportar CSV
-              </button>
-              <div className="w-px h-5 bg-[#1A2332]" />
-              <button
-                onClick={() => { window.location.href = '/'; }}
-                className="flex items-center gap-1.5 text-[11px] font-semibold text-rose-500/60 hover:text-rose-400 border border-[#1A2332] hover:border-rose-500/20 px-2.5 py-1.5 rounded-lg hover:bg-rose-500/5 transition-all">
-                <LogOut className="w-3 h-3" /> Cerrar sesión
-              </button>
-            </div>
-          </header>
-        )}
-
-        {/* Content */}
-        <main className="flex-1 overflow-y-auto">
+        {/* ── MAIN CONTENT ───────────────────────────────────────────────── */}
+        <main className="flex-1 overflow-y-auto bg-[#060b14]">
           <div className={`mx-auto px-5 py-6 ${activeTab === 'orquestador' ? 'h-full max-w-5xl' : 'max-w-[1400px]'}`}>
             {renderContent()}
           </div>
