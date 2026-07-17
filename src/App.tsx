@@ -7,14 +7,17 @@ import { BrochureData, CustomTemplate } from "./types";
 import { exportBrochureToPDF } from "./utils/pdfGenerator";
 
 export default function App() {
-  const [viewMode, setViewMode] = useState<"website" | "prospector">("website");
+  // DEV PREVIEW: ?preview=1 in URL → skip auth gate, show CRM directly
+  const isPreview = new URLSearchParams(window.location.search).get("preview") === "1";
+  const [viewMode, setViewMode] = useState<"website" | "prospector">(isPreview ? "prospector" : "website");
 
   // Auth state for the CRM/dashboard section only. The public website stays open.
-  const [authUser, setAuthUser] = useState<string | null>(null);
-  const [authRole, setAuthRole] = useState<string | null>(null);
-  const [authChecked, setAuthChecked] = useState(false);
+  const [authUser, setAuthUser] = useState<string | null>(isPreview ? "preview" : null);
+  const [authRole, setAuthRole] = useState<string | null>(isPreview ? "admin" : null);
+  const [authChecked, setAuthChecked] = useState(isPreview);
 
   useEffect(() => {
+    if (isPreview) return; // skip auth check in preview mode
     let cancelled = false;
     fetch("/api/auth/me")
       .then((res) => (res.ok ? res.json() : null))
