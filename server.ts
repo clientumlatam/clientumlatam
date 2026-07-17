@@ -3407,16 +3407,19 @@ app.post("/api/agent/api-usage", async (req, res) => {
 
 // ── Gemini proxy (so agents can call AI from client-side or server-side) ─────
 
-// POST /api/agent/ai/gemini
+// POST /api/agent/ai/gemini — Proxy Gemini for agent backend calls
 app.post("/api/agent/ai/gemini", async (req, res) => {
   try {
     const { prompt, model = "gemini-2.0-flash", system_prompt } = req.body ?? {};
     if (!prompt) return res.status(400).json({ error: "prompt requerido" });
 
-    const apiKey = process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY_V2;
-    if (!apiKey) return res.status(500).json({ error: "GEMINI_API_KEY no configurada" });
-
-    const genAI = new GoogleGenAI({ apiKey });
+    // Use the shared getAI() client. If GEMINI_API_KEY is invalid, fall back to GEMINI_API_KEY_V2.
+    let ai = getAI();
+    if (!ai) {
+      const keyV2 = process.env.GEMINI_API_KEY_V2;
+      if (!keyV2) return res.status(503).json({ error: "GEMINI_API_KEY no configurada" });
+      ai = new GoogleGenAI({ apiKey: keyV2, httpOptions: { headers: { "User-Agent": "aistudio-build" } } });
+    }
 
     const contents: Array<{ role: string; parts: Array<{ text: string }> }> = [];
     if (system_prompt) {
@@ -3425,18 +3428,18 @@ app.post("/api/agent/ai/gemini", async (req, res) => {
     }
     contents.push({ role: "user", parts: [{ text: prompt }] });
 
-    const response = await genAI.models.generateContent({
-      model,
+    const response = await generateContentWithFallback(ai, {
       contents,
+      defaultModel: model,
     });
 
     const text = response.text ?? "";
     const tokensIn = response.usageMetadata?.promptTokenCount ?? 0;
     const tokensOut = response.usageMetadata?.candidatesTokenCount ?? 0;
-    const costUsd = (tokensIn * 0.000000075) + (tokensOut * 0.0000003); // gemini-flash pricing
+    const costUsd = (tokensIn * 0.000000075) + (tokensOut * 0.0000003);
 
-    // Track usage
-    await pgPool.query(
+    // Track usage async (don't block the response)
+    pgPool.query(
       `INSERT INTO api_usage_logs (api_name, endpoint, cost_usd, tokens_in, tokens_out)
        VALUES ('gemini', $1, $2, $3, $4)`,
       [model, costUsd, tokensIn, tokensOut]
@@ -3576,6 +3579,235 @@ app.get("/api/pipeline/funnel", async (req, res) => {
       replies: parseInt(replied.rows[0].count) || 0,
     });
   } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Agent Runners (Fase 2) ────────────────────────────────────────────────────
+// These run server-side where API keys are available.
+// Agent classes delegate here via POST; never called directly from the browser.
+
+// POST /api/agent/run/prospect
+// Runs the Prospector: Google Places → companies table
+app.post("/api/agent/run/prospect", async (req, res) => {
+  try {
+    const {
+      industry,
+      city,
+      country = "Argentina",
+      limit = 20,
+      source = "auto",
+    } = req.body ?? {};
+
+    if (!industry || !city) {
+      return res.status(400).json({ error: "industry y city son requeridos" });
+    }
+
+    const mapsKey = process.env.GOOGLE_MAPS_PLATFORM_KEY;
+    const apifyToken = process.env.APIFY_API_TOKEN;
+
+    let rawResults: any[] = [];
+    let usedSource = source;
+
+    // Strategy: prefer Google Places (faster, cheaper), fall back to Apify
+    if (source === "google_places" || (source === "auto" && mapsKey)) {
+      try {
+        rawResults = await fetchGooglePlacesAPI(city, industry, mapsKey!);
+        usedSource = "google_places";
+      } catch (err: any) {
+        console.warn("[Runner/Prospect] Google Places falló, intentando Apify:", err.message);
+        if (apifyToken) {
+          rawResults = await fetchApifyGooglePlaces(city, industry);
+          usedSource = "apify";
+        }
+      }
+    } else if (source === "apify" || (source === "auto" && apifyToken)) {
+      rawResults = await fetchApifyGooglePlaces(city, industry);
+      usedSource = "apify";
+    } else {
+      return res.status(503).json({ error: "Ninguna fuente de prospección disponible (configura GOOGLE_MAPS_PLATFORM_KEY o APIFY_API_TOKEN)" });
+    }
+
+    const sliced = rawResults.slice(0, Math.min(limit, 50));
+    const companyIds: string[] = [];
+    let newCount = 0;
+
+    for (const raw of sliced) {
+      try {
+        // Normalize fields from both Google Places and Apify formats
+        const name = raw.company || raw.company_name || raw.name || raw.title || "";
+        const phone = raw.phone || raw.nationalPhoneNumber || (raw.phone === "Sin teléfono" ? null : raw.phone) || null;
+        const website = raw.website || raw.websiteUri || raw.websiteUrl || null;
+        const address = raw.address || raw.formattedAddress || null;
+        const rating = typeof raw.rating === "number" ? raw.rating : null;
+
+        if (!name) continue;
+
+        const upsert = await pgPool.query(
+          `INSERT INTO companies (name, industry, city, country, address, phone, website, rating, source, metadata)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+           ON CONFLICT (name, city) DO UPDATE SET
+             phone   = COALESCE(EXCLUDED.phone, companies.phone),
+             website = COALESCE(EXCLUDED.website, companies.website),
+             rating  = COALESCE(EXCLUDED.rating, companies.rating),
+             updated_at = NOW()
+           RETURNING id, (xmax = 0) AS is_new`,
+          [name, industry, city, country, address, phone, website, rating, usedSource, JSON.stringify({ pain_point: raw.painPoint, score: raw.score })]
+        );
+
+        const row = upsert.rows[0];
+        companyIds.push(row.id);
+        if (row.is_new) newCount++;
+      } catch (rowErr: any) {
+        console.warn("[Runner/Prospect] Error guardando empresa:", rowErr.message);
+      }
+    }
+
+    console.log(`[Runner/Prospect] ${sliced.length} procesadas → ${newCount} nuevas | source: ${usedSource} | city: ${city} | industry: ${industry}`);
+
+    res.json({
+      companies_found: sliced.length,
+      new_companies: newCount,
+      company_ids: companyIds,
+      source: usedSource,
+      errors: [],
+    });
+  } catch (err: any) {
+    console.error("[Runner/Prospect]", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/agent/run/enrich
+// Runs the Enricher: Hunter.io → leads_enriched table + optional Firecrawl
+app.post("/api/agent/run/enrich", async (req, res) => {
+  try {
+    const { company_id, company_name, website, domain, city, industry } = req.body ?? {};
+    if (!company_id || !company_name) {
+      return res.status(400).json({ error: "company_id y company_name son requeridos" });
+    }
+
+    // Derive domain from website
+    const rawDomain = domain || website || "";
+    const cleanDomain = rawDomain
+      .replace(/^https?:\/\//, "")
+      .replace(/^www\./, "")
+      .split("/")[0]
+      .split("?")[0]
+      .toLowerCase()
+      .trim();
+
+    let contacts: Array<{ name: string; email: string; role?: string; confidence?: number }> = [];
+    let webSummary: string | undefined;
+    let painPoint: string | undefined;
+
+    // Step 1: Hunter.io domain search
+    if (cleanDomain && cleanDomain.length >= 4) {
+      const hunterResult = await enrichWithHunter(cleanDomain);
+      if (hunterResult && hunterResult.contacts.length > 0) {
+        contacts = hunterResult.contacts.map(c => ({
+          name: c.name,
+          email: c.email,
+          role: c.position,
+          confidence: c.confidence,
+        }));
+      }
+    }
+
+    // Step 2: Firecrawl website analysis (if website exists)
+    if (website) {
+      try {
+        const fcRes = await fetch("https://api.firecrawl.dev/v1/scrape", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Bearer fc-test", // No Firecrawl key required for basic scrape
+          },
+          body: JSON.stringify({ url: website, formats: ["markdown"], onlyMainContent: true }),
+          signal: AbortSignal.timeout(15000),
+        });
+        if (fcRes.ok) {
+          const fcData: any = await fcRes.json();
+          const markdown = fcData?.data?.markdown || "";
+          webSummary = markdown.slice(0, 1000); // first 1000 chars
+        }
+      } catch {
+        // Firecrawl failed — continue without it
+      }
+    }
+
+    // Step 3: Generate pain point via Gemini (if available)
+    const ai = getAI();
+    if (ai && (webSummary || industry)) {
+      try {
+        const prompt = [
+          `Empresa: ${company_name}`,
+          `Ciudad: ${city || "Argentina"}`,
+          `Industria: ${industry || "B2B"}`,
+          webSummary ? `Resumen web:\n${webSummary}` : "",
+          "",
+          "En 1-2 oraciones, identifica el principal punto de dolor de ventas y cómo Clientum (CRM + IA + WhatsApp automation) puede resolverlo. Sé específico al rubro. Sin introducción.",
+        ].filter(Boolean).join("\n");
+
+        const geminiRes = await generateContentWithFallback(ai, {
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          defaultModel: "gemini-2.0-flash",
+        });
+        painPoint = geminiRes.text?.trim();
+      } catch {
+        // Gemini not available — skip
+      }
+    }
+
+    // Default pain point if Gemini unavailable
+    if (!painPoint) {
+      const defaults: Record<string, string> = {
+        "distribuidoras": "Pérdida de consultas de revendedores fuera del horario comercial; un bot de WhatsApp automatizaría el 70% de las cotizaciones.",
+        "restaurantes": "Reservas y pedidos gestionados manualmente; un chatbot de Clientum reduciría el tiempo de respuesta de 20 min a segundos.",
+        "retail": "Abandono de clientes por demoras en atención; automatizar seguimiento post-venta aumenta el ticket promedio.",
+      };
+      const industryKey = (industry || "").toLowerCase();
+      painPoint = defaults[industryKey] ?? `${company_name} podría automatizar su proceso de captación de clientes y seguimiento comercial con Clientum.`;
+    }
+
+    // Upsert into leads_enriched
+    const leadResult = await pgPool.query(
+      `INSERT INTO leads_enriched
+         (company_id, full_name, email, role, source, enrichment_data, status)
+       VALUES
+         ($1, $2, $3, $4, 'hunter_io',
+          jsonb_build_object('contacts', $5::jsonb, 'web_summary', $6, 'pain_point', $7, 'domain', $8),
+          'new')
+       ON CONFLICT (company_id, email) DO UPDATE SET
+         enrichment_data = EXCLUDED.enrichment_data,
+         updated_at = NOW()
+       RETURNING id`,
+      [
+        company_id,
+        contacts[0]?.name || company_name,
+        contacts[0]?.email || null,
+        contacts[0]?.role || null,
+        JSON.stringify(contacts),
+        webSummary || null,
+        painPoint || null,
+        cleanDomain || null,
+      ]
+    );
+
+    const leadId = leadResult.rows[0]?.id;
+
+    console.log(`[Runner/Enrich] ${company_name}: ${contacts.length} emails | pain_point: ${painPoint ? "✓" : "—"}`);
+
+    res.json({
+      company_id,
+      emails_found: contacts.length,
+      contacts,
+      web_summary: webSummary,
+      pain_point: painPoint,
+      lead_id: leadId,
+    });
+  } catch (err: any) {
+    console.error("[Runner/Enrich]", err);
     res.status(500).json({ error: err.message });
   }
 });
