@@ -96,3 +96,15 @@ id = "N_Z7qEJfZw2vUG3cRZUyz"
 uri = "file://docs/catalogo/cursos.csv"
 type = "table"
 title = "Cursos y Talleres — 289 filas"
+
+[[outputs]]
+id = "NgkR12ctvZASk33qXRpoT"
+uri = "file://docs/sitio/sitio-copy.csv"
+type = "table"
+title = "Sitio Copy — 12 páginas"
+
+[[outputs]]
+id = "XrBxMENat9B5T53eoUvL-"
+uri = "file://docs/sitio/sitemap.csv"
+type = "table"
+title = "Sitemap — 132 URLs"
