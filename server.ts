@@ -37,10 +37,12 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT) : 5000;
 // stale if it's ever rotated). Otherwise falls back to DATABASE_URL
 // (Replit's own internal Postgres) for local-only setups.
 async function resolveDatabaseUrl(): Promise<string> {
-  // Prefer an explicit connection string when available — fastest path.
-  if (process.env.NEON_DATABASE_URL) {
-    return process.env.NEON_DATABASE_URL;
-  }
+  // Priority 1: explicit Neon connection string
+  if (process.env.NEON_DATABASE_URL) return process.env.NEON_DATABASE_URL;
+  // Priority 2: Vercel Postgres / any provider that sets POSTGRES_URL
+  if (process.env.POSTGRES_URL) return process.env.POSTGRES_URL;
+  if (process.env.POSTGRES_URL_NO_SSL) return process.env.POSTGRES_URL_NO_SSL;
+  // Priority 3: resolve live from Neon API (avoids stale connection strings)
   const neonApiKey = process.env.NEON_API_KEY;
   const neonProjectId = process.env.NEON_PROJECT_ID;
   if (neonApiKey && neonProjectId) {
@@ -59,6 +61,7 @@ async function resolveDatabaseUrl(): Promise<string> {
     if (!data.uri) throw new Error("Neon no devolvió un connection string.");
     return data.uri;
   }
+  // Priority 4: generic DATABASE_URL or empty (pg falls back to PGHOST/PGUSER/etc.)
   return process.env.DATABASE_URL ?? "";
 }
 
@@ -3160,6 +3163,10 @@ async function initAgentTables() {
       icp_filter   JSONB DEFAULT '{}',
       created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+    ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS template     TEXT    DEFAULT 'intro';
+    ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS leads_count  INTEGER DEFAULT 0;
+    ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS sent_count   INTEGER DEFAULT 0;
+    ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS replies_count INTEGER DEFAULT 0;
 
     -- Emails individuales dentro de una campaña
     CREATE TABLE IF NOT EXISTS campaign_emails (
@@ -4012,6 +4019,73 @@ app.post("/api/proposals", async (req, res) => {
       [company_id, lead_id||null, content_md, pdf_url||null]
     );
     res.json(result.rows[0]);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Campaigns ─────────────────────────────────────────────────────────────────
+
+// GET /api/campaigns
+app.get("/api/campaigns", async (req, res) => {
+  try {
+    const result = await pgPool.query(
+      `SELECT id, name, type, status, template, leads_count, sent_count, replies_count, created_at
+       FROM campaigns ORDER BY created_at DESC LIMIT 100`
+    );
+    res.json(result.rows);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/campaigns
+app.post("/api/campaigns", async (req, res) => {
+  try {
+    const { name, type = "email", status = "draft", template = "intro", icp_filter = {} } = req.body ?? {};
+    if (!name) return res.status(400).json({ error: "name requerido" });
+    const result = await pgPool.query(
+      `INSERT INTO campaigns (name, type, status, template, icp_filter)
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [name, type, status, template, JSON.stringify(icp_filter)]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PATCH /api/campaigns/:id
+app.patch("/api/campaigns/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const allowed = ["name", "status", "template", "leads_count", "sent_count", "replies_count", "icp_filter"];
+    const sets: string[] = [];
+    const vals: unknown[] = [];
+    for (const key of allowed) {
+      if (req.body[key] !== undefined) {
+        vals.push(key === "icp_filter" ? JSON.stringify(req.body[key]) : req.body[key]);
+        sets.push(`${key} = ${vals.length}`);
+      }
+    }
+    if (sets.length === 0) return res.status(400).json({ error: "Nada que actualizar" });
+    vals.push(id);
+    const result = await pgPool.query(
+      `UPDATE campaigns SET ${sets.join(", ")} WHERE id = ${vals.length} RETURNING *`,
+      vals
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: "Campaña no encontrada" });
+    res.json(result.rows[0]);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /api/campaigns/:id
+app.delete("/api/campaigns/:id", async (req, res) => {
+  try {
+    await pgPool.query("DELETE FROM campaigns WHERE id = $1", [req.params.id]);
+    res.json({ ok: true });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
