@@ -139,7 +139,7 @@ const STATUS_CONFIG = {
   pending: { label: 'Pendiente', color: 'text-slate-400', bg: 'bg-slate-400/10 border-slate-400/30', icon: <AlertCircle className="w-3.5 h-3.5" /> },
 };
 
-function AgenteCard({ agente }: { agente: Agente }) {
+const AgenteCard: React.FC<{ agente: Agente }> = ({ agente }) => {
   const [expanded, setExpanded] = useState(false);
   const statusCfg = STATUS_CONFIG[agente.status];
 
