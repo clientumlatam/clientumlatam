@@ -915,12 +915,18 @@ app.get("/api/auth/me", async (req, res) => {
 // Lazy client initialization for safety
 let aiClient: GoogleGenAI | null = null;
 function getAI(): GoogleGenAI | null {
-  const key = process.env.GEMINI_API_KEY;
-  if (!key || key === "MY_GEMINI_API_KEY" || key.trim() === "") {
-    console.warn("[Gemini API] La clave GEMINI_API_KEY no está configurada o es de prueba. Las solicitudes usarán el fallback local de alta calidad.");
+  const key =
+    (process.env.GEMINI_API_KEY?.trim() && process.env.GEMINI_API_KEY !== "MY_GEMINI_API_KEY"
+      ? process.env.GEMINI_API_KEY
+      : null) ??
+    (process.env.GEMINI_API_KEY_V2?.trim() || null);
+  if (!key) {
+    console.warn("[Gemini API] GEMINI_API_KEY y GEMINI_API_KEY_V2 no están configuradas. Las solicitudes usarán el fallback local de alta calidad.");
     return null;
   }
   if (!aiClient) {
+    const usingV2 = !process.env.GEMINI_API_KEY?.trim() || process.env.GEMINI_API_KEY === "MY_GEMINI_API_KEY";
+    if (usingV2) console.log("[Gemini API] Usando GEMINI_API_KEY_V2 como clave activa.");
     aiClient = new GoogleGenAI({
       apiKey: key,
       httpOptions: {
@@ -3405,8 +3411,13 @@ async function setupServer() {
   // Bind the port BEFORE any async work so Cloud Run's healthcheck never
   // sees a refused connection and incorrectly triggers a restart loop.
   // ── AI provider availability check ───────────────────────────────────────
+  const geminiKey =
+    (process.env.GEMINI_API_KEY?.trim() && process.env.GEMINI_API_KEY !== "MY_GEMINI_API_KEY"
+      ? process.env.GEMINI_API_KEY
+      : null) ??
+    (process.env.GEMINI_API_KEY_V2?.trim() || null);
   const aiProviders = [
-    { name: "Gemini",      key: process.env.GEMINI_API_KEY },
+    { name: "Gemini",      key: geminiKey },
     { name: "Groq",        key: process.env.GROQ_API_KEY },
     { name: "OpenRouter",  key: process.env.OPENROUTER_API_KEY },
   ];
