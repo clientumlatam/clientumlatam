@@ -190,6 +190,7 @@ export default function SalesProspectorDashboard({
     "products" | "sellers" | "branches" | "conversations" | "bot" |
     "brochure" | "config" | "pages" | "ai" | "activity" | "quickcreate" |
     "orquestador" |
+    "empleados" |
     "wp-leads" | "wp-setup" | "wp-modulos"
   >("config");
   // "CRM Completo" reorganizado: barra horizontal de categorías (arriba) + menú vertical (izquierda)
@@ -205,6 +206,7 @@ export default function SalesProspectorDashboard({
       items: [
         { id: "icp", label: "ICP Builder", desc: "Definí tu cliente ideal", icon: Target },
         { id: "research", label: "Patagonia Explorer", desc: "Buscá y calificá leads reales", icon: Search },
+        { id: "empleados", label: "Scraper de Empleados", desc: "Encontrá contactos por empresa", icon: Users },
       ],
     },
     {
@@ -423,6 +425,16 @@ export default function SalesProspectorDashboard({
     }
   }, [searchProv]);
 
+  // ── Employee Scraper state ────────────────────────────────────────────────
+  type EmpContact = { name: string; email: string; position: string; confidence: number; linkedin?: string | null };
+  type EmpResult  = { loading?: boolean; contacts?: EmpContact[]; organization?: string; source?: string; error?: string };
+  const [empResults,     setEmpResults]     = useState<Record<string, EmpResult>>({});
+  const [empExpanded,    setEmpExpanded]    = useState<Set<string>>(new Set());
+  const [empBulkLoading, setEmpBulkLoading] = useState(false);
+  const [empDomains,     setEmpDomains]     = useState<Record<string, string>>({});
+  const [empFilter,      setEmpFilter]      = useState("");
+  // ─────────────────────────────────────────────────────────────────────────
+
   // Handle manual lead form in pipeline
   const [showAddForm, setShowAddForm] = useState(false);
   const [addCompany, setAddCompany] = useState("");
@@ -617,6 +629,81 @@ export default function SalesProspectorDashboard({
       setEnrichingIds(prev => { const s = new Set(prev); s.delete(idx); return s; });
     }
   };
+
+  // ── Employee Scraper helpers ──────────────────────────────────────────────
+  const guessCompanyDomain = (company: string): string => {
+    const clean = company
+      .toLowerCase()
+      .replace(/\b(s\.?a\.?|s\.?r\.?l\.?|sas|ltda?|s\.c\.a\.|e\.?u\.?)\b/gi, "")
+      .replace(/[^a-z0-9]/g, "")
+      .trim();
+    return clean ? `${clean}.com.ar` : "";
+  };
+
+  const handleScrapeOneDeal = async (deal: CRMDeal) => {
+    const domain = empDomains[deal.id]?.trim() || guessCompanyDomain(deal.company);
+    setEmpResults(prev => ({ ...prev, [deal.id]: { loading: true } }));
+    setEmpExpanded(prev => new Set(prev).add(deal.id));
+    try {
+      const res = await fetch("/api/scrape-employees-bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ leads: [{ id: deal.id, company: deal.company, domain }] }),
+      });
+      const data = await res.json();
+      const result = data.results?.[deal.id] ?? { contacts: [], source: "none" };
+      setEmpResults(prev => ({ ...prev, [deal.id]: result }));
+    } catch {
+      setEmpResults(prev => ({ ...prev, [deal.id]: { contacts: [], source: "error", error: "Error de red" } }));
+    }
+  };
+
+  const handleScrapeAllDeals = async () => {
+    setEmpBulkLoading(true);
+    const leadsToScrape = deals.map(d => ({
+      id: d.id,
+      company: d.company,
+      domain: empDomains[d.id]?.trim() || guessCompanyDomain(d.company),
+    }));
+    const loadingState: Record<string, EmpResult> = {};
+    leadsToScrape.forEach(l => { loadingState[l.id] = { loading: true }; });
+    setEmpResults(prev => ({ ...prev, ...loadingState }));
+    setEmpExpanded(new Set(deals.map(d => d.id)));
+    try {
+      const BATCH = 5;
+      for (let i = 0; i < leadsToScrape.length; i += BATCH) {
+        const batch = leadsToScrape.slice(i, i + BATCH);
+        const res = await fetch("/api/scrape-employees-bulk", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ leads: batch }),
+        });
+        const data = await res.json();
+        if (data.results) setEmpResults(prev => ({ ...prev, ...data.results }));
+      }
+    } catch (e) { console.error("Bulk scrape error", e); }
+    finally { setEmpBulkLoading(false); }
+  };
+
+  const handleExportEmpCSV = () => {
+    const rows = [["Empresa", "Rubro", "Ciudad", "Nombre Contacto", "Cargo", "Email", "Confianza %", "LinkedIn", "Fuente"]];
+    deals.forEach(deal => {
+      const result = empResults[deal.id];
+      if (result?.contacts && result.contacts.length > 0) {
+        result.contacts.forEach((c: EmpContact) => {
+          rows.push([deal.company, deal.industry ?? "", deal.city ?? "", c.name, c.position, c.email, c.confidence ? `${c.confidence}` : "0", c.linkedin ?? "", result.source ?? ""]);
+        });
+      } else {
+        rows.push([deal.company, deal.industry ?? "", deal.city ?? "", "", "", "", "", "", "Sin datos"]);
+      }
+    });
+    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = "empleados-leads.csv"; a.click();
+    URL.revokeObjectURL(url);
+  };
+  // ─────────────────────────────────────────────────────────────────────────
 
   const autoEnrichProspects = (prospects: any[]) => {
     // Enrich up to 10 prospects that have a website, staggered to avoid rate limits
@@ -3252,6 +3339,246 @@ export default function SalesProspectorDashboard({
           <OrquestadorIA currentUsername={currentUsername} />
         </div>
       )}
+
+      {/* TAB: SCRAPER DE EMPLEADOS */}
+      {activeTab === "empleados" && (() => {
+        const filteredDeals = deals.filter(d =>
+          !empFilter || d.company.toLowerCase().includes(empFilter.toLowerCase()) || (d.industry ?? "").toLowerCase().includes(empFilter.toLowerCase())
+        );
+        const totalContacts = Object.values(empResults).reduce((s, r) => s + (r.contacts?.length ?? 0), 0);
+        const hunterCount  = Object.values(empResults).filter(r => r.source === "hunter").length;
+        const aiCount      = Object.values(empResults).filter(r => r.source === "ai").length;
+        const scraped      = Object.values(empResults).filter(r => !r.loading).length;
+
+        const sourceLabel = (src?: string) =>
+          src === "hunter" ? { text: "Hunter.io", cls: "bg-emerald-100 text-emerald-700 border-emerald-200" }
+          : src === "ai"   ? { text: "IA Sugerido", cls: "bg-blue-100 text-blue-700 border-blue-200" }
+          : src === "none" ? { text: "Sin datos",   cls: "bg-slate-100 text-slate-500 border-slate-200" }
+          :                  { text: "—",           cls: "bg-slate-100 text-slate-400 border-slate-200" };
+
+        const confidenceColor = (n: number) =>
+          n >= 70 ? "bg-emerald-400" : n >= 40 ? "bg-amber-400" : "bg-slate-300";
+
+        const initials = (name: string) =>
+          name.split(" ").slice(0, 2).map(w => w[0]?.toUpperCase() ?? "").join("");
+
+        return (
+          <div className="flex-1 flex flex-col gap-4 max-w-5xl mx-auto w-full">
+            {/* ── Header ── */}
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div>
+                <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                  <Users className="w-5 h-5 text-emerald-500" />
+                  Scraper de Empleados
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Encontrá contactos reales vía Hunter.io y completá con IA para cada empresa del pipeline.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleExportEmpCSV}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 transition cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" /> Exportar CSV
+                </button>
+                <button
+                  onClick={handleScrapeAllDeals}
+                  disabled={empBulkLoading || deals.length === 0}
+                  className="flex items-center gap-1.5 px-4 py-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-lg font-semibold transition cursor-pointer"
+                >
+                  {empBulkLoading
+                    ? <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Scrapeando…</>
+                    : <><Sparkles className="w-3.5 h-3.5" /> Scrapear Todos ({deals.length})</>}
+                </button>
+              </div>
+            </div>
+
+            {/* ── Stats ── */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { label: "Leads totales",   value: deals.length,    color: "text-slate-700" },
+                { label: "Scrapeados",       value: scraped,         color: "text-blue-600"  },
+                { label: "Contactos reales", value: totalContacts,   color: "text-emerald-600" },
+                { label: "Hunter.io / IA",   value: `${hunterCount} / ${aiCount}`, color: "text-violet-600" },
+              ].map(s => (
+                <div key={s.label} className="bg-white border border-slate-200 rounded-xl p-3 shadow-xs">
+                  <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
+                  <p className="text-[10px] text-slate-500 mt-0.5">{s.label}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* ── Search filter ── */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Filtrar por empresa o rubro…"
+                value={empFilter}
+                onChange={e => setEmpFilter(e.target.value)}
+                className="w-full pl-8 pr-3 py-2 text-xs border border-slate-200 rounded-lg bg-white focus:outline-none focus:border-emerald-400"
+              />
+            </div>
+
+            {/* ── Lead rows ── */}
+            {filteredDeals.length === 0 && (
+              <div className="text-center py-12 text-slate-400 text-sm">
+                No hay leads en el pipeline todavía. Agregalos desde <strong>Patagonia Explorer</strong> o <strong>CRM Pipeline</strong>.
+              </div>
+            )}
+
+            <div className="flex flex-col gap-3 pb-6">
+              {filteredDeals.map(deal => {
+                const result  = empResults[deal.id];
+                const loading = result?.loading;
+                const isOpen  = empExpanded.has(deal.id);
+                const src     = sourceLabel(result?.source);
+                const domain  = empDomains[deal.id] ?? guessCompanyDomain(deal.company);
+                const hasContacts = (result?.contacts?.length ?? 0) > 0;
+
+                return (
+                  <div key={deal.id} className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+                    {/* Row header */}
+                    <div className="flex items-center gap-3 px-4 py-3 flex-wrap">
+                      {/* Avatar */}
+                      <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-600 shrink-0 select-none">
+                        {initials(deal.company)}
+                      </div>
+
+                      {/* Company + badges */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-semibold text-slate-800 text-sm truncate">{deal.company}</span>
+                          <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full border border-slate-200">
+                            {deal.industry ?? "—"}
+                          </span>
+                          {deal.city && (
+                            <span className="text-[10px] flex items-center gap-0.5 text-slate-400">
+                              <MapPin className="w-2.5 h-2.5" />{deal.city}
+                            </span>
+                          )}
+                        </div>
+                        {deal.contact && (
+                          <p className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1">
+                            <User className="w-2.5 h-2.5" /> Contacto conocido: {deal.contact}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Domain input */}
+                      <input
+                        type="text"
+                        placeholder="dominio.com.ar"
+                        value={domain}
+                        onChange={e => setEmpDomains(prev => ({ ...prev, [deal.id]: e.target.value }))}
+                        className="text-[11px] px-2 py-1 border border-slate-200 rounded-lg w-36 text-slate-600 focus:outline-none focus:border-emerald-400 font-mono"
+                        title="Dominio para Hunter.io"
+                      />
+
+                      {/* Status badge */}
+                      {result && !loading && (
+                        <span className={`text-[9px] px-2 py-0.5 rounded-full border font-semibold ${src.cls}`}>
+                          {src.text}{hasContacts ? ` · ${result.contacts!.length}` : ""}
+                        </span>
+                      )}
+
+                      {/* Actions */}
+                      <button
+                        onClick={() => handleScrapeOneDeal(deal)}
+                        disabled={loading}
+                        className="flex items-center gap-1 px-3 py-1.5 text-[11px] bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg font-semibold transition disabled:opacity-50 shrink-0 cursor-pointer"
+                      >
+                        {loading
+                          ? <RefreshCw className="w-3 h-3 animate-spin" />
+                          : <Sparkles className="w-3 h-3" />}
+                        {loading ? "Buscando…" : "Scrapear"}
+                      </button>
+
+                      {hasContacts && (
+                        <button
+                          onClick={() => setEmpExpanded(prev => {
+                            const s = new Set(prev);
+                            s.has(deal.id) ? s.delete(deal.id) : s.add(deal.id);
+                            return s;
+                          })}
+                          className="text-slate-400 hover:text-slate-600 transition p-1 cursor-pointer"
+                        >
+                          <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Expandable contacts */}
+                    {isOpen && hasContacts && (
+                      <div className="border-t border-slate-100 bg-slate-50/60 px-4 py-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {result!.contacts!.map((c, ci) => (
+                          <div key={ci} className="bg-white border border-slate-200 rounded-xl p-3 flex gap-3 shadow-xs">
+                            {/* Avatar */}
+                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white text-xs font-bold shrink-0 select-none">
+                              {initials(c.name) || "?"}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between gap-1">
+                                <div>
+                                  <p className="text-xs font-semibold text-slate-800 leading-tight">{c.name || "—"}</p>
+                                  <p className="text-[10px] text-slate-500">{c.position}</p>
+                                </div>
+                                {c.linkedin && (
+                                  <a href={c.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-600 transition shrink-0" title="LinkedIn">
+                                    <Linkedin className="w-3.5 h-3.5" />
+                                  </a>
+                                )}
+                              </div>
+
+                              {/* Email row */}
+                              {c.email ? (
+                                <div className="flex items-center gap-1.5 mt-1.5">
+                                  <Mail className="w-3 h-3 text-slate-400 shrink-0" />
+                                  <span className="text-[10px] text-slate-600 font-mono truncate">{c.email}</span>
+                                  <button
+                                    onClick={() => navigator.clipboard.writeText(c.email)}
+                                    className="text-slate-300 hover:text-slate-500 transition cursor-pointer"
+                                    title="Copiar email"
+                                  >
+                                    <Copy className="w-2.5 h-2.5" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <p className="text-[10px] text-slate-400 mt-1.5 italic">Email no disponible (sin dominio verificado)</p>
+                              )}
+
+                              {/* Confidence bar */}
+                              {c.confidence > 0 && (
+                                <div className="mt-1.5">
+                                  <div className="flex items-center justify-between mb-0.5">
+                                    <span className="text-[9px] text-slate-400">Confianza</span>
+                                    <span className="text-[9px] font-semibold text-slate-600">{c.confidence}%</span>
+                                  </div>
+                                  <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
+                                    <div className={`h-full rounded-full ${confidenceColor(c.confidence)}`} style={{ width: `${c.confidence}%` }} />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Empty state after scrape */}
+                    {isOpen && result && !loading && !hasContacts && (
+                      <div className="border-t border-slate-100 bg-slate-50/40 px-4 py-4 text-center">
+                        <p className="text-xs text-slate-400">No se encontraron contactos. Intentá con otro dominio.</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Asistente IA — right-side copilot panel */}
       <AsistenteIA
