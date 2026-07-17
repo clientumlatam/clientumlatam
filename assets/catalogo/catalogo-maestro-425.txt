@@ -1,0 +1,455 @@
+General
+[18]
+CTM-0050	Outsourcing de procesos de negocio	--	$33	
+CTM-0052	Automatización de Procesos de Negocio (BPA)	--	$3	
+CTM-0053	Implementación de RPA (Automatización Robótica de Procesos)	--	$285	
+CTM-0054	Automatización de Operaciones de TI (AIOps)	--	$27	
+CTM-0055	Automation with Dolibarr	--	$24	
+CTM-0056	Automatización Avanzada	--	$255	
+CTM-0057	Automatización Empresarial	--	$225	
+CTM-0058	Integración de Sistemas	--	$21	
+CTM-0059	Gestión de Flotas y Rutas	--	$195	
+CTM-0060	Asistencia Virtual para la Gestión de Tareas	--	$1.575	
+CTM-0061	Soluciones RPA (Robotic Process Automation)	--	$1.725	
+CTM-0062	Soporte Automatizado	--	$1.875	
+CTM-0063	Procesamiento Automatizado de Facturas y Pagos	--	$1.425	
+CTM-0064	Rediseño De Procesos	--	$1.275	
+CTM-0065	Automatización de Procesos Ecommerce: Optimiza y Agiliza tu Negocio Online	--	$1.125	
+CTM-0066	Consultoría en digitalización de procesos	--	$975	
+CTM-0068	Plataformas de Automatización	--	$525	
+CTM-0069	Optimización de Energía y Recursos	--	$675	
+General
+[43]
+CTM-0071	Desarrollo de Soluciones de BI para KPIs	--	$48	
+CTM-0072	Servicios de gestión de proyectos	--	$465	
+CTM-0073	Implementación de soluciones de big data	--	$4.575	
+CTM-0075	Consultoría empresarial	--	$4.425	
+CTM-0076	Gestión de la innovación	--	$435	
+CTM-0077	Análisis de datos en tiempo real	--	$4.275	
+CTM-0078	Gobierno de Datos y Gestión	--	$42	
+CTM-0079	Implementación de Business Intelligence (BI)	--	$405	
+CTM-0081	Consultoría y Estrategia Digital	--	$3.975	
+CTM-0082	BI (Business Intelligence)	--	$3.825	
+CTM-0083	Visualización Avanzada de Datos	--	$39	
+CTM-0084	IT Consultancy	--	$36	
+CTM-0086	Implementación de Herramientas de BI	--	$375	
+CTM-0087	Soporte Avanzado en BI	--	$3.525	
+CTM-0088	Optimización de Bases de Datos	--	$345	
+CTM-0089	Inteligencia de Mercado para Identificar Tendencias	--	$3.375	
+CTM-0090	Automatización de Reportes Ejecutivos	--	$33	
+CTM-0091	Planificación estratégica	--	$315	
+CTM-0092	Investigación de mercados	--	$3.225	
+CTM-0093	Consultoría en gestión de procesos	--	$3.075	
+CTM-0095	Análisis de Big Data	--	$27	
+CTM-0096	Analítica de datos	--	$2.775	
+CTM-0097	Dashboards Personalizados	--	$285	
+CTM-0099	Consultoría en Big Data	--	$2.625	
+CTM-0100	Análisis de Datos y Métricas	--	$255	
+CTM-0101	Redacción de informes	--	$2.475	
+CTM-0102	Desarrollo de Algoritmos Avanzados	--	$24	
+CTM-0103	Servicio de Analítica Web: Optimiza tu Ecommerce con Datos Valiosos	--	$225	
+CTM-0104	Support for BI	--	$2.325	
+CTM-0105	Análisis de Conversiones: Optimiza tu E-commerce y Aumenta tus Ventas	--	$2.175	
+CTM-0106	Consultoría Adicional Básica: Asesoría Experta para Optimizar tu Negocio	--	$2.025	
+CTM-0107	Consultoría en inteligencia competitiva	--	$21	
+CTM-0109	Consultoría en sostenibilidad	--	$1.875	
+CTM-0111	Personalización de Informes: Crea Reportes a Medida para tus Necesidades	--	$1.725	
+CTM-0112	Optimización de Estrategias de Precios	--	$165	
+CTM-0113	Optimización de Proyectos Empresariales	--	$1.425	
+CTM-0114	Plataforma de Analítica Web	--	$15	
+CTM-0115	Evaluación de Impacto: Analiza y Mide el Éxito de tus Iniciativas	--	$1.575	
+CTM-0116	Análisis de Comportamiento del Consumidor	--	$1.125	
+CTM-0123	Ciencia de Datos	--	$675	
+CTM-0124	Reportes de Ventas	--	$75	
+CTM-0125	Soluciones completas para grandes empresas con necesidades analíticas avanzadas y continuas.	--	$825	
+CTM-0126	Consultoría en Estrategia Web: Optimiza tu presencia online y alcanza tus objetivos	--	$9	
+General
+[30]
+CTM-0299	Online Learning Platforms	--	$45	
+CTM-0300	Gestión de Proyectos Ágiles	--	$45	
+CTM-0301	Capacitación en Desarrollo Web	--	$412	
+CTM-0302	Consultoría en Estrategia de TI	--	$412	
+CTM-0303	Formación en UX/UI Design	--	$412	
+CTM-0304	Technology Training	--	$375	
+CTM-0305	Capacitación en Procesos de Negocio para ERP Odoo	--	$375	
+CTM-0306	Capacitación en Análisis de Datos	--	$375	
+CTM-0307	Cursos en Tecnologías Digitales	--	$338	
+CTM-0308	Plataforma E-Learning	--	$338	
+CTM-0309	Talleres y Seminarios	--	$3	
+CTM-0310	Capacitación en Marketing Digital	--	$3	
+CTM-0311	Capacitación en Uso de CRM	--	$338	
+CTM-0312	Capacitación empresarial	--	$3	
+CTM-0313	Capacitación en Ciberseguridad	--	$262	
+CTM-0314	Talleres de Capacitación en Gestión	--	$262	
+CTM-0315	Servicios de capacitación	--	$262	
+CTM-0316	Capacitación y formación	--	$225	
+CTM-0317	Capacitación en liderazgo y gestión de equipos	--	$225	
+CTM-0318	Workshops and Seminars	--	$188	
+CTM-0319	Formación de Usuarios Avanzada: Domina tus habilidades y lleva tu productividad al siguiente nivel	--	$188	
+CTM-0320	Capacitación en inteligencia artificial	--	$225	
+CTM-0321	Capacitación en habilidades blandas	--	$15	
+CTM-0322	Taller de emprendimiento	--	$188	
+CTM-0323	Plataforma de Aprendizaje en Línea	--	$15	
+CTM-0324	Formación en idiomas	--	$142	
+CTM-0325	Capacitación básica en CMS: Domina los fundamentos para gestionar tu sitio web	--	$9	
+CTM-0326	Capacitación Integral en E-Commerce: Domina el Comercio Electrónico y Potencia tu Negocio	--	$105	
+CTM-0327	Capacitación básica: el primer paso para tu éxito profesional	--	$112	
+CTM-0328	Capacitación y Entrenamiento en ERP: Maximiza la Adopción y Aprovechamiento de tu Sistema	--	$128	
+General
+[17]
+CTM-0127	Implementación De Medidas De Protección	--	$39	
+CTM-0128	Desarrollo de soluciones de ciberseguridad	--	$3.675	
+CTM-0129	Servicios de ciberseguridad	--	$345	
+CTM-0130	Ciberseguridad avanzada	--	$3.225	
+CTM-0131	Seguridad informática	--	$3	
+CTM-0132	Auditoría de Seguridad	--	$2.775	
+CTM-0133	Gestión de Identidades y Accesos	--	$255	
+CTM-0134	Verificación de Seguridad en Big Data	--	$2.325	
+CTM-0135	Instalación de Sistemas de Alarmas	--	$21	
+CTM-0136	Respuesta a incidentes básica	--	$1.725	
+CTM-0137	Análisis de Riesgos de Ciberseguridad	--	$195	
+CTM-0138	Servicios de Seguridad Ecommerce	--	$15	
+CTM-0139	Seguridad Adicional: Tu escudo digital para un hogar protegido	--	$1.275	
+CTM-0140	Respaldo y Recuperación de Datos: Protege tus archivos con nuestra solución integral	--	$105	
+CTM-0141	Plataforma de Monitoreo y Alertas	--	$825	
+CTM-0142	Detección de Fraude con IA	--	$6	
+CTM-0143	SSL Básico	--	$375	
+General
+[7]
+CTM-0382	Colaboración y Trabajo Remoto	--	$135	
+CTM-0383	Plataformas de Comunicación	--	$12	
+CTM-0384	Implementación de Sistemas de Telefonía IP	--	$975	
+CTM-0385	Plataforma de Gestión de Eventos Virtuales	--	$75	
+CTM-0386	Videoconferencias Seguras y Eficientes	--	$6	
+CTM-0387	Mantenimiento de Sistemas de Videoconferencia	--	$412	
+CTM-0388	Optimización de redes corporativas	--	$225	
+General
+[12]
+CTM-0228	Actualización De Versión CRM	--	$93	
+CTM-0239	Consultoría en experiencia del cliente	--	$7.875	
+CTM-0240	Implementación de CRM	--	$795	
+CTM-0252	Implementación de CRM para Retail y Distribuidores	--	$645	
+CTM-0254	Soporte a Usuarios Clave CRM	--	$6.675	
+CTM-0264	Integración ERP y CRM para Retail y Distribuidores	--	$5.175	
+CTM-0269	Support for CRM	--	$4.575	
+CTM-0274	ERP y CRM	--	$375	
+CTM-0278	Soluciones CRM	--	$2.925	
+CTM-0286	Módulo CRM Básico: Gestioná tus clientes de forma eficiente	--	$27	
+CTM-0291	Fidelización de Clientes	--	$12	
+CTM-0294	Implementación de ERP y CRM para pymes: Optimiza tus procesos y crece	--	$15	
+General
+[48]
+CTM-0042	Desarrollo de Apps Móviles para Ecommerce: Diseño, Implementación y Publicación	--	$855	
+CTM-0043	Desarrollo de Aplicaciones Móviles Nativas para Ecommerce: Mejora la Experiencia de Compra y Fideliza Clientes	--	$975	
+CTM-0044	Desarrollo de app móvil	--	$735	
+CTM-0045	Soluciones Personalizadas para Apps	--	$615	
+CTM-0046	Creación de apps móviles	--	$495	
+CTM-0047	Aplicaciones Móviles para Ecommerce: Crea tu Tienda Online en tu Bolsillo	--	$375	
+CTM-0048	Diseño avanzado de aplicación móvil	--	$135	
+CTM-0049	Desarrollo de Apps Móviles con Realidad Aumentada y Virtual: ¡Experiencias Inmersivas en tus Manos!	--	$255	
+CTM-0160	Desarrollo de videojuegos	--	$48	
+CTM-0161	Desarrollo de soluciones blockchain	--	$4.575	
+CTM-0162	Desarrollo de soluciones de realidad virtual	--	$465	
+CTM-0163	Servicios de integración de sistemas	--	$4.725	
+CTM-0164	Migración y modernización de aplicaciones	--	$45	
+CTM-0165	Servicios de desarrollo de aplicaciones con arquitecturas de microservicios	--	$4.425	
+CTM-0166	Custom Web Development	--	$4.425	
+CTM-0168	Desarrollo de software	--	$4.275	
+CTM-0170	Soporte Integral para Comercio Electrónico	--	$4.125	
+CTM-0171	Desarrollo de sitio web	--	$405	
+CTM-0172	Personalización de Experiencia de Usuario	--	$39	
+CTM-0174	Web Design	--	$36	
+CTM-0175	Gestión de Contenidos Web	--	$3.675	
+CTM-0177	Desarrollo de Contenido Multilingüe	--	$375	
+CTM-0178	Soporte para Wordpress	--	$3.825	
+CTM-0179	Servicio de Optimización de Búsqueda Interna	--	$3.525	
+CTM-0182	Diseño Web Responsive	--	$3.375	
+CTM-0185	Diseño de sitios web	--	$3.075	
+CTM-0186	Servicio de Estrategia de Precio y Promociones	--	$3	
+CTM-0187	Diseño de página web	--	$255	
+CTM-0189	Servicio de Membresías	--	$27	
+CTM-0193	Integración de WooCommerce	--	$3	
+CTM-0194	Diseño Web Personalizado	--	$2.325	
+CTM-0197	Traducción de Sitio Web	--	$2.325	
+CTM-0198	Diseño UX/UI	--	$225	
+CTM-0201	Solución de Dropshipping	--	$2.025	
+CTM-0204	Solución de Pasarela de Pago	--	$1.725	
+CTM-0207	Mantenimiento de sitios web	--	$1.575	
+CTM-0208	Consultoría de UX	--	$135	
+CTM-0210	Servicios Web	--	$15	
+CTM-0211	Optimización de Performance Web	--	$1.575	
+CTM-0212	Servicio de Envío y Logística	--	$1.275	
+CTM-0214	Implementación de Módulos Adicionales: Mejora tu Sitio Web con Funcionalidades Esenciales	--	$105	
+CTM-0216	Diseño de sitio web corporativo	--	$12	
+CTM-0218	Hasta 5 páginas: ¡Crea sitios web impresionantes con facilidad!	--	$525	
+CTM-0219	Implementación Sitio Web Institucional	--	$6	
+CTM-0220	<strong>Ítem: La solución definitiva para tus necesidades</strong>	--	$675	
+CTM-0221	Plan Básico Web: ¡Tu sitio web profesional al alcance de tu mano!	--	$712	
+CTM-0222	Plantillas prediseñadas: ¡Crea contenido impactante en minutos!	--	$825	
+CTM-0223	Diseño Personalizado Completo: Crea tu Propia Marca Única	--	$9	
+General
+[24]
+CTM-0167	Servicio de Desarrollo de Integraciones B2B para Ecommerce: Automatiza tus Ventas y Distribución	--	$435	
+CTM-0169	Servicio de Implementación de Sistema de Recomendaciones Personalizadas	--	$42	
+CTM-0173	Rediseño de Tienda Online: Optimiza tu E-commerce para Impulsar las Ventas	--	$3.975	
+CTM-0176	Plataforma e-Commerce	--	$375	
+CTM-0180	Desarrollo de tienda online	--	$345	
+CTM-0181	E-Commerce	--	$33	
+CTM-0183	Servicio de Implementación de Programas de Fidelización	--	$315	
+CTM-0184	Servicio de Optimización de Funnels de Conversión	--	$3.225	
+CTM-0188	Servicio de Integración de Marketplace	--	$2.625	
+CTM-0190	Integración Omnicanal para Ecommerce: Conecta tu tienda virtual con todos tus canales	--	$2.775	
+CTM-0191	Servicios de Internacionalización Ecommerce	--	$285	
+CTM-0192	Integración Multicanal para Ecommerce: Amplía tu Alcance y Optimiza tus Ventas	--	$2.925	
+CTM-0195	Servicios de Gestión de Catálogo Ecommerce	--	$24	
+CTM-0196	Support for E-Commerce	--	$2.475	
+CTM-0199	Implementación Tienda Online Básico	--	$1.875	
+CTM-0200	Soluciones de e-commerce	--	$195	
+CTM-0202	Tienda Virtual	--	$21	
+CTM-0203	Servicios de Retención de Clientes Ecommerce	--	$2.175	
+CTM-0205	Servicios de Gestión de Inventario Ecommerce	--	$18	
+CTM-0206	Implementación de soluciones de e-commerce: Optimiza tu negocio online	--	$165	
+CTM-0209	Diseño de Tienda Virtual: Crea una Experiencia de Compra Inolvidable	--	$1.425	
+CTM-0213	Optimización de Tienda Virtual: Mejora tu rendimiento y aumenta tus ventas	--	$975	
+CTM-0215	¡Crea tu Tienda Online Básica y Vende en Internet Hoy!	--	$1.125	
+CTM-0217	Plan Tienda Online Basico pagado cada 1 mes	--	$9	
+General
+[62]
+CTM-0224	Implementación de ERP Oracle e-Business Suite	--	$975	
+CTM-0225	Implementación de ERP Microsoft Dynamics 365	--	$96	
+CTM-0226	Migración de ERP SAP a Odoo	--	$9.375	
+CTM-0227	Integración de ERP SAP con Herramientas de BI	--	$9.525	
+CTM-0229	Desarrollo de software personalizado	--	$915	
+CTM-0230	Implementación de ERP	--	$9.075	
+CTM-0231	Consultoría en Innovación Tecnológica	--	$8.925	
+CTM-0232	Servicios de Integración de ERP con otras Aplicaciones	--	$855	
+CTM-0233	Transformación Digital Asistida	--	$87	
+CTM-0235	Gestión de la cadena de suministro	--	$8.325	
+CTM-0236	Project Management Platforms	--	$8.475	
+CTM-0237	Soporte Avanzado ERP	--	$825	
+CTM-0238	Gestión de proyectos y portafolio	--	$81	
+CTM-0241	Gestión de la Producción	--	$7.725	
+CTM-0242	Optimización de Inventarios	--	$7.425	
+CTM-0243	Integración de Sistemas ERP	--	$75	
+CTM-0244	Servicios de Certificación y Validación de ERP	--	$765	
+CTM-0245	Gestión de Talento y RRHH	--	$72	
+CTM-0246	ERP para Servicios	--	$7.275	
+CTM-0247	Integración ERP: Sincroniza tu tienda online y ERP para una gestión eficiente	--	$705	
+CTM-0248	Implementación de ERP para Retail y Distribuidores	--	$69	
+CTM-0249	Auditoría de sistemas	--	$6.825	
+CTM-0250	Gestión de Mantenimiento	--	$6.225	
+CTM-0251	Servicios de Integración de ERP Ecommerce	--	$6.375	
+CTM-0253	ERP para Manufactura	--	$66	
+CTM-0255	Gestión de Documentos	--	$6	
+CTM-0256	ERP para Agroindustria	--	$6.075	
+CTM-0257	Asesoría en Cumplimiento Normativo	--	$585	
+CTM-0258	Gestión de Calidad	--	$555	
+CTM-0259	Consultoría Inicial para Servicios	--	$5.625	
+CTM-0260	Implementación Básica: La solución integral para tu negocio	--	$5.775	
+CTM-0261	Gestión de Ventas	--	$54	
+CTM-0262	Recursos humanos	--	$525	
+CTM-0263	Plataforma de Administración de Propiedades	--	$5.025	
+CTM-0265	Plataforma de Facturación y Pagos	--	$495	
+CTM-0266	Contabilidad y finanzas	--	$4.725	
+CTM-0267	Implementación de Soluciones de Gestión de Activos Intangibles: Optimiza y Protege tus Recursos Valiosos	--	$48	
+CTM-0268	Implementación de Módulos de Gestión Empresarial a Medida	--	$4.425	
+CTM-0270	Gestión de Compras	--	$42	
+CTM-0271	Módulo de mantenimiento para Dolibarr	--	$435	
+CTM-0272	Consultoría de Gestión para Distribuidores y Mayoristas	--	$3.975	
+CTM-0273	Integración de Datos: Conecta y Unifica Tus Datos para Decisiones Informadas	--	$4.125	
+CTM-0275	Integración con Terceros: Conecta tu negocio con el mundo	--	$39	
+CTM-0276	Gestión de Proveedores	--	$36	
+CTM-0277	Evaluación de desempeño	--	$285	
+CTM-0279	Soporte Técnico ERP	--	$3.075	
+CTM-0280	Evaluación Inicial de Sistemas: Diagnóstico y Optimización para un Rendimiento Óptimo	--	$315	
+CTM-0281	Mantenimiento Anual Básico: Protege tu inversión y optimiza el rendimiento de tu equipo	--	$33	
+CTM-0282	Licencia de Usuario (x10): ¡Ampliá tu alcance y potenciá tu negocio!	--	$3.375	
+CTM-0283	Plan de Contingencia: Guía esencial para la preparación ante emergencias	--	$3.525	
+CTM-0284	Plataforma de Gestión de Flotas	--	$2.475	
+CTM-0285	Software ERP	--	$255	
+CTM-0287	Optimización de Operaciones Logísticas	--	$225	
+CTM-0288	Optimización de Estrategias de Ventas	--	$2.325	
+CTM-0289	5 usuarios: la solución perfecta para equipos pequeños y medianos	--	$21	
+CTM-0290	Control de Pedidos	--	$105	
+CTM-0292	Gestión de Órdenes de Trabajo	--	$1.275	
+CTM-0293	Seguimiento de Tiempos y Costos	--	$1.425	
+CTM-0295	Integración de Módulos ERP: Amplía las Funcionalidades de tu Sistema	--	$165	
+CTM-0296	Adaptación a Cambios Regulatorios: Mantente al día con las últimas normativas	--	$1.725	
+CTM-0297	Gestión Avanzada de Datos: Centraliza, Analiza y Automatiza tus Procesos para el Éxito Empresarial	--	$1.875	
+CTM-0298	Servicios de Migración de ERP: La clave para una transformación empresarial sin problemas	--	$2.025	
+General
+[29]
+CTM-0144	Migración Básica a la Nube	--	$24	
+CTM-0145	Cloud Computing	--	$225	
+CTM-0146	Servicios de Implementación de ERP en la Nube	--	$21	
+CTM-0147	Servicios de Alojamiento y Cloud	--	$195	
+CTM-0148	Optimización de Recursos TI	--	$1.575	
+CTM-0149	Soluciones de nube híbrida	--	$1.725	
+CTM-0150	Plataforma ERP en la nube	--	$1.875	
+CTM-0151	Consultoría en Soluciones Cloud	--	$1.425	
+CTM-0152	Respaldo y Recuperación de Datos	--	$1.275	
+CTM-0153	Configuración de Redes	--	$825	
+CTM-0154	Soporte de Infraestructura en la Nube	--	$975	
+CTM-0155	Evaluación de Tecnologías Cloud	--	$1.125	
+CTM-0156	Cloud Storage Solution	--	$712	
+CTM-0157	Gestión Básica de Servicios en la Nube	--	$562	
+CTM-0158	1 vCore, RAM: 1gb, Disco: 25 GB SSD, Ancho de Banda: 1000 GB	--	$3	
+CTM-0159	Implementación de ERP en la Nube: Optimiza tu gestión empresarial con SaaS	--	$45	
+CTM-0389	Hosting Corporativo	--	$6	
+CTM-0390	Soluciones de Hosting Confiables y Seguras	--	$68	
+CTM-0391	Servidor Virtual Privado	--	$6	
+CTM-0392	Alojamiento web	--	$52	
+CTM-0393	VPS Hosting	--	$45	
+CTM-0394	Web Hosting Maintenance	--	$45	
+CTM-0395	Migración de Hosting	--	$52	
+CTM-0396	Gestión De Dominios	--	$38	
+CTM-0397	Hosting Web Profesional	--	$38	
+CTM-0398	Web Hosting Starter	--	$3	
+CTM-0399	Hosting seguro	--	$3	
+CTM-0400	Hosting Básico	--	$15	
+CTM-0401	Registro y pago anual de un dominio .com	--	$22	
+General
+[5]
+CTM-0490	Integración Facebook & Instagram Ads	--	$75	
+CTM-0491	Integración WooCommerce & Shopify	--	$195	
+CTM-0492	Integración AFIP Facturación	--	$225	
+CTM-0493	Integración MercadoPago & Stripe	--	$135	
+CTM-0494	Integración ERPs Tradicionales (Tango / Bejerman)	--	$525	
+General
+[16]
+CTM-0051	Implementación de soluciones de inteligencia artificial (IA) y aprendizaje automático (ML) para automatización de procesos	--	$315	
+CTM-0067	Automatización de Ventas con IA	--	$825	
+CTM-0070	Desarrollo de Soluciones de Inteligencia Artificial y Machine Learning	--	$4.725	
+CTM-0074	IA y Aprendizaje Automático	--	$45	
+CTM-0080	Implementación de Sistemas de IA	--	$4.125	
+CTM-0085	Análisis Predictivo y ML	--	$3.675	
+CTM-0094	Análisis de Sentimiento en Redes Sociales	--	$3	
+CTM-0098	Consultoría en Machine Learning	--	$2.925	
+CTM-0108	Gestión de Riesgos con IA	--	$195	
+CTM-0110	Análisis de mercado	--	$18	
+CTM-0117	Planificación Financiera con IA	--	$12	
+CTM-0118	Análisis de Datos de Recursos Humanos con IA	--	$1.275	
+CTM-0119	Análisis de Datos de la Cadena de Suministro con IA	--	$135	
+CTM-0120	Análisis de Interacciones con Clientes con IA	--	$975	
+CTM-0121	Gestión de Cumplimiento Normativo con IA	--	$105	
+CTM-0122	IA y ML	--	$6	
+General
+[53]
+CTM-0329	Personalización de Experiencias en Tiempo Real	--	$9	
+CTM-0330	Servicio de Desarrollo de Programa de Afiliación: Aumenta el Tráfico y las Ventas de tu Ecommerce	--	$9	
+CTM-0331	Segmentación Avanzada para Estrategias de Marketing	--	$825	
+CTM-0332	Recomendaciones de Productos Personalizadas	--	$9	
+CTM-0333	Content Creation and Management	--	$825	
+CTM-0334	Campaña de publicidad	--	$825	
+CTM-0335	SEO Basic Package	--	$75	
+CTM-0336	Social Media Management	--	$75	
+CTM-0337	Graphic Design Services	--	$825	
+CTM-0338	Diseño gráfico	--	$825	
+CTM-0339	Filmación de video corporativo	--	$825	
+CTM-0340	Generación De Leads	--	$75	
+CTM-0341	Estrategia de SEO	--	$712	
+CTM-0342	Servicios de Marketing Multicanal Ecommerce	--	$75	
+CTM-0343	Animación 2D	--	$712	
+CTM-0344	Producción de video	--	$675	
+CTM-0345	Automatización de Campañas de Marketing	--	$638	
+CTM-0346	Diseño de identidad de marca	--	$675	
+CTM-0347	Servicio de SEO	--	$675	
+CTM-0348	Keyword Optimization for SEO	--	$525	
+CTM-0349	Marketing Digital con IA	--	$525	
+CTM-0350	Optimización Seo	--	$562	
+CTM-0351	Gestión de Redes Sociales	--	$562	
+CTM-0352	Campañas SEM	--	$6	
+CTM-0353	Posicionamiento SEO	--	$6	
+CTM-0354	Campañas de Marketing para Ecommerce: Atrae y Fideliza Clientes en Línea	--	$6	
+CTM-0355	Video Spot Publicitario Básico	--	$638	
+CTM-0356	Identificación de leads calificados	--	$638	
+CTM-0357	Copywriting	--	$525	
+CTM-0358	Servicios de Implementación de Cupones y Promociones Ecommerce	--	$488	
+CTM-0359	Video promocional	--	$488	
+CTM-0360	Desarrollo de Contenido para Ecommerce: Mejora el Engagement y la Experiencia del Cliente	--	$488	
+CTM-0361	Creación de contenido	--	$412	
+CTM-0362	Diseño de empaques	--	$45	
+CTM-0363	Campaña de Remarketing: Recupera clientes potenciales y aumenta tus ventas	--	$45	
+CTM-0364	Email Marketing con IA	--	$375	
+CTM-0365	Auditoría SEO	--	$375	
+CTM-0366	Campañas de Google Ads	--	$412	
+CTM-0367	Diseño de imagen de marca	--	$412	
+CTM-0368	Plataforma de Gestión de Afiliados	--	$338	
+CTM-0369	Edición de video	--	$375	
+CTM-0370	Diseño de material impreso	--	$3	
+CTM-0371	Campaña publicitaria en Facebook e Instagram	--	$338	
+CTM-0372	Diseño de infografía	--	$3	
+CTM-0373	Retoque fotográfico	--	$3	
+CTM-0374	Gestión de Anuncios Facebook	--	$262	
+CTM-0375	Diseño de logotipo	--	$262	
+CTM-0376	Diseño de folleto	--	$262	
+CTM-0377	Análisis De Datos De Marketing	--	$225	
+CTM-0378	Lead Scoring con IA	--	$225	
+CTM-0379	Diseño de presentación	--	$225	
+CTM-0380	Optimización SEO Completa: Mejora tu visibilidad online y aumenta tus ventas	--	$188	
+CTM-0381	Servicio de Gestión de Contenidos para Ecommerce: Planificación, Creación y Optimización SEO	--	$188	
+General
+[21]
+CTM-0402	Soluciones Para Servicios	--	$45	
+CTM-0403	Internet of Things (IoT)	--	$4.425	
+CTM-0404	Implementación de soluciones de IoT	--	$4.275	
+CTM-0405	Realidad aumentada y virtual	--	$4.125	
+CTM-0407	Consultoría en Blockchain	--	$3.975	
+CTM-0408	Gestión para Distribuidores y Mayoristas	--	$39	
+CTM-0409	Control para Agroindustria	--	$36	
+CTM-0410	Integración para Minoristas	--	$3.675	
+CTM-0411	Optimización para Manufactura	--	$375	
+CTM-0412	Desarrollo de soluciones de tecnología financiera (FinTech)	--	$345	
+CTM-0414	Soporte Operativo Anual para Minoristas	--	$33	
+CTM-0415	Desarrollo de soluciones de telemedicina	--	$315	
+CTM-0416	Auditoría de Sistemas para Minoristas	--	$3.075	
+CTM-0417	Evaluación de Estrategias de Mercado para Minoristas	--	$285	
+CTM-0418	Consultoría en sostenibilidad y responsabilidad social	--	$2.925	
+CTM-0419	Capacitación en Gestión para Minoristas	--	$2.775	
+CTM-0420	Consultoría Inicial para Minoristas	--	$2.625	
+CTM-0423	Personalización de Plataforma para Minoristas	--	$255	
+CTM-0427	Soluciones por Industria	--	$135	
+CTM-0432	Asesoría de Diseño de Interiores	--	$18	
+CTM-0438	Gestión de Cultivos	--	$975	
+General
+[40]
+CTM-0001	Gestión de la Experiencia del Cliente (CX)	--	$21	
+CTM-0002	Systems Maintenance	--	$2.025	
+CTM-0003	Servicios de monitoreo y gestión de infraestructura IT	--	$2.025	
+CTM-0004	Servicios de auditoría y cumplimiento normativo	--	$195	
+CTM-0005	IT Support Package	--	$195	
+CTM-0006	Desarrollo de chatbots	--	$1.875	
+CTM-0007	Automatización de Servicio al Cliente	--	$1.875	
+CTM-0008	Montaje de eventos	--	$18	
+CTM-0009	Soporte Técnico Continuo	--	$1.725	
+CTM-0010	Soporte Remoto	--	$1.725	
+CTM-0011	Mantenimiento preventivo	--	$165	
+CTM-0012	Soporte Técnico 24/7	--	$165	
+CTM-0013	Asistencia técnica remota	--	$1.425	
+CTM-0014	Generación de Respuestas con IA	--	$15	
+CTM-0015	Diseño de interiores	--	$1.575	
+CTM-0016	Servicios de Asistencia Virtual Ecommerce	--	$1.575	
+CTM-0017	Servicio de Gestión de Reseñas y Opiniones	--	$1.425	
+CTM-0018	Instalación de Software	--	$135	
+CTM-0019	Consultoría legal	--	$135	
+CTM-0020	Chatbot de Atención al Cliente para Ecommerce	--	$12	
+CTM-0022	Chatbot de Ventas (WhatsApp/Web)	--	$12	
+CTM-0023	Translation of Documents	--	$1.125	
+CTM-0024	Servicio de traducción	--	$1.125	
+CTM-0025	Actualización de software	--	$105	
+CTM-0026	Alquiler de equipo audiovisual	--	$105	
+CTM-0027	Enrutamiento Inteligente de Tickets	--	$9	
+CTM-0028	Traducción e interpretación	--	$975	
+CTM-0029	Personalización	--	$75	
+CTM-0030	Plataforma de Chatbots y Asistentes Virtuales	--	$825	
+CTM-0031	Optimización de Estrategias de Servicio al Cliente	--	$825	
+CTM-0032	Transcripción de audio	--	$9	
+CTM-0033	Soporte a Usuarios Finales	--	$562	
+CTM-0034	Respaldo y recuperación	--	$6	
+CTM-0035	Gestión de redes	--	$638	
+CTM-0036	Soporte básico anual	--	$675	
+CTM-0037	Valor Hora - Cliente D	--	$712	
+CTM-0038	**Soporte Técnico**	--	$375	
+CTM-0039	Servicio de catering	--	$412	
+CTM-0040	Soporte Integral: Tu solución completa para todas tus necesidades	--	$45	
+CTM-0041	Chatbots para E-commerce: Asistencia 24/7, Respuestas Automáticas y Procesamiento de Pedidos	--	$488	
