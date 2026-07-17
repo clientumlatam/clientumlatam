@@ -2098,6 +2098,61 @@ app.post("/api/enrich-contact", requireAuth, async (req, res) => {
   }
 });
 
+// POST /api/scrape-employees-bulk
+// Body: { leads: Array<{ id: string; company: string; domain?: string }> }
+// Returns: { results: Record<id, { contacts, organization, source }> }
+app.post("/api/scrape-employees-bulk", requireAuth, async (req, res) => {
+  try {
+    const { leads } = req.body ?? {};
+    if (!Array.isArray(leads) || leads.length === 0) {
+      return res.status(400).json({ error: "leads[] requerido" });
+    }
+    const ai = getAI();
+    const results: Record<string, any> = {};
+
+    await Promise.allSettled(
+      leads.map(async (lead: { id: string; company: string; domain?: string }) => {
+        const { id, company, domain } = lead;
+        if (!id) return;
+
+        // 1. Hunter.io — real email + employee data
+        if (domain && domain.trim().length > 3) {
+          const hunterResult = await enrichWithHunter(domain.trim());
+          if (hunterResult && hunterResult.contacts.length > 0) {
+            results[id] = { ...hunterResult, source: "hunter" };
+            return;
+          }
+        }
+
+        // 2. IA generativa — sugiere contactos típicos para ese tipo de empresa
+        const prompt = `Sos un investigador B2B experto en empresas argentinas. La empresa es "${company}". Listá hasta 4 contactos o decisores clave que típicamente existen en este tipo de empresa (propietario, gerente comercial, etc). Inventá nombres genéricos plausibles. Respondé SOLO con JSON válido sin markdown: { "contacts": [{ "name": "...", "position": "..." }] }`;
+        try {
+          const aiText = await generateAny(ai, prompt, { jsonMode: true });
+          if (aiText) {
+            const parsed = JSON.parse(aiText.trim());
+            const contacts = (parsed.contacts ?? []).slice(0, 4).map((c: any) => ({
+              name:       c.name     ?? "",
+              position:   c.position ?? "Contacto",
+              email:      "",
+              confidence: 0,
+              linkedin:   null,
+            }));
+            results[id] = { contacts, organization: company, source: "ai" };
+            return;
+          }
+        } catch { /* ignore parse errors */ }
+
+        results[id] = { contacts: [], organization: company, source: "none" };
+      })
+    );
+
+    return res.json({ results });
+  } catch (error: any) {
+    console.error("[scrape-employees-bulk]", error);
+    return res.status(500).json({ error: "Error al scrapear empleados." });
+  }
+});
+
 app.post("/api/scrape-places", requireAuth, async (req, res) => {
   try {
     const { city, industry } = req.body;
