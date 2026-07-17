@@ -279,16 +279,7 @@ export default function SalesProspectorDashboard({
     github: "",
   };
 
-  // User custom Google Maps Key
-  const [customApiKey, setCustomApiKey] = useState<string>(() => localStorage.getItem("custom_google_maps_key") || "");
-  const [showKeyModal, setShowKeyModal] = useState(false);
-  const [modalKeyInput, setModalKeyInput] = useState(() => localStorage.getItem("custom_google_maps_key") || "");
-  const [isValidatingKey, setIsValidatingKey] = useState(false);
-  const [validationError, setValidationError] = useState<string | null>(null);
-  const [validationSuccess, setValidationSuccess] = useState<boolean>(false);
-
-  const isKeyActive = Boolean(customApiKey) && customApiKey !== "YOUR_API_KEY" && customApiKey.trim() !== "";
-  // Check server-side whether the server has a Google Maps Platform key configured.
+  // Google Maps key is always provided server-side — no user configuration needed.
   const [serverHasGoogleMaps, setServerHasGoogleMaps] = useState<boolean>(false);
   useEffect(() => {
     fetch("/api/config/has-google-maps")
@@ -296,7 +287,7 @@ export default function SalesProspectorDashboard({
       .then(d => setServerHasGoogleMaps(Boolean(d.hasKey)))
       .catch(() => setServerHasGoogleMaps(false));
   }, []);
-  const hasActiveValidKey = serverHasGoogleMaps || isKeyActive;
+  const hasActiveValidKey = serverHasGoogleMaps;
 
   // CRM deals management — shared across every tab (Pipeline, Patagonia
   // Explorer, Creación Rápida, Actividad) via the sharedStore event bus.
@@ -563,7 +554,7 @@ export default function SalesProspectorDashboard({
           payload: { 
             city: searchCity, 
             industry: selectedInd,
-            googleMapsPlatformKey: customApiKey || API_KEY 
+            googleMapsPlatformKey: undefined
           }
         })
       });
@@ -726,49 +717,6 @@ export default function SalesProspectorDashboard({
     }
   };
 
-  const handleValidateAndSaveKey = async () => {
-    if (!modalKeyInput || modalKeyInput.trim() === "") {
-      setValidationError("Por favor, ingresa una clave antes de validar.");
-      return;
-    }
-
-    setIsValidatingKey(true);
-    setValidationError(null);
-    setValidationSuccess(false);
-
-    try {
-      const response = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "validateGooglePlacesKey",
-          payload: { apiKey: modalKeyInput.trim() }
-        })
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        setValidationSuccess(true);
-        localStorage.setItem("custom_google_maps_key", modalKeyInput.trim());
-        setCustomApiKey(modalKeyInput.trim());
-      } else {
-        setValidationError(data.error || "La clave de API no es válida.");
-      }
-    } catch (err: any) {
-      console.error(err);
-      setValidationError("Error de conexión al validar la clave: " + (err.message || err));
-    } finally {
-      setIsValidatingKey(false);
-    }
-  };
-
-  const handleRemoveKey = () => {
-    localStorage.removeItem("custom_google_maps_key");
-    setCustomApiKey("");
-    setModalKeyInput("");
-    setValidationSuccess(false);
-    setValidationError(null);
-  };
 
   const handleDownloadCSV = () => {
     if (filteredSearchResults.length === 0) {
@@ -1890,65 +1838,16 @@ export default function SalesProspectorDashboard({
 
               {hasActiveValidKey ? (
                 <div className="bg-emerald-50/60 border border-emerald-100 rounded-lg p-2.5 text-[10px] text-emerald-800 leading-relaxed flex flex-col gap-1">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 font-bold text-emerald-700">
-                      <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
-                      <span>Buscador Google Maps Activo</span>
-                    </div>
-                    {!hasValidKey && (
-                      <button
-                        onClick={() => {
-                          setValidationError(null);
-                          setValidationSuccess(false);
-                          setModalKeyInput(customApiKey);
-                          setShowKeyModal(true);
-                        }}
-                        className="text-slate-400 hover:text-slate-600 transition cursor-pointer"
-                        title="Configurar Clave"
-                      >
-                        <Settings className="w-3.5 h-3.5" />
-                      </button>
-                    )}
+                  <div className="flex items-center gap-1.5 font-bold text-emerald-700">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
+                    <span>Buscador Google Maps Activo</span>
                   </div>
-                  <span>
-                    Conexión establecida con la API oficial de Google Places para obtener datos 100% reales en tiempo real.{" "}
-                    {hasValidKey ? "(Clave del servidor activa para todos los usuarios)" : customApiKey ? "(Clave personalizada guardada localmente)" : ""}
-                  </span>
+                  <span>Conexión establecida con la API oficial de Google Places para obtener datos 100% reales en tiempo real.</span>
                 </div>
               ) : (
-                <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-[10px] text-slate-600 leading-relaxed flex flex-col gap-1.5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 font-bold text-slate-700">
-                      <Globe className="w-3.5 h-3.5 text-slate-500" />
-                      <span>Prospección Local Simulada ️</span>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setValidationError(null);
-                        setValidationSuccess(false);
-                        setModalKeyInput(customApiKey);
-                        setShowKeyModal(true);
-                      }}
-                      className="text-slate-400 hover:text-emerald-600 transition cursor-pointer"
-                      title="Configurar Clave"
-                    >
-                      <Settings className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                  <span>
-                    Para obtener empresas 100% reales de Google Maps en tiempo real, introduce tu clave de Google Places.
-                  </span>
-                  <button
-                    onClick={() => {
-                      setValidationError(null);
-                      setValidationSuccess(false);
-                      setModalKeyInput(customApiKey);
-                      setShowKeyModal(true);
-                    }}
-                    className="mt-1 w-full text-center py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold text-[9px] transition tracking-wide uppercase font-mono cursor-pointer"
-                  >
-                    Configurar Clave Real ️
-                  </button>
+                <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-[10px] text-slate-500 leading-relaxed flex items-center gap-1.5">
+                  <Globe className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <span>Conectando con Google Maps...</span>
                 </div>
               )}
 
@@ -3211,146 +3110,6 @@ export default function SalesProspectorDashboard({
           </div>
         )}
 
-      {/* MODAL CONFIGURACIÓN GOOGLE PLACES API KEY */}
-      {showKeyModal && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-lg w-full m-4 overflow-hidden flex flex-col max-h-[90vh]">
-            {/* Header */}
-            <div className="bg-slate-900 text-white p-4 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Key className="w-4.5 h-4.5 text-emerald-400" />
-                <span className="font-bold text-sm font-sans tracking-wide">
-                  Configuración de API Key: Google Places (New)
-                </span>
-              </div>
-              <button
-                onClick={() => setShowKeyModal(false)}
-                className="text-slate-400 hover:text-white transition cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Body */}
-            <div className="p-5 overflow-y-auto flex flex-col gap-4 text-xs text-slate-700 leading-relaxed">
-              
-              {/* Quick Guide */}
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col gap-2.5">
-                <h4 className="font-bold text-slate-800 flex items-center gap-1">
-                  <Info className="w-4 h-4 text-emerald-600" />
-                  Guía Rápida de Configuración (3 pasos)
-                </h4>
-                <ol className="list-decimal pl-4 space-y-1.5 text-[11px] text-slate-600">
-                  <li>
-                    Ingresa a la consola de Google Cloud en{" "}
-                    <a
-                      href="https://console.cloud.google.com/"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-emerald-600 hover:underline font-semibold inline-flex items-center gap-0.5"
-                    >
-                      console.cloud.google.com <ExternalLink className="w-3 h-3" />
-                    </a>.
-                  </li>
-                  <li>
-                    Habilita la API de <strong>Places API (New)</strong> en la sección de Biblioteca de APIs.
-                  </li>
-                  <li>
-                    Crea una API Key en la sección <strong>APIs y Servicios &rarr; Credenciales</strong>, asegúrate de activar la facturación en tu cuenta (Google regala un saldo mensual gratuito) y pégala aquí abajo.
-                  </li>
-                </ol>
-                <div className="text-[10px] text-slate-400 italic mt-1 bg-white p-1.5 rounded border border-slate-100 flex items-center gap-1.5">
-                  <Lock className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Tu clave se guarda localmente en este navegador de forma 100% segura.</span>
-                </div>
-              </div>
-
-              {/* Input Field */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">
-                  Ingresar API Key de Google
-                </label>
-                <div className="relative">
-                  <input
-                    type="password"
-                    placeholder="AIzaSy..."
-                    value={modalKeyInput}
-                    onChange={(e) => setModalKeyInput(e.target.value)}
-                    className="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 text-xs font-mono focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition"
-                  />
-                  <Key className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                </div>
-              </div>
-
-              {/* Validation Statuses */}
-              {validationError && (
-                <div className="bg-red-50 border border-red-100 text-red-800 rounded-lg p-3 text-[11px] flex flex-col gap-1">
-                  <div className="font-bold flex items-center gap-1.5 text-red-700">
-                    <AlertTriangle className="w-4 h-4 text-red-500" />
-                    <span>Clave no válida</span>
-                  </div>
-                  <span>{validationError}</span>
-                </div>
-              )}
-
-              {validationSuccess && (
-                <div className="bg-emerald-50 border border-emerald-100 text-emerald-800 rounded-lg p-3 text-[11px] flex flex-col gap-1 animate-fadeIn">
-                  <div className="font-bold flex items-center gap-1.5 text-emerald-700">
-                    <CheckCircle className="w-4 h-4 text-emerald-500" />
-                    <span>¡Validación Exitosa!</span>
-                  </div>
-                  <span>
-                    La clave de Google Maps se validó con éxito en el servidor y ha sido guardada de manera local. Ahora podrás buscar negocios en tiempo real.
-                  </span>
-                </div>
-              )}
-
-              {/* Info about active state */}
-              {customApiKey && !validationSuccess && !validationError && (
-                <div className="bg-slate-50 border border-slate-100 rounded-lg p-3 text-[11px] flex items-center justify-between text-slate-600">
-                  <span className="flex items-center gap-1.5 font-medium">
-                    <Check className="w-4 h-4 text-emerald-500" />
-                    Clave guardada activa: {customApiKey.substring(0, 6)}...{customApiKey.substring(customApiKey.length - 4)}
-                  </span>
-                  <button
-                    onClick={handleRemoveKey}
-                    className="text-red-500 hover:text-red-700 hover:underline font-bold text-[10px] cursor-pointer"
-                  >
-                    Remover Clave
-                  </button>
-                </div>
-              )}
-
-            </div>
-
-            {/* Footer */}
-            <div className="bg-slate-50 p-4 border-t border-slate-150 flex items-center justify-end gap-2.5">
-              <button
-                type="button"
-                onClick={() => setShowKeyModal(false)}
-                className="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition cursor-pointer"
-              >
-                Cerrar
-              </button>
-              <button
-                type="button"
-                onClick={handleValidateAndSaveKey}
-                disabled={isValidatingKey || !modalKeyInput.trim()}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs rounded-lg shadow-sm flex items-center gap-1.5 transition cursor-pointer"
-              >
-                {isValidatingKey ? (
-                  <>
-                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    Validando en Google...
-                  </>
-                ) : (
-                  "Validar y Guardar"
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
       {/* TAB: WORDPRESS — Leads del Chatbot */}
       {activeTab === "wp-leads" && (
         <div className="flex-1 -m-6 flex flex-col overflow-hidden">
