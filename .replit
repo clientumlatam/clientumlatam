@@ -64,7 +64,7 @@ defaultBucketID = "replit-objstore-ee52125a-7ef9-4c14-a221-3b1abc6ac4b1"
 [userenv]
 
 [userenv.shared]
-NEON_DATA_API_URL = "https://ep-noisy-water-acvnc08j.apirest.sa-east-1.aws.neon.tech/neondb/rest/v1"
+NEON_DATA_API_URL = "https://ep-plain-bread-achv6ed0.apirest.sa-east-1.aws.neon.tech/neondb/rest/v1"
 
 [userenv.development]
 
