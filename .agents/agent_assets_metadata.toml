@@ -108,3 +108,9 @@ id = "XrBxMENat9B5T53eoUvL-"
 uri = "file://docs/sitio/sitemap.csv"
 type = "table"
 title = "Sitemap — 132 URLs"
+
+[[outputs]]
+id = "qBPnLwL8-kqM1w2Zs8VeT"
+uri = "file://docs/informe-docs.csv"
+type = "table"
+title = "Informe de documentación — docs/ completo"
