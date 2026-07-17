@@ -2311,7 +2311,14 @@ export default function SalesProspectorDashboard({
                               </div>
                               <div className="flex items-center gap-1.5">
                                 <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                                <span className="truncate">Contacto: {p.contact}</span>
+                                {p.contact ? (
+                                  <span className="truncate flex items-center gap-1">
+                                    {p.contactVerified && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" title="Verificado por Hunter.io" />}
+                                    {p.contact}
+                                  </span>
+                                ) : (
+                                  <span className="truncate text-slate-400 italic text-[9px]">Sin contacto — usar Scraper IA</span>
+                                )}
                               </div>
                               <div className="flex items-center gap-1.5">
                                 <Award className="w-3.5 h-3.5 text-slate-400 shrink-0" />
@@ -2328,10 +2335,39 @@ export default function SalesProspectorDashboard({
                               <p className="text-slate-700 font-medium">{p.painPoint}</p>
                             </div>
 
-                            <div className="flex justify-between items-center gap-2 mt-1">
-                              <span className="text-[9px] text-slate-400 italic font-mono">
-                                Haz clic para ver en mapa
-                              </span>
+                            <div className="flex justify-between items-center gap-2 mt-1 flex-wrap">
+                              {/* Real links from Google Places */}
+                              <div className="flex items-center gap-2 flex-wrap">
+                                {(p.googleMapsUri || p.guiacoresUrl) && (
+                                  <a
+                                    href={p.googleMapsUri || p.guiacoresUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="text-[9px] text-sky-600 hover:text-sky-800 font-bold flex items-center gap-0.5 hover:underline"
+                                  >
+                                    <Map className="w-3 h-3 shrink-0" />
+                                    Google Maps
+                                  </a>
+                                )}
+                                {p.website && (() => {
+                                  try {
+                                    const hostname = new URL(p.website).hostname.replace(/^www\./, "");
+                                    return (
+                                      <a
+                                        href={p.website}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="text-[9px] text-emerald-600 hover:text-emerald-800 font-bold flex items-center gap-0.5 hover:underline"
+                                      >
+                                        <Globe className="w-3 h-3 shrink-0" />
+                                        {hostname}
+                                      </a>
+                                    );
+                                  } catch { return null; }
+                                })()}
+                              </div>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();

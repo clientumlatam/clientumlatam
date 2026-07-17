@@ -1769,7 +1769,7 @@ async function fetchGooglePlacesAPI(city: string, industry: string, apiKey: stri
       headers: {
         "Content-Type": "application/json",
         "X-Goog-Api-Key": apiKey,
-        "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.rating,places.websiteUri,places.types"
+        "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.rating,places.websiteUri,places.googleMapsUri,places.types,places.userRatingCount"
       },
       body: JSON.stringify({
         textQuery: query,
@@ -1786,18 +1786,14 @@ async function fetchGooglePlacesAPI(city: string, industry: string, apiKey: stri
     const places = data.places || [];
     console.log(`[Google Places API Success] Encontrados ${places.length} resultados.`);
 
-    const contactNames = [
-      "Luciana Silva", "Carlos Benítez", "Mariano Gómez", "Sofia Rodriguez", 
-      "Gustavo B.", "Andrés Martínez", "Gabriela López", "Facundo Peralta",
-      "Estela Castro", "Martin Diaz"
-    ];
-
     return places.slice(0, 20).map((place: any, index: number) => {
       const companyName = place.displayName?.text || `Comercio en ${city}`;
       const rating = place.rating || null;
-      const phone = place.nationalPhoneNumber || "Sin teléfono";
+      const reviewCount = place.userRatingCount || null;
+      const phone = place.nationalPhoneNumber || null;
       const address = place.formattedAddress || `Dirección en ${city}`;
       const website = place.websiteUri || "";
+      const googleMapsUri = place.googleMapsUri || null;
       const types = place.types || [];
 
       let painPoint = "Excelente presencia de marca en Google pero carece de un canal automático de cotizaciones y CRM para agendar reuniones de ventas 24/7.";
@@ -1807,10 +1803,10 @@ async function fetchGooglePlacesAPI(city: string, industry: string, apiKey: stri
         painPoint = "No cuenta con página web institucional ni catálogo digital, lo que reduce su presencia digital en la Patagonia.";
         score = 9;
       } else if (rating && rating < 4.2) {
-        painPoint = `Calificación de ${rating} estrellas en Google Maps por demoras en atención. Necesita un asistente de WhatsApp de Clientum para agilizar respuestas.`;
+        painPoint = `Calificación de ${rating} estrellas en Google Maps. Un asistente de WhatsApp de Clientum agiliza respuestas y puede mejorar reseñas.`;
         score = 8;
-      } else if (phone === "Sin teléfono") {
-        painPoint = "No expone teléfono directo en Maps. Necesita integrar landing page de captación de Clientum con bot de WhatsApp.";
+      } else if (!phone) {
+        painPoint = "No expone teléfono directo en Google Maps. Un bot de WhatsApp con landing page de Clientum convierte visitas en consultas.";
         score = 8;
       } else if (types.includes("restaurant") || types.includes("food") || types.includes("bar")) {
         painPoint = "Dificultad para centralizar reservas de mesas y pedidos para llevar desde WhatsApp.";
@@ -1822,7 +1818,8 @@ async function fetchGooglePlacesAPI(city: string, industry: string, apiKey: stri
 
       const baseAmount = !website ? 220000 : 180000;
       const amount = baseAmount + (index * 15000);
-      const guiacoresUrl = `https://www.google.com/search?q=${encodeURIComponent(companyName + " " + city)}`;
+      // Use real Google Maps link — never invent URLs
+      const mapsUrl = googleMapsUri || (googleMapsUri ? googleMapsUri : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(companyName + " " + city)}`);
 
       return {
         company: companyName,
@@ -1830,12 +1827,18 @@ async function fetchGooglePlacesAPI(city: string, industry: string, apiKey: stri
         amount: amount,
         city: city,
         address: address,
-        phone: phone,
-        contact: contactNames[index % contactNames.length],
+        phone: phone || "Sin teléfono",
+        // contact is null — enriched via Hunter.io on demand, never invented
+        contact: null,
+        contactVerified: false,
+        contactEmail: null,
+        contactPosition: null,
         painPoint: painPoint,
         score: score,
-        guiacoresUrl: guiacoresUrl,
+        guiacoresUrl: mapsUrl,
+        googleMapsUri: googleMapsUri,
         rating: rating,
+        reviewCount: reviewCount,
         website: website
       };
     });
