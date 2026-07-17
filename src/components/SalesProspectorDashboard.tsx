@@ -79,7 +79,8 @@ import {
   PlusCircle,
   Activity,
   Save,
-  Network
+  Network,
+  Cpu
 } from "lucide-react";
 
 interface SalesProspectorDashboardProps {
