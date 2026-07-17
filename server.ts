@@ -1046,9 +1046,10 @@ async function tryFreeAI(prompt: string, opts?: { jsonMode?: boolean }): Promise
   const orKey = process.env.OPENROUTER_API_KEY;
   if (orKey) {
     const orModels = [
-      "meta-llama/llama-3.3-70b-instruct:free",
-      "google/gemini-2.0-flash-exp:free",
-      "deepseek/deepseek-r1:free",
+      "meta-llama/llama-3.1-8b-instruct:free",
+      "qwen/qwen3-8b:free",
+      "mistralai/mistral-7b-instruct:free",
+      "google/gemma-3-12b-it:free",
     ];
     for (const model of orModels) {
       try {
@@ -2235,16 +2236,21 @@ app.post("/api/scrape-employees-bulk", requireAuth, async (req, res) => {
           }
         }
 
-        // 2. IA generativa — sugiere contactos típicos para ese tipo de empresa
-        const prompt = `Sos un investigador B2B experto en empresas argentinas. La empresa es "${company}". Listá hasta 4 contactos o decisores clave que típicamente existen en este tipo de empresa (propietario, gerente comercial, etc). Inventá nombres genéricos plausibles. Respondé SOLO con JSON válido sin markdown: { "contacts": [{ "name": "...", "position": "..." }] }`;
+        // 2. IA generativa — sugiere ROLES/CARGOS típicos de la empresa, NUNCA nombres inventados.
+        const prompt = `Sos un investigador B2B experto en empresas argentinas. La empresa es "${company}".
+Listá hasta 4 cargos o roles decisores que típicamente existen en este tipo de empresa (ej: Gerente Comercial, Dueño/Propietario, Responsable de Compras, Director de Operaciones).
+IMPORTANTE: NO inventes nombres de personas. Solo devolvé el cargo/rol. El campo "name" debe ser null siempre.
+Respondé SOLO con JSON válido sin markdown: { "roles": [{ "position": "Cargo o rol exacto" }] }`;
         try {
           const aiText = await generateAny(ai, prompt, { jsonMode: true });
           if (aiText) {
             const parsed = JSON.parse(aiText.trim());
-            const contacts = (parsed.contacts ?? []).slice(0, 4).map((c: any) => ({
-              name:       c.name     ?? "",
-              position:   c.position ?? "Contacto",
-              email:      "",
+            // Accept both "roles" (new format) and legacy "contacts" key
+            const items = parsed.roles ?? parsed.contacts ?? [];
+            const contacts = items.slice(0, 4).map((c: any) => ({
+              name:       null,   // never invent a name
+              position:   c.position ?? c.role ?? "Decisor",
+              email:      null,
               confidence: 0,
               linkedin:   null,
             }));
