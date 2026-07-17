@@ -3043,6 +3043,746 @@ async function initWhatsAppTables() {
 }
 
 // ---------------------------------------------------------------------------
+// Agent OS — DB tables for the Clientum AI Sales Operating System
+// ---------------------------------------------------------------------------
+async function initAgentTables() {
+  await pgPool.query(`
+    -- Empresas prospectadas por el Agente Prospector
+    CREATE TABLE IF NOT EXISTS companies (
+      id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      name        TEXT NOT NULL,
+      industry    VARCHAR(120),
+      city        VARCHAR(120),
+      country     VARCHAR(60) DEFAULT 'Argentina',
+      address     TEXT,
+      phone       VARCHAR(40),
+      website     TEXT,
+      rating      NUMERIC(3,1),
+      source      VARCHAR(60) DEFAULT 'google_places',
+      status      VARCHAR(30) NOT NULL DEFAULT 'new',
+      metadata    JSONB DEFAULT '{}',
+      created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE(name, city)
+    );
+
+    -- Leads enriquecidos (personas contacto en cada empresa)
+    CREATE TABLE IF NOT EXISTS leads_enriched (
+      id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      company_id  UUID REFERENCES companies(id) ON DELETE CASCADE,
+      name        TEXT,
+      email       VARCHAR(255),
+      phone       VARCHAR(40),
+      linkedin    TEXT,
+      whatsapp    VARCHAR(40),
+      role        VARCHAR(120),
+      source      VARCHAR(60),
+      icp_fit     INTEGER DEFAULT 0,
+      meddic_score INTEGER DEFAULT 0,
+      metadata    JSONB DEFAULT '{}',
+      created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    -- Cola de tareas de agentes (el corazón del OS)
+    CREATE TABLE IF NOT EXISTS agent_tasks (
+      id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      type           VARCHAR(60) NOT NULL,
+      agent_name     VARCHAR(60) NOT NULL,
+      status         VARCHAR(20) NOT NULL DEFAULT 'pending',
+      input          JSONB NOT NULL DEFAULT '{}',
+      output         JSONB,
+      error          TEXT,
+      retries        INTEGER NOT NULL DEFAULT 0,
+      max_retries    INTEGER NOT NULL DEFAULT 2,
+      parent_task_id UUID REFERENCES agent_tasks(id) ON DELETE SET NULL,
+      tokens_used    INTEGER,
+      cost_usd       NUMERIC(10,6),
+      duration_ms    INTEGER,
+      created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      started_at     TIMESTAMPTZ,
+      finished_at    TIMESTAMPTZ
+    );
+
+    -- Log detallado de cada acción dentro de una tarea
+    CREATE TABLE IF NOT EXISTS agent_logs (
+      id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      task_id     UUID REFERENCES agent_tasks(id) ON DELETE CASCADE,
+      agent_name  VARCHAR(60) NOT NULL,
+      action      VARCHAR(120) NOT NULL,
+      detail      TEXT,
+      tokens_in   INTEGER,
+      tokens_out  INTEGER,
+      api_used    VARCHAR(80),
+      cost_usd    NUMERIC(10,6),
+      duration_ms INTEGER,
+      created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    -- Log del Orquestador: objetivos + planes
+    CREATE TABLE IF NOT EXISTS orchestrator_logs (
+      id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      objective   TEXT NOT NULL,
+      plan        JSONB,
+      status      VARCHAR(20) NOT NULL DEFAULT 'running',
+      started_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      finished_at TIMESTAMPTZ
+    );
+
+    -- Uso de APIs externas (para monitoreo de costos y cuotas)
+    CREATE TABLE IF NOT EXISTS api_usage_logs (
+      id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      api_name    VARCHAR(80) NOT NULL,
+      endpoint    VARCHAR(255),
+      cost_usd    NUMERIC(10,6) DEFAULT 0,
+      tokens_in   INTEGER,
+      tokens_out  INTEGER,
+      created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    -- Propuestas / brochures generados por IA
+    CREATE TABLE IF NOT EXISTS proposals (
+      id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      company_id  UUID REFERENCES companies(id) ON DELETE CASCADE,
+      lead_id     UUID REFERENCES leads_enriched(id) ON DELETE SET NULL,
+      content_md  TEXT NOT NULL,
+      pdf_url     TEXT,
+      status      VARCHAR(20) NOT NULL DEFAULT 'draft',
+      sent_at     TIMESTAMPTZ,
+      created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    -- Campañas de outreach
+    CREATE TABLE IF NOT EXISTS campaigns (
+      id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      name         TEXT NOT NULL,
+      type         VARCHAR(20) NOT NULL DEFAULT 'email',
+      status       VARCHAR(20) NOT NULL DEFAULT 'draft',
+      icp_filter   JSONB DEFAULT '{}',
+      created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    -- Emails individuales dentro de una campaña
+    CREATE TABLE IF NOT EXISTS campaign_emails (
+      id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      campaign_id   UUID REFERENCES campaigns(id) ON DELETE CASCADE,
+      lead_id       UUID REFERENCES leads_enriched(id) ON DELETE CASCADE,
+      email_number  INTEGER NOT NULL DEFAULT 1,
+      subject       TEXT,
+      body          TEXT,
+      status        VARCHAR(20) NOT NULL DEFAULT 'draft',
+      scheduled_at  TIMESTAMPTZ,
+      sent_at       TIMESTAMPTZ,
+      opened_at     TIMESTAMPTZ,
+      replied_at    TIMESTAMPTZ
+    );
+
+    -- Conversaciones multicanal con leads
+    CREATE TABLE IF NOT EXISTS conversations (
+      id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      lead_id     UUID REFERENCES leads_enriched(id) ON DELETE SET NULL,
+      channel     VARCHAR(20) NOT NULL DEFAULT 'email',
+      direction   VARCHAR(10) NOT NULL DEFAULT 'outbound',
+      message     TEXT NOT NULL,
+      metadata    JSONB DEFAULT '{}',
+      created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+
+    -- Perfiles ICP generados por el Agente Estratega
+    CREATE TABLE IF NOT EXISTS icp_profiles (
+      id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      name            VARCHAR(120),
+      description     TEXT,
+      industry        TEXT,
+      company_size    VARCHAR(60),
+      pain_points     JSONB DEFAULT '[]',
+      objections      JSONB DEFAULT '[]',
+      value_prop      TEXT,
+      score_weights   JSONB DEFAULT '{}',
+      raw_json        JSONB DEFAULT '{}',
+      created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
+
+  // Indexes for common queries
+  await pgPool.query(`
+    CREATE INDEX IF NOT EXISTS idx_agent_tasks_status ON agent_tasks(status);
+    CREATE INDEX IF NOT EXISTS idx_agent_tasks_agent ON agent_tasks(agent_name);
+    CREATE INDEX IF NOT EXISTS idx_agent_tasks_created ON agent_tasks(created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_agent_logs_task ON agent_logs(task_id);
+    CREATE INDEX IF NOT EXISTS idx_agent_logs_created ON agent_logs(created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_api_usage_created ON api_usage_logs(created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_companies_status ON companies(status);
+    CREATE INDEX IF NOT EXISTS idx_leads_enriched_company ON leads_enriched(company_id);
+    CREATE INDEX IF NOT EXISTS idx_campaign_emails_status ON campaign_emails(status);
+    CREATE INDEX IF NOT EXISTS idx_conversations_lead ON conversations(lead_id);
+  `);
+
+  console.log("[Agent OS] Tablas del Sales OS listas (companies, leads_enriched, agent_tasks, agent_logs, orchestrator_logs, api_usage_logs, proposals, campaigns, conversations, icp_profiles).");
+}
+
+// ---------------------------------------------------------------------------
+// Agent OS — API routes
+// ---------------------------------------------------------------------------
+
+// Helper: builds a WHERE clause + params array from a map of {field: value}.
+// Values that are undefined/null are skipped. Supports ILIKE via % prefix.
+function sqlWhere(filters: Record<string, unknown>): { where: string; params: unknown[] } {
+  const params: unknown[] = [];
+  const conditions: string[] = [];
+  for (const [field, value] of Object.entries(filters)) {
+    if (value === undefined || value === null || value === "") continue;
+    params.push(value);
+    const op = typeof value === "string" && value.startsWith("%") ? "ILIKE" : "=";
+    conditions.push(`${field} ${op} ${params.length}`);
+  }
+  return { where: conditions.length ? `WHERE ${conditions.join(" AND ")}` : "", params };
+}
+
+// ── Agent Tasks ──────────────────────────────────────────────────────────────
+
+// POST /api/agent/tasks — Create a new agent task
+app.post("/api/agent/tasks", async (req, res) => {
+  try {
+    const { id, type, agent_name, input, parent_task_id, max_retries = 2 } = req.body ?? {};
+    if (!type || !agent_name) return res.status(400).json({ error: "type y agent_name son requeridos" });
+
+    const result = await pgPool.query(
+      `INSERT INTO agent_tasks (id, type, agent_name, input, parent_task_id, max_retries, status)
+       VALUES (COALESCE($1::uuid, gen_random_uuid()), $2, $3, $4, $5, $6, 'pending')
+       RETURNING id, type, agent_name, status, created_at`,
+      [id || null, type, agent_name, JSON.stringify(input ?? {}), parent_task_id || null, max_retries]
+    );
+    res.json(result.rows[0]);
+  } catch (err: any) {
+    console.error("[Agent Tasks POST]", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/agent/tasks — List tasks with optional filters
+app.get("/api/agent/tasks", async (req, res) => {
+  try {
+    const { status, agent, limit = "50", offset = "0" } = req.query as Record<string, string>;
+    const { where, params: fp } = sqlWhere({
+      ...(status ? { status } : {}),
+      ...(agent ? { agent_name: agent } : {}),
+    });
+    const lim = Math.max(1, Math.min(200, parseInt(limit) || 50));
+    const off = Math.max(0, parseInt(offset) || 0);
+    const result = await pgPool.query(
+      `SELECT id, type, agent_name, status, retries, max_retries, parent_task_id,
+              tokens_used, cost_usd, duration_ms, created_at, started_at, finished_at,
+              CASE WHEN error IS NOT NULL THEN error ELSE NULL END as error
+       FROM agent_tasks ${where}
+       ORDER BY created_at DESC
+       LIMIT ${lim} OFFSET ${off}`,
+      fp
+    );
+    res.json({ tasks: result.rows, total: result.rowCount });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/agent/tasks/:id — Get single task with its logs
+app.get("/api/agent/tasks/:id", async (req, res) => {
+  try {
+    const task = await pgPool.query("SELECT * FROM agent_tasks WHERE id = $1", [req.params.id]);
+    if (!task.rows.length) return res.status(404).json({ error: "Task not found" });
+
+    const logs = await pgPool.query(
+      "SELECT * FROM agent_logs WHERE task_id = $1 ORDER BY created_at ASC",
+      [req.params.id]
+    );
+    res.json({ task: task.rows[0], logs: logs.rows });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PATCH /api/agent/tasks/:id/status
+app.patch("/api/agent/tasks/:id/status", async (req, res) => {
+  try {
+    const { status } = req.body ?? {};
+    const updates: Record<string, unknown> = { status };
+    if (status === "running") updates.started_at = new Date().toISOString();
+
+    await pgPool.query(
+      `UPDATE agent_tasks SET status = $1${status === "running" ? ", started_at = NOW()" : ""} WHERE id = $2`,
+      [status, req.params.id]
+    );
+    res.json({ ok: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PATCH /api/agent/tasks/:id/complete
+app.patch("/api/agent/tasks/:id/complete", async (req, res) => {
+  try {
+    const { output, tokens_used, cost_usd, duration_ms } = req.body ?? {};
+    await pgPool.query(
+      `UPDATE agent_tasks
+       SET status='completed', output=$1, tokens_used=$2, cost_usd=$3, duration_ms=$4, finished_at=NOW()
+       WHERE id=$5`,
+      [output ? JSON.stringify(output) : null, tokens_used, cost_usd, duration_ms, req.params.id]
+    );
+    res.json({ ok: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PATCH /api/agent/tasks/:id/fail
+app.patch("/api/agent/tasks/:id/fail", async (req, res) => {
+  try {
+    const { error, duration_ms } = req.body ?? {};
+    await pgPool.query(
+      `UPDATE agent_tasks
+       SET status='failed', error=$1, duration_ms=$2, finished_at=NOW(), retries=retries+1
+       WHERE id=$3`,
+      [error, duration_ms, req.params.id]
+    );
+    res.json({ ok: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Agent Logs ───────────────────────────────────────────────────────────────
+
+// POST /api/agent/logs
+app.post("/api/agent/logs", async (req, res) => {
+  try {
+    const { task_id, agent_name, action, detail, tokens_in, tokens_out, api_used, cost_usd, duration_ms } = req.body ?? {};
+    if (!agent_name || !action) return res.status(400).json({ error: "agent_name y action son requeridos" });
+
+    await pgPool.query(
+      `INSERT INTO agent_logs (task_id, agent_name, action, detail, tokens_in, tokens_out, api_used, cost_usd, duration_ms)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [task_id || null, agent_name, action, detail || null, tokens_in || null, tokens_out || null, api_used || null, cost_usd || null, duration_ms || null]
+    );
+    res.json({ ok: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/agent/logs — Recent logs (last 100)
+app.get("/api/agent/logs", async (req, res) => {
+  try {
+    const { task_id, agent, limit = "100" } = req.query as Record<string, string>;
+    const { where, params: fp } = sqlWhere({
+      ...(task_id ? { task_id } : {}),
+      ...(agent ? { agent_name: agent } : {}),
+    });
+    const lim = Math.max(1, Math.min(500, parseInt(limit) || 100));
+    const result = await pgPool.query(
+      `SELECT * FROM agent_logs ${where} ORDER BY created_at DESC LIMIT ${lim}`,
+      fp
+    );
+    res.json({ logs: result.rows });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── API Usage ────────────────────────────────────────────────────────────────
+
+// POST /api/agent/api-usage
+app.post("/api/agent/api-usage", async (req, res) => {
+  try {
+    const { apiName, api_name, endpoint, cost_usd, tokens_in, tokens_out } = req.body ?? {};
+    const name = apiName ?? api_name;
+    await pgPool.query(
+      `INSERT INTO api_usage_logs (api_name, endpoint, cost_usd, tokens_in, tokens_out)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [name, endpoint || null, cost_usd || 0, tokens_in || null, tokens_out || null]
+    );
+    res.json({ ok: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Gemini proxy (so agents can call AI from client-side or server-side) ─────
+
+// POST /api/agent/ai/gemini
+app.post("/api/agent/ai/gemini", async (req, res) => {
+  try {
+    const { prompt, model = "gemini-2.0-flash", system_prompt } = req.body ?? {};
+    if (!prompt) return res.status(400).json({ error: "prompt requerido" });
+
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY_V2;
+    if (!apiKey) return res.status(500).json({ error: "GEMINI_API_KEY no configurada" });
+
+    const genAI = new GoogleGenAI({ apiKey });
+
+    const contents: Array<{ role: string; parts: Array<{ text: string }> }> = [];
+    if (system_prompt) {
+      contents.push({ role: "user", parts: [{ text: `System: ${system_prompt}` }] });
+      contents.push({ role: "model", parts: [{ text: "Entendido." }] });
+    }
+    contents.push({ role: "user", parts: [{ text: prompt }] });
+
+    const response = await genAI.models.generateContent({
+      model,
+      contents,
+    });
+
+    const text = response.text ?? "";
+    const tokensIn = response.usageMetadata?.promptTokenCount ?? 0;
+    const tokensOut = response.usageMetadata?.candidatesTokenCount ?? 0;
+    const costUsd = (tokensIn * 0.000000075) + (tokensOut * 0.0000003); // gemini-flash pricing
+
+    // Track usage
+    await pgPool.query(
+      `INSERT INTO api_usage_logs (api_name, endpoint, cost_usd, tokens_in, tokens_out)
+       VALUES ('gemini', $1, $2, $3, $4)`,
+      [model, costUsd, tokensIn, tokensOut]
+    ).catch(() => {});
+
+    res.json({ text, tokensIn, tokensOut, costUsd });
+  } catch (err: any) {
+    console.error("[Gemini Proxy]", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Orchestrator ─────────────────────────────────────────────────────────────
+
+// POST /api/orchestrator/plans — Save an orchestration objective + plan
+app.post("/api/orchestrator/plans", async (req, res) => {
+  try {
+    const { objective, plan } = req.body ?? {};
+    if (!objective) return res.status(400).json({ error: "objective requerido" });
+
+    const result = await pgPool.query(
+      `INSERT INTO orchestrator_logs (objective, plan, status) VALUES ($1, $2, 'running') RETURNING id`,
+      [objective, plan ? JSON.stringify(plan) : null]
+    );
+    res.json({ id: result.rows[0].id });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/orchestrator/status — Live system snapshot
+app.get("/api/orchestrator/status", async (req, res) => {
+  try {
+    const [tasks, costs, apiUsage, recentLogs] = await Promise.all([
+      pgPool.query(`
+        SELECT
+          COUNT(*) FILTER (WHERE status = 'running')  AS active,
+          COUNT(*) FILTER (WHERE status = 'pending')  AS pending,
+          COUNT(*) FILTER (WHERE status = 'failed' AND created_at > NOW() - INTERVAL '24h') AS failed_24h,
+          COUNT(*) FILTER (WHERE status = 'completed' AND created_at > NOW() - INTERVAL '24h') AS completed_24h,
+          array_agg(DISTINCT agent_name) FILTER (WHERE status = 'running') AS agents_running
+        FROM agent_tasks
+      `),
+      pgPool.query(`
+        SELECT
+          COALESCE(SUM(cost_usd), 0)::float AS total_cost_24h,
+          COALESCE(SUM(tokens_in + tokens_out), 0)::int AS total_tokens_24h
+        FROM api_usage_logs WHERE created_at > NOW() - INTERVAL '24h'
+      `),
+      pgPool.query(`
+        SELECT api_name, COUNT(*) AS calls,
+               COALESCE(SUM(cost_usd),0)::float AS cost_usd
+        FROM api_usage_logs WHERE created_at > NOW() - INTERVAL '24h'
+        GROUP BY api_name ORDER BY cost_usd DESC
+      `),
+      pgPool.query(`
+        SELECT id, agent_name, action, detail, created_at
+        FROM agent_logs ORDER BY created_at DESC LIMIT 20
+      `),
+    ]);
+
+    const t = tasks.rows[0];
+    const c = costs.rows[0];
+
+    res.json({
+      active_tasks: parseInt(t.active) || 0,
+      pending_tasks: parseInt(t.pending) || 0,
+      failed_tasks_24h: parseInt(t.failed_24h) || 0,
+      completed_tasks_24h: parseInt(t.completed_24h) || 0,
+      agents_running: t.agents_running?.filter(Boolean) ?? [],
+      total_cost_usd_24h: parseFloat(c.total_cost_24h) || 0,
+      total_tokens_24h: parseInt(c.total_tokens_24h) || 0,
+      api_usage: apiUsage.rows,
+      recent_logs: recentLogs.rows,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/orchestrator/metrics — Historical metrics
+app.get("/api/orchestrator/metrics", async (req, res) => {
+  try {
+    const { period = "7d" } = req.query as { period?: string };
+    const interval = period === "30d" ? "30 days" : period === "24h" ? "24 hours" : "7 days";
+
+    const [taskMetrics, costMetrics] = await Promise.all([
+      pgPool.query(`
+        SELECT
+          DATE_TRUNC('day', created_at) AS day,
+          COUNT(*) FILTER (WHERE status = 'completed') AS completed,
+          COUNT(*) FILTER (WHERE status = 'failed') AS failed,
+          agent_name,
+          AVG(duration_ms) AS avg_duration_ms
+        FROM agent_tasks
+        WHERE created_at > NOW() - INTERVAL '${interval}'
+        GROUP BY day, agent_name ORDER BY day DESC
+      `),
+      pgPool.query(`
+        SELECT
+          DATE_TRUNC('day', created_at) AS day,
+          api_name,
+          SUM(cost_usd)::float AS cost_usd,
+          SUM(tokens_in + tokens_out) AS total_tokens
+        FROM api_usage_logs
+        WHERE created_at > NOW() - INTERVAL '${interval}'
+        GROUP BY day, api_name ORDER BY day DESC
+      `),
+    ]);
+
+    res.json({ task_metrics: taskMetrics.rows, cost_metrics: costMetrics.rows, period });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Pipeline Funnel ───────────────────────────────────────────────────────────
+
+// GET /api/pipeline/funnel — Conversion funnel across the entire OS
+app.get("/api/pipeline/funnel", async (req, res) => {
+  try {
+    const [companies, leads, proposals, campaigns, emails, replied] = await Promise.all([
+      pgPool.query("SELECT COUNT(*) FROM companies"),
+      pgPool.query("SELECT COUNT(*) FROM leads_enriched"),
+      pgPool.query("SELECT COUNT(*) FROM proposals WHERE status != 'draft'"),
+      pgPool.query("SELECT COUNT(*) FROM campaigns WHERE status = 'active'"),
+      pgPool.query("SELECT COUNT(*) FROM campaign_emails WHERE status = 'sent'"),
+      pgPool.query("SELECT COUNT(*) FROM campaign_emails WHERE replied_at IS NOT NULL"),
+    ]);
+
+    res.json({
+      companies: parseInt(companies.rows[0].count) || 0,
+      leads_enriched: parseInt(leads.rows[0].count) || 0,
+      proposals_sent: parseInt(proposals.rows[0].count) || 0,
+      campaigns_active: parseInt(campaigns.rows[0].count) || 0,
+      emails_sent: parseInt(emails.rows[0].count) || 0,
+      replies: parseInt(replied.rows[0].count) || 0,
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Companies ─────────────────────────────────────────────────────────────────
+
+// GET /api/companies
+app.get("/api/companies", async (req, res) => {
+  try {
+    const { status, industry, city, limit = "50", offset = "0" } = req.query as Record<string, string>;
+    const conditions: string[] = [];
+    const params: unknown[] = [];
+
+    const { where, params: fp } = sqlWhere({
+      ...(status ? { "c.status": status } : {}),
+      ...(industry ? { "c.industry": `%${industry}%` } : {}),
+      ...(city ? { "c.city": `%${city}%` } : {}),
+    });
+    const lim = Math.max(1, Math.min(200, parseInt(limit) || 50));
+    const off = Math.max(0, parseInt(offset) || 0);
+    const [result, total] = await Promise.all([
+      pgPool.query(
+        `SELECT c.*,
+                (SELECT COUNT(*) FROM leads_enriched l WHERE l.company_id = c.id) AS leads_count
+         FROM companies c ${where}
+         ORDER BY c.created_at DESC
+         LIMIT ${lim} OFFSET ${off}`,
+        fp
+      ),
+      pgPool.query(`SELECT COUNT(*) FROM companies c ${where}`, fp),
+    ]);
+    res.json({ companies: result.rows, total: parseInt(total.rows[0].count) });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/companies
+app.post("/api/companies", async (req, res) => {
+  try {
+    const { name, industry, city, country, address, phone, website, rating, source, metadata } = req.body ?? {};
+    if (!name) return res.status(400).json({ error: "name requerido" });
+
+    const result = await pgPool.query(
+      `INSERT INTO companies (name, industry, city, country, address, phone, website, rating, source, metadata)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+       ON CONFLICT (name, city) DO UPDATE SET
+         phone = COALESCE(EXCLUDED.phone, companies.phone),
+         website = COALESCE(EXCLUDED.website, companies.website),
+         rating = COALESCE(EXCLUDED.rating, companies.rating),
+         updated_at = NOW()
+       RETURNING *`,
+      [name, industry||null, city||null, country||'Argentina', address||null, phone||null, website||null, rating||null, source||'manual', JSON.stringify(metadata||{})]
+    );
+    res.json(result.rows[0]);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/companies/:id
+app.get("/api/companies/:id", async (req, res) => {
+  try {
+    const [company, leads] = await Promise.all([
+      pgPool.query("SELECT * FROM companies WHERE id = $1", [req.params.id]),
+      pgPool.query("SELECT * FROM leads_enriched WHERE company_id = $1 ORDER BY created_at DESC", [req.params.id]),
+    ]);
+    if (!company.rows.length) return res.status(404).json({ error: "Company not found" });
+    res.json({ company: company.rows[0], leads: leads.rows });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PATCH /api/companies/:id
+app.patch("/api/companies/:id", async (req, res) => {
+  try {
+    const fields = ["name","industry","city","country","address","phone","website","rating","status"];
+    const updates: string[] = [];
+    const params: unknown[] = [];
+
+    for (const f of fields) {
+      if (req.body[f] !== undefined) {
+        params.push(req.body[f]);
+        updates.push(`${f} = ${params.length}`);
+      }
+    }
+    if (!updates.length) return res.status(400).json({ error: "No fields to update" });
+
+    params.push(req.params.id);
+    const result = await pgPool.query(
+      `UPDATE companies SET ${updates.join(", ")}, updated_at=NOW() WHERE id=${params.length} RETURNING *`,
+      params
+    );
+    res.json(result.rows[0]);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Leads Enriched ────────────────────────────────────────────────────────────
+
+// GET /api/leads-enriched
+app.get("/api/leads-enriched", async (req, res) => {
+  try {
+    const { company_id, limit = "50" } = req.query as Record<string, string>;
+    const result = await pgPool.query(
+      `SELECT l.*, c.name AS company_name, c.industry, c.city
+       FROM leads_enriched l
+       LEFT JOIN companies c ON c.id = l.company_id
+       ${company_id ? "WHERE l.company_id = $1" : ""}
+       ORDER BY l.created_at DESC
+       LIMIT ${company_id ? "$2" : "$1"}`,
+      company_id ? [company_id, parseInt(limit)] : [parseInt(limit)]
+    );
+    res.json({ leads: result.rows });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/leads-enriched
+app.post("/api/leads-enriched", async (req, res) => {
+  try {
+    const { company_id, name, email, phone, linkedin, whatsapp, role, source, icp_fit, meddic_score, metadata } = req.body ?? {};
+    if (!company_id) return res.status(400).json({ error: "company_id requerido" });
+
+    const result = await pgPool.query(
+      `INSERT INTO leads_enriched (company_id, name, email, phone, linkedin, whatsapp, role, source, icp_fit, meddic_score, metadata)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`,
+      [company_id, name||null, email||null, phone||null, linkedin||null, whatsapp||null, role||null, source||'manual', icp_fit||0, meddic_score||0, JSON.stringify(metadata||{})]
+    );
+    res.json(result.rows[0]);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Proposals ─────────────────────────────────────────────────────────────────
+
+// GET /api/proposals
+app.get("/api/proposals", async (req, res) => {
+  try {
+    const { company_id, status, limit = "20" } = req.query as Record<string, string>;
+    const { where, params: fp } = sqlWhere({
+      ...(company_id ? { "p.company_id": company_id } : {}),
+      ...(status ? { "p.status": status } : {}),
+    });
+    const lim = Math.max(1, Math.min(100, parseInt(limit) || 20));
+    const result = await pgPool.query(
+      `SELECT p.*, c.name AS company_name FROM proposals p
+       LEFT JOIN companies c ON c.id = p.company_id
+       ${where} ORDER BY p.created_at DESC LIMIT ${lim}`,
+      fp
+    );
+    res.json({ proposals: result.rows });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/proposals
+app.post("/api/proposals", async (req, res) => {
+  try {
+    const { company_id, lead_id, content_md, pdf_url } = req.body ?? {};
+    if (!company_id || !content_md) return res.status(400).json({ error: "company_id y content_md requeridos" });
+
+    const result = await pgPool.query(
+      `INSERT INTO proposals (company_id, lead_id, content_md, pdf_url) VALUES ($1,$2,$3,$4) RETURNING *`,
+      [company_id, lead_id||null, content_md, pdf_url||null]
+    );
+    res.json(result.rows[0]);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── ICP Profiles ──────────────────────────────────────────────────────────────
+
+// GET /api/icp-profiles
+app.get("/api/icp-profiles", async (req, res) => {
+  try {
+    const result = await pgPool.query("SELECT * FROM icp_profiles ORDER BY created_at DESC LIMIT 20");
+    res.json({ profiles: result.rows });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/icp-profiles
+app.post("/api/icp-profiles", async (req, res) => {
+  try {
+    const { name, description, industry, company_size, pain_points, objections, value_prop, score_weights, raw_json } = req.body ?? {};
+    const result = await pgPool.query(
+      `INSERT INTO icp_profiles (name, description, industry, company_size, pain_points, objections, value_prop, score_weights, raw_json)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+      [name||'Sin nombre', description||null, industry||null, company_size||null,
+       JSON.stringify(pain_points||[]), JSON.stringify(objections||[]),
+       value_prop||null, JSON.stringify(score_weights||{}), JSON.stringify(raw_json||{})]
+    );
+    res.json(result.rows[0]);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
 // Santi SDR — endpoints de ingesta (requireAuth: solo el CRM los llama)
 // ---------------------------------------------------------------------------
 
@@ -3339,6 +4079,7 @@ async function setupServer() {
   await initPasswordResetTokensTable();
   await initChatbotLeadsTable();
   await initSantiTables();
+  await initAgentTables();
 
   // In dev, attach Vite middleware after DB init.
   // Dynamic import (not a static top-level import) so that in production
