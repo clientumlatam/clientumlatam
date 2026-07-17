@@ -1,0 +1,375 @@
+Skip to content
+
+Overview
+
+Deployments
+
+Logs
+
+Analytics
+
+Speed Insights
+
+Observability
+
+Firewall
+
+CDN
+
+Environment Variables
+
+Domains
+
+Connect
+
+Beta
+
+Integrations
+
+Storage
+
+Flags
+
+Agent
+
+AI Gateway
+
+Sandboxes
+
+Workflows
+
+Images
+
+Beta
+
+Usage
+
+Support
+
+Settings
+
+Vercel Agent
+
+Code reviews that catch bugs before they reach production.
+
+Deployments
+
+3iKAY2X8b
+
+DeploymentLogsResourcesSourceOpen Graph
+
+Deployment Details
+
+Build Failed
+
+Command "vite build" exited with 127
+
+Created
+
+clientumlatam-446160m ago
+
+Status
+
+ErrorStale
+
+Duration
+
+1m 17s58m ago
+
+Environment
+
+Production
+
+Domains
+
+clientumlatam-git-main-clientumlatam-4461s-projects.vercel.app
+
+clientumlatam-377uwox4n-clientumlatam-4461s-projects.vercel.app
+
+Source
+
+main
+
+3eadf89Unify Replit dev and Vercel prod on Neon Postgres (resolve connection via Neon API)
+
+Deploy Logs
+
+1m 17s
+
+17 lines
+
+CtrlF
+
+Running build in Washington, D.C., USA (East) – iad1
+
+Build machine configuration: 2 cores, 8 GB
+
+Cloning github.com/clientumlatam/clientumlatam (Branch: main, Commit: 3eadf89)
+
+Previous build caches not available.
+
+Cloning completed: 2.716s
+
+Running "vercel build"
+
+Vercel CLI 55.0.0
+
+Error: Node.js version 20.x is deprecated. Deployments created on or after 2026-10-01 will fail to build. Please set Node.js Version to 24.x in your Project Settings to use Node.js 24.
+
+Running "install" command: `npm ci --no-audit --no-fund`...
+
+npm warn deprecated lodash.isequal@4.5.0: This package is deprecated. Use require('node:util').isDeepStrictEqual instead.
+
+npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+
+npm error Exit handler never called!
+
+npm error This is an error with npm itself. Please report this error at:
+
+npm error <https://github.com/npm/cli/issues>
+
+npm error A complete log of this run can be found in: /vercel/.npm/_logs/2026-07-14T09_28_52_024Z-debug-0.log
+
+sh: line 1: vite: command not found
+
+Error: Command "vite build" exited with 127
+
+Deployment Summary
+
+Deployment Checks
+
+No checks configured
+
+Use events or statuses from your checks provider to determine when a deployment is promoted to Production.
+
+Assigning Custom Domains
+
+Runtime Logs
+
+View and debug runtime logs & errors
+
+Observability
+
+Monitor app health & performance
+
+Speed Insights
+
+Not Enabled
+
+Performance metrics from real users
+
+Web Analytics
+
+Not Enabled
+
+Analyze visitors & traffic in real-time
+
+clientumlatam – Deployment Overview – VercelSkip to content
+
+Overview
+
+Deployments
+
+Logs
+
+Analytics
+
+Speed Insights
+
+Observability
+
+Firewall
+
+CDN
+
+Environment Variables
+
+Domains
+
+Connect
+
+Beta
+
+Integrations
+
+Storage
+
+Flags
+
+Agent
+
+AI Gateway
+
+Sandboxes
+
+Workflows
+
+Images
+
+Beta
+
+Usage
+
+Support
+
+Settings
+
+Vercel Agent
+
+Code reviews that catch bugs before they reach production.
+
+Deployments
+
+Chf9JZjH3
+
+DeploymentLogsResourcesSourceOpen Graph
+
+Deployment Details
+
+Build Failed
+
+Command "npm install --no-audit --no-fund" exited with 1
+
+Created
+
+clientumlatam-44613m ago
+
+Status
+
+ErrorLatest
+
+Duration
+
+1m 17s2m ago
+
+Environment
+
+Production
+
+Domains
+
+clientumlatam-git-main-clientumlatam-4461s-projects.vercel.app
+
+clientumlatam-j0mb2wccc-clientumlatam-4461s-projects.vercel.app
+
+Source
+
+main
+
+32fa42bFix Vercel build: avoid npm ci bug, bump Node engine to 22.x
+
+Deploy Logs
+
+1m 17s
+
+13 lines
+
+CtrlF
+
+07:25:35.275
+
+ 
+
+Running build in Washington, D.C., USA (East) – iad1
+
+07:25:35.276
+
+ 
+
+Build machine configuration: 2 cores, 8 GB
+
+07:25:35.294
+
+ 
+
+Cloning github.com/clientumlatam/clientumlatam (Branch: main, Commit: 32fa42b)
+
+07:25:35.296
+
+ 
+
+Skipping build cache, deployment was triggered without cache.
+
+07:25:37.928
+
+ 
+
+Cloning completed: 2.633s
+
+07:25:38.279
+
+ 
+
+Running "vercel build"
+
+07:25:38.297
+
+ 
+
+Vercel CLI 55.0.0
+
+07:25:40.140
+
+ 
+
+Running "install" command: `npm install --no-audit --no-fund`...
+
+07:26:51.415
+
+ 
+
+npm error Exit handler never called!
+
+07:26:51.416
+
+ 
+
+npm error This is an error with npm itself. Please report this error at:
+
+07:26:51.416
+
+ 
+
+npm error <https://github.com/npm/cli/issues>
+
+07:26:51.417
+
+ 
+
+npm error A complete log of this run can be found in: /vercel/.npm/_logs/2026-07-14T10_25_40_274Z-debug-0.log
+
+07:26:51.451
+
+ 
+
+Error: Command "npm install --no-audit --no-fund" exited with 1
+
+Deployment Summary
+
+Deployment Checks
+
+Assigning Custom Domains
+
+Runtime Logs
+
+View and debug runtime logs & errors
+
+Observability
+
+Monitor app health & performance
+
+Speed Insights
+
+Not Enabled
+
+Performance metrics from real users
+
+Web Analytics
+
+Not Enabled
+
+Analyze visitors & traffic in real-time
+
+clientumlatam – Deployment Overview
+
+07:26:00

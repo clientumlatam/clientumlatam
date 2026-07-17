@@ -1,0 +1,54 @@
+
+Vercel security overview
+Cloud-deployed web applications face constant security threats, with attackers launching millions of malicious attacks weekly
+Vercel CLI Overview
+Vercel gives you multiple ways to interact with and configure your Vercel Projects
+Vercel Workflows
+Vercel Workflows is a fully managed platform for building durable applications and AI agents in JavaScript, TypeScript, and Python
+Vercel deploy
+The vercel deploy command deploys Vercel projects, executable from the project's root directory or by specifying a path
+Redis on Vercel
+Vercel lets you connect external Redis databases through the Marketplace, allowing you to integrate high-performance caching and real-tim…
+Getting started with Vercel
+Deploy your app on Vercel in three steps: install the CLI, add agent support if you use an AI coding agent, and deploy
+Postgres on Vercel
+Vercel lets you connect external Postgres databases through the Marketplace, allowing you to connect external Postgres databases to your…
+Deploying to Vercel
+Every time your project builds successfully, Vercel creates a deployment with its own URL
+Deploying Git Repositories with Vercel
+Vercel allows for automatic deployments on every branch push and merges onto the production branch of your GitHub, GitLab, Bitbucket and…
+Vercel vs Render
+Vercel and Render are both cloud platforms that simplify web deployment through automated CI/CD, managed infrastructure, and zero-configu…
+Guide
+Environments
+Vercel provides three default environments—Local, Preview, and Production: Local Development: developing and testing code changes on your…
+Vercel vs Fastly: Get started with Vercel
+Both Vercel and Fastly deliver web content globally with different tradeoffs
+Guide
+Vercel vs Northflank: Get started with Vercel
+Vercel gives you global delivery, framework-aware caching, built-in security, and AI infrastructure that work together from the first dep…
+Guide
+Integrating Vercel and Kubernetes
+luate whether specific backend services could also benefit from a serverless architecture and be migrated to Vercel
+Shared Responsibility Model: Vercel responsibilities
+Infrastructure: Vercel is responsible for the security and availability of the underlying infrastructure used to provide our services
+Vercel vs Railway: Get started with Vercel
+If your project needs global delivery, framework-aware caching, built-in security, and AI infrastructure working together without manual assembly, <ma…
+Guide
+Vercel vs Akamai: Platform deep dive
+Vercel solves infrastructure problems that matter for teams building full-stack applications, performance-critical systems, and AI-powere…
+Guide
+Getting started with Vercel: Next steps
+Fundamental concepts – How requests, builds, and compute work on Vercel Set up environment variables Add a custom domain Explore supporte…
+Vercel Integrations
+The cloud platform for generative AI AI Wix Integrate with robust business solutions Commerce Xata Deploy preview branches of your database Storage
+Deploy a Celery app on Vercel: Local development
+Use vercel dev to run the web application and Celery subscriber locally: terminal vercel dev starts both your web applicatio…
+Vercel CLI Overview: Routes
+Manage project-level routing rules for your Vercel Project
+Getting started with Vercel: Add a database or other storage
+If your project needs a database, blob storage, or another backing service, you can provision one from the CLI and have Vercel wire the c…
+How requests flow through Vercel: How Vercel executes server-side code
+When a request requires dynamic data, personalization, or server-side logic, the proxy forwards it to the Compute Layer
+Deploy a Flask app on Vercel: Vercel Functions
+When you deploy a Flask app to Vercel, it becomes a single Vercel Function

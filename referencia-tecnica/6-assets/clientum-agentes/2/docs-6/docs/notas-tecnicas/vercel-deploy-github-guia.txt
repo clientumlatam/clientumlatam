@@ -1,0 +1,56 @@
+
+Deploying GitHub Projects with Vercel
+Vercel for GitHub automatically deploys your GitHub projects with Vercel, providing Preview Deployment URLs, and automatic C…
+Using private GitHub repositories with Vercel Sandbox
+When using Vercel Sandbox with private repositories, you need to authenticate with a GitHub personal access token or Github…
+Guide
+Deploying Git Repositories with Vercel
+Vercel allows for automatic deployments on every branch push and merges onto the production branch of your GitHub, GitLab, Bitbucket and…
+Code Owners
+are available on Enterprise plans As a company grows, it can become difficult for any one person to be familiar with the entire codebase
+Integrations for Comments
+Git provider integration Comments are available for projects using any Git provider
+Git settings
+Once you have connected a Git repository, select the Git menu item from your project settings page to edit your project's
+List git repositories linked to namespace by provider (Vercel SDK)
+GET /v1/integrations/search-repo Lists git repositories linked to a namespace id for a supported provider
+Monitor Frontend Performance with DebugBear and Vercel: Send Reports to GitHub
+If you use GitHub, DebugBear can report test results directly on your pull request
+Guide
+List git repositories linked to namespace by provider
+GET /v1/integrations/search-repo Lists git repositories linked to a namespace id for a supported provider
+Getting Started with Code Owners
+ensure that the Vercel GitHub app has been installed for your team
+Using the Go Runtime with Vercel Functions: Private packages
+To install private packages with go get, add an Environment Variable named GIT_CREDENTIALS
+Git Configuration: Github.enabled
+The github.enabled property has been deprecated in favor of git.deploymentEnabled, which allows you to disable auto-deployments for your…
+Deployment Checks: GitHub Checks
+GitHub and GitHub Actions have edge cases with status reporting
+How to Build a Fullstack App with Next.js, Prisma, and Postgres
+ou configured on GitHub: http://localhost:3000/api/auth .env # GitHub OAuth GITHUB_ID=6bafeb321963449bdf51 GITHUB_SECRET=509…
+Guide
+Git Configuration: Github.autoJobCancelation
+Type: Boolean
+Using private GitHub repositories with Vercel Sandbox: Classic personal access token
+Classic tokens work similarly to fine-grained tokens but with broader scope
+Guide
+Run and track deploys from Slack: Configure GitHub
+Create a fine-grained personal access token for the target repository with these permissions: Actions: read and write Contents: read Issues: write Pul…
+Guide
+Working with Vercel's private registry: Setting up your CI provider
+The instructions below are for GitHub Actions, but configuring other CI providers should be similar: Create a Vercel authentication token…
+Deploying GitHub Projects with Vercel: Silence GitHub comments
+By default, comments from the Vercel GitHub bot will appear on your pull requests and commits
+Bot Management
+s/model-endpoints/webhooks/#_top) geedoproductsearchbot ecommerce GeedoProductSearch is a web crawler operated by Geedo SIA that indexes product infor…
+Deploying GitHub Projects with Vercel: Using GitHub Actions
+You can use GitHub Actions to build and deploy your Vercel Application
+Integrations for Comments: Adding Comments to your issue tracker
+is available on all plans Any member of your team can covert comments to an issue in Linear, Jira, or GitHub
+Deploying Git Repositories with Vercel: Deploying a Git repository
+Setting up your GitHub, GitLab, or Bitbucket repository on Vercel is only a matter of clicking the "New Project" button on the top right…
+Trusted Sources: Add a GitHub Actions service
+For GitHub, the dashboard offers a guided form so you don't write claims by hand: Go to Settings and select Deployment Protection
+Getting Started with Code Owners: Setting up Code Owners in your repository
+A GitHub App enables Code Owners functionality by adding reviewers and enforcing

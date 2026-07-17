@@ -1,0 +1,124 @@
+docs/sitio de toda esta carpeta de forma recursiva , busca y move todo los csv o sheets a docs/sitio/csv
+57 minutes ago
+
+9 archivos CSV movidos a docs/sitio/csv/:
+
+    sitio-copy.csv
+    sitemap.csv
+    planes.csv
+    servicios-y-productos.csv
+    cursos.csv
+    woocommerce-573.csv
+    talleres_donweb.csv
+    leads-general-roca-distribuidora.csv
+    ai-client-prospector-pipeline-v2.csv
+
+haz lo mismo con cada carpeta de docs
+55 minutes ago
+
+Listo. Resultados por carpeta:
+
+    docs/referencia-tecnica — sin archivos CSV/sheets
+    docs/docs-capturas — sin archivos CSV/sheets
+    docs/docs-zips — 41 archivos (CSV + XLSX) movidos a docs/docs-zips/csv/
+
+bueno ahora renombra las carpetas de csv agregando el nombre de la carpeta original
+54 minutes ago
+
+Hecho:
+
+    docs/sitio/csv → docs/sitio/csv-sitio
+    docs/docs-zips/csv → docs/docs-zips/csv-docs-zips
+
+docs a la raiz de esta carpeta movelas
+53 minutes ago
+
+Listo:
+
+    docs/sitio/csv-sitio → docs/csv-sitio
+    docs/docs-zips/csv-docs-zips → docs/csv-docs-zips
+
+Ambas carpetas ahora están en la raíz de docs/.
+
+docs/csv-sitio docs/informe-sitio.csv
+
+necesito ahora completes todas las paginas del sitio web publico que faltan
+48 minutes ago
+
+Déjame leer los archivos clave para entender qué páginas existen y cuáles faltan.
+
+Déjame explorar la estructura completa del proyecto para entender qué páginas existen y qué falta.
+
+Necesito ver qué páginas ya están implementadas en PublicWebsite.tsx para saber qué falta construir.
+
+Bien, todas las páginas existen pero varias son muy cortas. Voy a leer las secciones más delgadas para saber qué falta completar.
+
+Ahora necesito ver el nav completo para entender qué páginas están accesibles vs. cuáles faltan en la navegación.
+
+Ahora tengo el panorama completo. Hay páginas con tab implementado pero sin acceso desde el nav, y 3 nav items sin tab de contenido. Voy a leer el final del archivo y los tabs faltantes para confirmar antes de escribir.
+
+Tengo todo claro. Los problemas son:
+
+    3 nav items sin contenido: industrias, carreras, documentacion → pantalla en blanco al hacer click
+    4 páginas del sitemap sin acceso desde el nav: asistente_ia, portal_cliente, desarrollo_web, integraciones → fueron removidas de SOLUTIONS_ITEMS
+    Integraciones incompleta: solo muestra 6 de las 63 integraciones del catálogo
+
+Voy a hacer todo esto ahora en paralelo.
+
+Ahora hago todos los cambios en paralelo donde puedo:
+
+Ahora expando integraciones con el catálogo completo y agrego los 3 tabs faltantes:
+
+Ahora agrego los 3 tabs faltantes (industrias, carreras, documentacion) antes del cierre de motion.div:
+
+El sitio está funcionando. Listo — esto es lo que se completó:
+
+4 páginas del sitemap reconectadas al nav (Soluciones dropdown):
+
+    ✅ Asistente IA — ahora aparece en el menú Soluciones
+    ✅ Portal del Cliente — ahora aparece en el menú Soluciones
+    ✅ Desarrollo Web — ahora aparece en el menú Soluciones
+    ✅ Integraciones — ahora aparece en el menú Soluciones
+
+3 páginas nuevas construidas desde cero (antes pantalla en blanco):
+
+    ✅ Industrias — grilla de 9 sectores (Retail, Salud, Agroindustria, Inmobiliaria, Logística, Industrial, Automotriz, Medios, Institucional) con descripción de cómo aplica Clientum en cada uno
+    ✅ Trabajá con Nosotros (Carreras) — cultura del equipo + 4 posiciones abiertas (Full Stack, Consultor, Comercial, Diseñador)
+    ✅ Documentación API — endpoints disponibles, lista de 10 eventos de webhook, ejemplo de payload + CTA al equipo técnico
+
+Integraciones expandida:
+
+    ✅ Pasó de 6 integraciones destacadas a mostrar el catálogo completo de 63 herramientas en 10 categorías (E-Commerce, Pagos, Mensajería, Marketing, ERP, Cloud, Analytics, Productividad, Seguridad, IA) con badges de tipo Nativo / Certificado / Partner / API.
+
+usa estos textos
+20 minutes ago
+
+Perfecto — tengo todo lo que necesito. Actualizo PROJECTS (saco Mafacha, corrijo rutas de imágenes, agrego logos) y los 4 testimoniales del brochure en una sola operación:
+
+Ahora actualizo el renderizado de las cards para mostrar logo + screenshot, y los 4 testimoniales del brochure:
+
+anda borrando cuando termines de usar para todo el sitio web completando todas las pagees que estan mal , arregla todo, solo dentro de docs para el sitio web
+16 minutes ago
+Website cleanup and fixes
+
+Leo todos los archivos de docs/sitio/ en paralelo para extraer contenido útil antes de borrarlos:
+
+Los XML son de talleres.donweb.com (no útiles para el sitio), el catalogo-maestro ya fue usado. Borro todo y hago los arreglos pendientes en paralelo:
+
+Ahora con el contenido exacto, hago todos los arreglos pendientes de una vez:
+
+Ahora reemplazo el bloque de testimoniales con los 4 del brochure, y borro el readme de docs/sitio que ya no sirve:
+
+Servidor levantado sin errores. Verifico qué CSVs de docs/csv-sitio aún tienen contenido útil para el sitio y commito todo lo hecho:
+
+Reviso el estado actual de las páginas más importantes mientras leo el contenido del sitio-copy.csv:
+
+Leo el contenido completo del CSV para las soluciones y el estado actual de esas tabs en paralelo:
+
+Todo bien en el servidor. Verifico errores TS y qué archivos csv-sitio se pueden borrar en paralelo:
+
+Los errores TS son todos en docs/referencia-tecnica/ (scaffolds viejos, intocables). Ahora leo el tab clientes completo y borro los CSVs del sitio ya usados en paralelo:
+
+Tengo todo claro. Aplico todas las correcciones del tab clientes con Python para evitar el problema de indentación:
+
+You've reached your daily free quota limit. It will reset at 12:00 AM UTC.

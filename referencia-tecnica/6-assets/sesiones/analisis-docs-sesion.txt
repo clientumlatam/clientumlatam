@@ -1,0 +1,93 @@
+docs ANALIZA CADA CARPETA Y ARCHIVOS DE TODO DOCS
+
+28 minutes ago
+
+12 actions He revisado carpeta por carpeta. Resumen:
+
+docs/SANTI-SDR.md — documentación legítima: la integración del agente SDR "Santi" (Hermes) con el CRM vía API (/api/leads), tablas Postgres, flujo operativo y checklist de go-live. En buen estado.
+
+docs/SECRETS.md — 🚨 riesgo de seguridad serio. Este archivo tiene las claves reales de GOOGLE_MAPS_PLATFORM_KEY, GEMINI_API_KEY, HUNTER_API_KEY, SANTI_API_KEY, APIFY_API_TOKEN y SESSION_SECRET en texto plano, dentro del repo. No voy a repetir los valores acá. Que estén committeadas así significa que cualquiera con acceso al código (o si el repo se comparte/publica) puede leerlas directamente — es exactamente lo que Replit Secrets existe para evitar.
+
+docs/assets/ (11 MB) — archivos sueltos de sesiones de chat anteriores: capturas de pantalla, exports de ChatGPT/Claude, CSVs de catálogo, un PDF de brochure, un zip de plugin. Parece una carpeta de "adjuntos temporales", no documentación curada.
+
+docs/public/ (50 MB) — logos y capturas de sitios web de clientes (AFP Service, Cabarcos Motores, Canal10, etc.). Son assets de contenido reales, probablemente usados o pensados para la sección de clientes del sitio público.
+
+docs/clientum-exports/ (27 MB) — la carpeta más grande y mixta:
+
+clientum-catalogo-final.csv + exports/ + references/ → catálogo de productos, copy del sitio, brochures de referencia y logs de sesiones de trabajo previas (redise del catálogo, descarga de logos). Material de referencia de contenido/negocio. scaffolds/hermes-santi/ → el scaffold completo de la skill de Santi (coincide con SANTI-SDR.md). wordpress/ → una exportación completa de un theme + 4 plugins de WordPress (clientum-theme, ai-marketing-expert v1 y v2, clientum-ai-prospector, clientum-user-dashboard). Es código PHP de una versión paralela o anterior de Clientum en WordPress — no lo usa esta app (Express + React). import-products-from-google-sheets-for-woocommerce-free-cron (2)/ → un plugin de WooCommerce de terceros, con su árbol completo de dependencias vendor/ (Google API Client, Guzzle, Monolog, Symfony...). Son más de 1000 archivos PHP que no son código propio, es librería de terceros — es lo que más bulto le agrega a la carpeta docs y no tiene relación directa con este proyecto. Antes de tocar nada, tengo dos decisiones que te corresponden a vos:
+
+¿Qué hacemos con lo que encontré en docs/? docs/SECRETS.md tiene claves reales en texto plano en el repo Dejarlo como está por ahora ¿Querés que limpie el resto de docs/ (bloat de WordPress + plugin de terceros)? Dejar todo como está, es material de referencia
+
+Worked for 1 minute docs/screens
+
+15 minutes ago
+
+9 actions He revisado docs/screens/ — no es solo screenshots, es una carpeta de exports reales generados desde la app (misma fecha/hora, 11:51):
+
+Capturas (14 PNG, ~3.4 MB) — idénticas byte a byte a las que ya están en artifacts/. Son duplicados.
+
+Datos de leads reales (CSV + PDF, distribuidoras de General Roca/Neuquén):
+
+leads_merged.csv y las dos variantes Leads_Clientum_General Roca_Distribuidora_Mayorista*.csv — listas de prospectos con nombre de empresa, dirección, teléfono y nombre de contacto real (ej. "Estela Castro", "Gustavo B."), score MEDDIC, monto sugerido. ai_client_prospector_pipeline (2).csv — pipeline de deals con los mismos datos. Brochure_Clientum_2026_..._Neuquén-7.pdf (4 MB) — brochure exportado. Las dos variantes de "Leads_Clientum..." no son iguales: tienen los mismos negocios pero con teléfonos/scores distintos entre sí (parecen exports de corridas diferentes del scraper, no un duplicado exacto).
+
+Un dato aparte que salió en los logs mientras revisaba: la GEMINI_API_KEY real está devolviendo "API key not valid" en el servidor corriendo ahora mismo — el ICP Builder y el generador de Outreach están cayendo al modo mock local por eso. Es un problema funcional real, separado de la carpeta docs.
+
+Dos cosas encontradas — ¿qué hacemos? docs/screens/ tiene datos reales de contacto de leads (teléfonos, nombres) sueltos en CSV/PDF Dejarla, la necesito como respaldo La GEMINI_API_KEY actual no es válida y el ICP Builder/Outreach están usando datos mock. ¿Querés que te pida una clave nueva para arreglarlo? Yes
+
+Worked for 47 seconds
+
+2 actions Add secrets GEMINI_API_KEY AlzaSyBLcmfD_bwSfYzYEKJAfKUOH98YCLFDZXE
+
+Worked for 13 seconds Nueva clave guardada. Reinicio el servidor y confirmo que Gemini responde bien.
+
+Show less Restarted workflow Start application
+
+Refreshed logs Testing API functionality
+
+Testing API functionality
+
+Fetched a URL Testing authentication and generation
+
+Testing authentication and generation
+
+Fetched a URL Checking server configuration
+
+Checking server configuration
+
+Processed text
+
+Searched for "action ==="
+
+Fetched a URL Debugging fallback flag
+
+Debugging fallback flag
+
+Refreshed logs Investigating API key failure
+
+Investigating API key failure
+
+Fetched a URL
+
+Ran DELETE FROM users WHERE username = 'geminicheck_test' La clave nueva de Gemini que guardaste también devuelve "API key not valid" — probé el generador de outreach con una cuenta de prueba (ya la borré) y sigue cayendo a modo mock. Puede ser que la clave se haya copiado mal, que le falte habilitar la API "Generative Language" en Google Cloud, o que sea de un proyecto sin facturación activa.
+
+La clave de Gemini sigue fallando (API key not valid). ¿Cómo querés seguir? Dejarlo en modo mock por ahora
+
+Worked for 1 minute Entendido, lo dejamos en modo mock por ahora. El ICP Builder y el generador de Outreach van a seguir funcionando con datos simulados hasta que quieras retomar la clave de Gemini. Cuando quieras probar de nuevo, avisame.
+
+Worked for 12 seconds help restructure the nav or footer taxonomy, f
+
+12 minutes ago
+
+2 actions Your message got cut off — "help restructure the nav or footer taxonomy, f..." Which one did you mean?
+
+¿Qué querés restructurar? ¿Nav o footer de qué parte de la app? Otra cosa (te explico en comentarios) Additional comments
+
+El menú de arriba del sitio público (INICIO, SOLUCIONES, PRECIOS...)
+
+El footer del sitio público
+
+El sidebar del CRM (ya lo agrupamos, ¿seguir ajustando?)
+
+Worked for 15 seconds
+
+4 actions You've reached your daily free quota limit. It will reset at 12:00 AM UTC.

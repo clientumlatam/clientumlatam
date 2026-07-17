@@ -1,0 +1,99 @@
+Módulos del Plugin
+
+AI Marketing Expert v2 · 4 activos · 2 por configurar
+Ver en WordPress.org
+
+Módulos totales
+
+6
+
+Activos
+
+4
+
+Por configurar
+
+2
+
+Webhook activo
+
+Pendiente
+Chatbot IA
+Activo
+
+Asistente conversacional que captura leads en tu sitio WordPress. Cuando un visitante interactúa con el chat, sus datos llegan automáticamente al CRM de Clientum.
+
+CRM: Los leads llegan a Chatbot Leads → gestionables desde el dashboard
+Webhook/api/webhooks/chatbot-lead
+AuthX-CRM-Token
+
+    Captura nombre, teléfono, email y empresa
+    Registra la conversación completa
+    Envía leads al CRM via webhook en tiempo real
+    Personalizable con flujos de preguntas
+
+Generador de Contenido
+Activo
+
+Genera artículos de blog, copies de landing, descripciones de productos y posts para redes sociales con IA. Optimizado para PyMEs de la Patagonia.
+
+CRM: Generá contenido directamente desde Clientum con el módulo Copiloto IA
+
+    Artículos de blog optimizados para SEO
+    Copies de landing pages por industria
+    Descripciones de productos WooCommerce
+    Adaptación al español rioplatense
+
+Email Marketing
+Activo
+
+Campañas de email automatizadas con IA. Gestiona suscriptores, diseña newsletters y trackea aperturas y clics directamente desde WordPress.
+
+CRM: Los suscriptores pueden sincronizarse con los leads del CRM Pipeline
+Límite free10 campañas
+SuscriptoresIlimitado
+
+    Campañas automatizadas con triggers
+    Segmentación por comportamiento
+    Templates generados con IA
+    Reportes de apertura y conversión
+
+SEO con IA
+Por configurar
+
+Análisis y optimización SEO impulsado por IA. Audita páginas, sugiere keywords y genera meta-tags optimizados para posicionar en Google.
+
+CRM: Las keywords estratégicas se pueden usar para el ICP Builder de Clientum
+
+    Auditoría de páginas en tiempo real
+    Sugerencias de keywords por industria
+    Meta-tags y descripciones con IA
+    Score de legibilidad y densidad
+
+Redes Sociales
+Por configurar
+
+Generá y programá posts para Instagram, Facebook y LinkedIn con IA. Reutilizá el contenido del blog automáticamente para cada red social.
+
+CRM: Los posts sobre servicios se pueden coordinar con las campañas de Outreach del CRM
+
+    Generación de copies para cada red
+    Programación de publicaciones
+    Hashtags sugeridos por IA
+    Reutilización automática del blog
+
+Prospector de Leads
+Activo
+
+Descubrimiento de prospectos locales integrado con el Explorador Patagónico de Clientum. Busca empresas por rubro y zona geográfica.
+
+CRM: Los leads se exportan directo al CRM Pipeline → Patagonia Explorer
+
+    Búsqueda por rubro y ciudad
+    Integración con Google Maps API
+    Calificación automática MEDDIC
+    Exportación directa al CRM Pipeline
+
+Flujo de datos
+
+Los módulos de WordPress se comunican con Clientum CRM via webhook REST. El módulo Chatbot envía leads en tiempo real. Los módulos SEO, Contenido y Redes operan de forma autónoma en WordPress y pueden coordinarse manualmente desde el Orquestador IA.

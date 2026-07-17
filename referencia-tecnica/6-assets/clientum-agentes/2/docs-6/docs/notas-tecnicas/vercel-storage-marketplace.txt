@@ -1,0 +1,57 @@
+lts
+Storage on Vercel Marketplace
+Marketplace Storage Integrations are available on all plans The Vercel Marketplace provides integrations with different storage providers to provision…
+Interact with Integrations using Agent Tools
+Agent Tools are available on Enterprise and Pro plans With Agent Tools, you can interact with your installed integrations through a chat interface in…
+Postgres on Vercel
+Vercel lets you connect external Postgres databases through the Marketplace, allowing you to connect external Postgres databases to your Vercel projec…
+Vercel Storage
+A suite of managed, serverless storage products that integrate with your frontend framework
+How to reset a secret for a Neon integration
+When you reset the Neon database secret, the current one will immediately stop working
+Guide
+Vercel Storage: Marketplace Storage
+is available on all plans The Vercel Marketplace connects you with storage providers like Neon, Upstash, and Supabase
+Add a Native Integration
+Native Integrations are available on all plans All plans, including Enterprise, can install the integrations through a self-service workflow
+Storage on Vercel Marketplace: From the CLI
+Use vercel install (or its full form, vercel integration add) to provision a resource without leaving your terminal: terminal The command installs the…
+Vercel install
+vercel install (alias: vercel i) is an alias for vercel integration add
+Getting started with Vercel: Add a database or other storage
+If your project needs a database, blob storage, or another backing service, you can provision one from the CLI and have Vercel wire the credentials in…
+Build a Claude Managed Agent on Vercel
+Claude Managed Agents gives you a fully managed agent runtime
+Guide
+Vercel vs Netlify: Best use cases for Netlify
+Advanced deployment and collaboration Shipping to production safely requires more than just pushing code
+Guide
+Vercel integration: Options
+Option Shorthand Description --plan -p Billing plan ID for integrations that support installation-level billing plans
+Vercel integration: Post-provisioning behavior
+--no-claim If the new resource is a sandbox, skip the offer to claim it and instead print a hint about how to claim it later
+
+Update the microfrontends settings: 200: No description
+Content-Type: application/json ```json { "type": "object", "required": [ "accountId", "alias", "defaultResourceConfig", "deploymentExpiration", "direc…
+Update a flag: 200: No description
+Content-Type: application/json ```json { "oneOf": [ { "type": "object", "required": [ "createdAt", "createdBy", "environments", "id", "kind", "ownerId…
+Validate Drain delivery configuration: Request body
+Required: No Content-Type: application/json Responses
+Upload a project avatar: 200: No description
+Content-Type: application/json ```json { "type": "object", "required": [ "accountId", "alias", "defaultResourceConfig", "deploymentExpiration", "direc…
+Vercel vs Railway: What's included vs what you assemble
+This table shows what each platform includes out of the box versus what requires external providers
+Guide
+Create a new Drain: Request body
+Required: No Content-Type: application/json ```json { "type": "object", "required": [ "name", "projects", "schemas" ], "properties": { "name": { "type…
+Update an existing project: 200: The project was successfully updated
+Content-Type: application/json ```json { "type": "object", "required": [ "accountId", "alias", "defaultResourceConfig", "deploymentExpiration", "direc…
+List projects in a microfrontends group: 200: No description
+Content-Type: application/json ```json { "type": "object", "required": [ "projects" ], "properties": { "projects": { "type": "array", "items": { "type…
+Update an existing Drain: Request body
+Required: No Content-Type: application/json ```json { "type": "object", "properties": { "name": { "type": "string" }, "projects": { "type": "string",…
+Counts custom events: 200: No description
+Content-Type: application/json ```json { "type": "object", "required": [ "data", "query", "version" ], "properties": { "version": { "type": "number" }…
+Vercel vs Railway: Always-on servers and long-running workloads
+Railway runs services as persistent processes with no execution time ceiling
+G

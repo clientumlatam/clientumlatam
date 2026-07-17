@@ -840,6 +840,12 @@ function getAI(): GoogleGenAI | null {
     console.warn("[Gemini API] La clave GEMINI_API_KEY no está configurada o es de prueba. Las solicitudes usarán el fallback local de alta calidad.");
     return null;
   }
+  // Prevent @google/genai SDK from preferring GOOGLE_API_KEY env var over our
+  // explicit GEMINI_API_KEY when both are set. The SDK warns "Using GOOGLE_API_KEY"
+  // and may fail if that key is invalid for generativelanguage.googleapis.com.
+  if (process.env.GOOGLE_API_KEY && process.env.GOOGLE_API_KEY !== key) {
+    delete process.env.GOOGLE_API_KEY;
+  }
   if (!aiClient) {
     aiClient = new GoogleGenAI({
       apiKey: key,
@@ -2998,6 +3004,42 @@ async function initSantiTables() {
     );
   `);
   console.log("[Santi] Tablas santi_leads / santi_brochures / santi_notes listas.");
+}
+
+async function initProspectingTable() {
+  await pgPool.query(`
+    CREATE TABLE IF NOT EXISTS prospecting_searches (
+      id         SERIAL PRIMARY KEY,
+      user_id    INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      query      JSONB,
+      results    JSONB,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+  console.log("[Maps] Tabla prospecting_searches lista.");
+}
+
+async function initWhatsAppTables() {
+  await pgPool.query(`
+    CREATE TABLE IF NOT EXISTS whatsapp_conversations (
+      id              SERIAL PRIMARY KEY,
+      phone           VARCHAR(20) NOT NULL,
+      contact_name    VARCHAR(255),
+      lead_id         INTEGER,
+      bot_active      BOOLEAN DEFAULT TRUE,
+      last_message_at TIMESTAMPTZ,
+      created_at      TIMESTAMPTZ DEFAULT NOW()
+    );
+    CREATE TABLE IF NOT EXISTS whatsapp_messages (
+      id               SERIAL PRIMARY KEY,
+      conversation_id  INTEGER REFERENCES whatsapp_conversations(id) ON DELETE CASCADE,
+      direction        VARCHAR(10) CHECK (direction IN ('inbound','outbound')),
+      content          TEXT NOT NULL,
+      sent_by          VARCHAR(50),
+      created_at       TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+  console.log("[WhatsApp] Tablas whatsapp_conversations / whatsapp_messages listas.");
 }
 
 // ---------------------------------------------------------------------------

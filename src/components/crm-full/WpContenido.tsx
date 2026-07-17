@@ -100,13 +100,17 @@ export default function WpContenido() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt: `Actuá como experto en marketing digital para PyMEs argentinas de la Patagonia. Generá ${TIPOS.find(t => t.id === tipo)?.label ?? 'contenido'} sobre el siguiente tema. Usá español rioplatense, tono directo y conversacional. Tema: ${prompt}`,
-          type: tipo,
+          action: 'assistantChat',
+          payload: {
+            message: `Actuá como experto en marketing digital para PyMEs argentinas de la Patagonia. Generá ${TIPOS.find(t => t.id === tipo)?.label ?? 'contenido'} sobre el siguiente tema. Usá español rioplatense, tono directo y conversacional. No uses saludos ni introducciones — devolvé directamente el contenido listo para usar. Tema: ${prompt}`,
+            history: [],
+            contextNote: `Tipo de contenido: ${TIPOS.find(t => t.id === tipo)?.label ?? tipo}`,
+          },
         }),
       });
       if (!res.ok) throw new Error();
       const data = await res.json();
-      setOutput(data.result || data.text || SAMPLE_OUTPUTS[tipo]);
+      setOutput(data.result || SAMPLE_OUTPUTS[tipo]);
     } catch {
       setOutput(SAMPLE_OUTPUTS[tipo]);
     } finally {

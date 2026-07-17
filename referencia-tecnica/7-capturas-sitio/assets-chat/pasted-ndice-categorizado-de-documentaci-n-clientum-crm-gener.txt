@@ -1,0 +1,164 @@
+📚 Índice categorizado de documentación — Clientum CRM
+
+    Generado: julio 2026 · 170 archivos · 7 carpetas principales en /docs
+
+Categorías
+
+    🤖 Agentes IA — Arquitectura y organigrama
+    🧩 Agentes IA — Definiciones por rol
+    📋 Agentes IA — Fichas detalladas (identidad / memoria / proceso / skill)
+    🏗️ Arquitectura técnica
+    🔧 Notas técnicas
+    🌐 Sitio y producto
+    🗂️ Sesiones y bitácora
+    💬 Chats exportados con LLMs
+    ⚠️ Duplicados detectados
+
+1. 🤖 Agentes IA — Arquitectura y organigrama
+
+Visión general del sistema de agentes, cómo están organizados y cómo arrancarlo.
+Archivo	Descripción
+agentes/organigrama-sistema-agentes.md	Estructura completa del sistema de agentes IA de Clientum (julio 2026)
+agentes/arquitectura-hermes-prime.md	Arquitectura definitiva del sistema: cómo interactúan CRM, agentes y Santi/Hermes
+agentes/agente-orquestador.md	Definición del Orquestador (Chief of Staff): rol, identidad, proceso
+agentes/setup-agentes-autonomos.md	Guía de puesta en marcha de los agentes autónomos (repo GitHub + workflows)
+agentes/referencia-api-keys.md	Qué API key usa cada agente: Gemini, Groq, OpenRouter, Apify, Hunter, Maps…
+agentes/clientum-agentes/organigrama-sistema-agentes.md	(subcarpeta repo autónomo) Mismo organigrama
+agentes/clientum-agentes/setup-agentes-autonomos.md	(subcarpeta repo autónomo) Guía de setup
+2. 🧩 Agentes IA — Definiciones por rol
+
+Un archivo por agente o sub-agente con su rol, responsabilidades y stack.
+Orquestador
+Archivo	Descripción
+agentes/agente-orquestador.md	Punto único de contacto con Jonathan; delega a los 5 departamentos
+Ventas
+Archivo	Descripción
+agentes/agente-ventas.md	Supervisión del pipeline: prospección → outreach → calificación → cierre
+agentes/subagente-ventas-santi-sdr.md	Santi SDR: primer contacto automatizado vía WhatsApp
+agentes/integracion-santi-hermes-prospector.md	Integración Hermes ↔ AI Prospector; cómo opera Santi sobre la DB
+agentes/subagente-ventas-explorador-patagonico.md	Explorador Patagónico: scraping + Google Maps + Hunter para prospección
+Técnico (CTO IA)
+Archivo	Descripción
+agentes/agente-tecnico.md	Agente CTO: producto, infra y automatización
+agentes/subagente-tecnico-backend-infra.md	Sub-agente de backend e infraestructura
+agentes/subagente-tecnico-frontend-ux.md	Sub-agente de frontend y UX
+agentes/subagente-tecnico-ia-automatizacion.md	Sub-agente de IA y automatizaciones
+Marketing
+Archivo	Descripción
+agentes/agente-marketing.md	Agente de Marketing: SEO, contenido y leads vía chatbot
+agentes/subagente-marketing-seo-contenido.md	Sub-agente SEO y generación de contenido
+Customer Success
+Archivo	Descripción
+agentes/agente-customer-success.md	Agente CS: onboarding y retención de clientes
+agentes/subagente-cs-asesor-comercial.md	Sub-agente Asesor Comercial IA
+Operaciones
+Archivo	Descripción
+agentes/agente-operaciones.md	Agente COO: KPIs, MRR y reporting
+agentes/subagente-operaciones-finanzas-admin.md	Sub-agente de Finanzas y Administración
+3. 📋 Agentes IA — Fichas detalladas
+
+Cada agente tiene 4 archivos estructurados: identidad, memoria, proceso, skill. Están en agentes/clientum-agentes/<rol>/ — son la fuente para el repo autónomo de GitHub.
+
+agentes/clientum-agentes/
+├── orquestador/
+│   ├── identidad.md       — quién es, qué rol cumple
+│   ├── memoria.md         — contexto persistente del agente
+│   ├── proceso.md         — flujo de trabajo paso a paso
+│   └── skill.md           — herramientas y capacidades
+│
+├── ventas/
+│   ├── identidad / memoria / proceso / skill
+│   └── santi-sdr/
+│       └── identidad / memoria / proceso / skill
+│   └── explorador-patagonico/
+│       └── identidad / memoria / proceso / skill
+│
+├── tecnico/
+│   ├── identidad / memoria / proceso / skill
+│   ├── backend-infra/     → identidad / memoria / proceso / skill
+│   ├── frontend-ux/       → identidad / memoria / proceso / skill
+│   └── ia-automatizacion/ → identidad / memoria / proceso / skill
+│
+├── marketing/
+│   ├── identidad / memoria / proceso / skill
+│   └── seo-contenido/     → identidad / memoria / proceso / skill
+│
+├── customer-success/
+│   ├── identidad / memoria / proceso / skill
+│   └── asesor-comercial-ia/ → identidad / memoria / proceso / skill
+│
+└── operaciones/
+    ├── identidad / memoria / proceso / skill
+    └── finanzas-admin/    → identidad / memoria / proceso / skill
+
+    Total: 56 fichas (14 agentes × 4 archivos)
+
+4. 🏗️ Arquitectura técnica
+
+Documentos de referencia del stack y la infraestructura del CRM.
+Archivo	Descripción
+docs-raiz/ARCHITECTURE.md	Stack completo, rutas, DB schema, env vars, flujo dev → Vercel
+docs-raiz/BUILD.md	Instrucciones de build y despliegue
+docs-raiz/INTEGRATION.md	Integraciones externas del CRM (plugin WP, webhooks, etc.)
+docs-raiz/README.md	Introducción general al proyecto
+docs-raiz/DOCS-INDEX.md	Índice anterior generado automáticamente (114 archivos)
+docs-raiz/ANALISIS-DOCS.md	Análisis recursivo de /docs — reducción del 89,7% vs v1
+docs-raiz/hermes-santi.md	Documentación completa para levantar Santi SDR desde cero
+proyecto/SECRETS-AUDITORIA.md	Auditoría de los 32 secrets configurados en Replit
+proyecto/REMIX-LIMITACIONES-FREE.md	Qué NO se transfiere al hacer Remix en cuenta free de Replit
+5. 🔧 Notas técnicas
+
+Guías y referencias por tecnología o problema específico.
+Archivo	Descripción
+proyecto/notas-tecnicas/vercel.md	Deploy en Vercel: guías, errores comunes, variables de entorno
+proyecto/notas-tecnicas/neon.md	Neon Postgres: consola, configuración, conexiones pooled
+proyecto/notas-tecnicas/replit.md	Particularidades del entorno Replit (puertos, secrets, workflows)
+proyecto/notas-tecnicas/cloudflare-worker.md	Cloudflare Worker: proxy y configuración
+proyecto/notas-tecnicas/github-actions.md	GitHub Actions: workflows CI/CD del repo de agentes
+proyecto/notas-tecnicas/errores-ts.md	Errores TypeScript frecuentes y sus soluciones
+proyecto/notas-tecnicas/estructura-proyecto-replit.md	Estructura de carpetas del proyecto en Replit
+proyecto/notas-tecnicas/agentes-prompts.md	Prompts base y estrategias de los agentes IA
+6. 🌐 Sitio y producto
+
+Contenido y notas sobre el sitio público y el producto.
+Archivo	Descripción
+sitio/copy-final.md	Copy completo del sitio clientum.com.ar (v5, julio 2026) — fuente de verdad
+sesiones/notas-producto.md	Notas de producto: catálogo, logos, menú, rediseño
+7. 🗂️ Sesiones y bitácora
+
+Registro cronológico de trabajo y contexto acumulado entre sesiones.
+Archivo	Descripción
+docs-raiz/SESIONES.md	Bitácora cronológica de sesiones de trabajo
+docs-raiz/INFORMES.md	Análisis e informes consolidados de sesiones y chats
+sesiones/notas-contexto.md	Fragmentos de contexto y notas entre sesiones
+8. 💬 Chats exportados con LLMs
+
+Exports de conversaciones de trabajo con distintos modelos.
+Archivo	Modelo / Fecha	Descripción
+chats/README.md	—	Índice de todos los chats exportados
+chats/claude-2026-07-13.md	Claude · 13 jul	—
+chats/chatgpt-2026-07-13.md	ChatGPT · 13 jul	—
+chats/claude-2026-07-14-mistral.md	Claude/Mistral · 14 jul	—
+chats/claude-2026-07-14-vercel.md	Claude · 14 jul	Deploy Vercel
+chats/chatgpt-2026-07-14.md	ChatGPT · 14 jul	—
+chats/gemini-2026-07-14.md	Gemini · 14 jul	—
+chats/chat-2026-07-17.md	Chat · 17 jul	—
+chats/chat-agente-2026-07-17.md	Chat agente · 17 jul	—
+chats/chat-agente-2026-07-17-cont.md	Chat agente cont. · 17 jul	—
+chats/claude-2026-07-17.md	Claude · 17 jul	—
+chats/claude-2026-07-17-mds.md	Claude · 17 jul	Docs/MDs
+chats/claude-2026-07-17-v2.md	Claude · 17 jul	v2
+chats/misc.md	varios	Fragmentos varios
+9. ⚠️ Duplicados detectados
+
+Las carpetas con sufijo (2) son copias exactas de sus pares sin sufijo. Se pueden eliminar de forma segura.
+
+docs/agentes/clientum-agentes/customer-success (2)/   ← duplicado de customer-success/
+docs/agentes/clientum-agentes/marketing (2)/           ← duplicado de marketing/
+docs/agentes/clientum-agentes/operaciones (2)/         ← duplicado de operaciones/
+docs/agentes/clientum-agentes/orquestador (2)/         ← duplicado de orquestador/
+docs/agentes/clientum-agentes/tecnico (2)/             ← duplicado de tecnico/
+docs/agentes/clientum-agentes/ventas (2)/              ← duplicado de ventas/
+docs/agentes/clientum-agentes/ORGANIGRAMA (2).md       ← duplicado de ORGANIGRAMA.md
+
+    Para eliminarlos: find docs/ -name "* (2)*" -exec rm -rf {} + Primero verificá que las versiones sin (2) estén completas.

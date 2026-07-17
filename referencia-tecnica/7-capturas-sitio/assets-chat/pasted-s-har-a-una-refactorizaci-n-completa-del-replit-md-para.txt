@@ -1,0 +1,163 @@
+Sí. Haría una refactorización completa del `replit.md` para convertirlo en la **especificación técnica oficial** del proyecto.
+
+La reorganizaría aproximadamente así:
+
+1. **Resumen Ejecutivo**
+
+   * Qué es Clientum CRM.
+   * Objetivo del producto.
+   * Arquitectura Hermes Prime.
+   * Enlaces de producción y desarrollo.
+
+2. **Arquitectura General**
+
+   * Frontend.
+   * Backend.
+   * Base de datos.
+   * IA.
+   * Infraestructura.
+   * Integraciones.
+
+3. **Estructura del Proyecto**
+
+   * Árbol de carpetas.
+   * Explicación de cada directorio.
+   * Archivos críticos.
+
+4. **Stack Tecnológico**
+
+   * Versiones exactas.
+   * Dependencias principales.
+   * Justificación de cada tecnología.
+
+5. **Variables de Entorno**
+   Separadas por categorías:
+
+   * Core.
+   * Base de datos.
+   * IA.
+   * Google.
+   * Email.
+   * Deploy.
+   * Automatización.
+
+6. **Base de Datos**
+
+   * Esquema actual.
+   * Relaciones.
+   * Índices.
+   * Futuras tablas multiempresa.
+
+7. **API**
+   Agrupada por dominio:
+
+   * Auth.
+   * CRM.
+   * Leads.
+   * IA.
+   * Chatbot.
+   * Integraciones.
+   * Administración.
+
+8. **Frontend**
+
+   * Rutas.
+   * Componentes.
+   * Estado global.
+   * Flujo de navegación.
+
+9. **Dashboard**
+   Documentaría el dashboard definitivo con módulos como:
+
+   * Inicio
+   * CRM
+   * Prospectos
+   * Google Maps
+   * WhatsApp
+   * Agentes IA
+   * Marketing
+   * Automatizaciones
+   * Facturación
+   * Reportes
+   * Configuración
+
+10. **Hermes Prime**
+
+    * Organigrama.
+    * Agentes.
+    * Responsabilidades.
+    * Comunicación entre agentes.
+    * Cron.
+    * Memoria.
+
+11. **Integraciones**
+
+    * Google Maps
+    * Apify
+    * Hunter
+    * WhatsApp
+    * Mercado Pago
+    * AFIP
+    * OpenRouter
+    * Gemini
+    * Groq
+    * WordPress
+    * ERPNext
+    * Dolibarr
+
+12. **CI/CD**
+
+    * GitHub Actions.
+    * Vercel.
+    * Neon Preview Branches.
+    * Replit.
+
+13. **Seguridad**
+
+    * Sesiones.
+    * Cookies.
+    * Secrets.
+    * Roles.
+    * Auditoría.
+
+14. **Roadmap**
+    Dividido por fases:
+
+    * Fase 1: CRM.
+    * Fase 2: IA.
+    * Fase 3: Multiempresa.
+    * Fase 4: Marketplace.
+    * Fase 5: Ecosistema Clientum.
+
+15. **Checklist de Producción**
+    Una lista verificable con elementos como:
+
+    * Variables configuradas.
+    * Build correcto.
+    * CI verde.
+    * Base de datos migrada.
+    * Backups.
+    * HTTPS.
+    * Monitoreo.
+    * SEO.
+    * Rendimiento.
+
+## Además incorporaría
+
+A partir de todo el trabajo realizado en conversaciones anteriores, agregaría oficialmente al proyecto:
+
+* Prospección inteligente con Google Maps.
+* Enriquecimiento de leads.
+* Motor de scoring con IA.
+* WhatsApp Copilot.
+* Centro de Agentes Hermes Prime.
+* Dashboard ejecutivo.
+* Arquitectura SaaS multiempresa.
+* Documentación de APIs.
+* Diagramas de arquitectura.
+* Guías de despliegue.
+* Manual para desarrolladores.
+* Manual para operadores.
+* Manual para administradores.
+
+Con esa reorganización, `replit.md` dejaría de ser solo una guía de configuración y pasaría a ser el **documento maestro** de Clientum CRM, desde el que cualquier desarrollador o agente de IA pueda comprender la plataforma, desplegarla y evolucionarla de forma consistente.

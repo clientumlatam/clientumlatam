@@ -1,0 +1,50 @@
+
+Vercel Replicate IntegrationConnectable Account
+Replicate provides a platform for accessing and deploying a wide range of open-source artificial intelligence models
+Resource REPL
+APIs & SDKs Marketplace Partner API Optional POST/v1/installations/{installationId}/resources/{resourceId}/repl The REPL is a command-line interface o…
+Vercel Replicate IntegrationConnectable Account: Some available models on Replicate
+Blip Type: Image Generate image captions Flux 1.1 Pro Type: Image Faster, better FLUX Pro
+Update Resource: Response
+200Return the updated resource idstringRequired The partner-specific ID of the resource productIdstringRequired The partner-specific ID/slug of the pr…
+Retrieve a list of projects
+"koa", "mastra", "middleman", "nestjs", "nextjs", "nitro", "node", "nuxtjs", "parcel", "polymer", "preact", "python", "react-router", "redwoodjs", "re…
+Create a new deployment: Responses
+ected", "maxLength": 256, "nullable": true }, "rootDirectory": { "type": "string", "description": "The name of a directory or relative path to the sou…
+Create a connector: Responses
+"required": [ "appId", "appSlug", "appName", "clientId" ], "properties": { "appId": { "type": "integer" }, "appSlug": { "type": "string" }, "appName":…
+Structured Outputs: Response format
+ream: for text in stream.text_stream: full_json += text recipe = json.loads(full_json) print(recipe['name'], recipe['cuisine']) { "id": "msg_123", "ty…
+Update an existing project
+Group operations are included.", "enum": [ "create", "delete", "list", "read", "update" ] } }, "integrationStrict": { "type": "array", "items": { "typ…
+Programmatic Domain Management
+The domains registrar API enables you to programmatically manage your domain lifecycle from search to renewal
+Building a Slack agent with durable workflows
+z } from "zod"; type HookEvent = { type: "reply"; text: string } { type: "confirm" } { type: "cancel" }; export async function draftRefinementWorkflow…
+Guide
+Update a Team: Responses
+} } } } } ```
+Create one or more environment variables: Responses
+} ] } } ] } ```
+Run and track deploys from Slack: Slash command and permissions
+The bot registers a /deploy slash command with two paths
+Guide
+Update a Team
+gingPrefix": { "type": "string", "description": "The prefix that is prepended to automatic aliases." }, "resourceConfig": { "type": "object", "propert…
+Put Firewall Configuration: Responses
+"type": "object", "required": [ "name", "active", "conditionGroup" ] } }, { "type": "object", "additionalProperties": { "type": "object", "required":…
+Supported domains
+.ws Yes Yes .wtf Yes Yes .xn--3ds443g Yes No .xn--5tzm5g Yes Yes .xn--6frz82g Yes Yes .xn--80asehdb Yes No .xn--80aswg Yes No .xn--9dbq2a Yes Yes .xn-…
+Create a new project
+roup operations are included.", "enum": [ "create", "delete", "list", "read", "update" ] } }, "integrationStrict": { "type": "array", "items": { "type…
+Create a new Drain: Responses
+"enum": [ "hive" ] }, "roleArn": { "type": "string" }, "region": { "type": "string" }, "serverSideEncryption": { "type": "string", "enum": [ "AES256",…
+Update an existing project: Responses
+ntifier for the dismissed toast" }, "dismissedAt": { "type": "number", "description": "unix timestamp representing the time the toast was dimissed" },…
+Upload a project avatar
+ncluded.", "enum": [ "create", "delete", "list", "read", "update" ] } }, "integrationStrict": { "type": "array", "items": { "type": "string", "descrip…
+Building AI apps on Vercel: an overview: Add context
+By default, models don't remember past interactions or know anything about your user
+Guide
+Drain Audit Logs to S3: Getting started with Audit Logs to S3
+Before you configure the drain, make sure you have: Access to create or update an S3
