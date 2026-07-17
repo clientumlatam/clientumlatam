@@ -3314,6 +3314,20 @@ export default function PublicWebsite({
                   </div>
                 )}
 
+                {/* Imágenes de resumen visual de casos de éxito */}
+                <div className="flex flex-col gap-4 mt-4">
+                  <img
+                    src="/casos/casos-por-industria.png"
+                    alt="Casos de éxito por industria — Clientum"
+                    className="w-full rounded-2xl shadow-md border border-slate-200 object-contain"
+                  />
+                  <img
+                    src="/casos/casos-testimonios-digitales.png"
+                    alt="Casos de éxito y testimonios digitales — Clientum"
+                    className="w-full rounded-2xl shadow-md border border-slate-200 object-contain"
+                  />
+                </div>
+
                 {/* Brief cases testimonials — clientes reales */}
                 <div className="bg-slate-100 border border-slate-200 rounded-2xl p-8 grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
                   <div className="flex flex-col gap-2">
