@@ -3384,10 +3384,11 @@ export default function SalesProspectorDashboard({
         const filteredDeals = deals.filter(d =>
           !empFilter || d.company.toLowerCase().includes(empFilter.toLowerCase()) || (d.industry ?? "").toLowerCase().includes(empFilter.toLowerCase())
         );
-        const totalContacts = Object.values(empResults).reduce((s, r) => s + (r.contacts?.length ?? 0), 0);
-        const hunterCount  = Object.values(empResults).filter(r => r.source === "hunter").length;
-        const aiCount      = Object.values(empResults).filter(r => r.source === "ai").length;
-        const scraped      = Object.values(empResults).filter(r => !r.loading).length;
+        const empVals = Object.values(empResults) as EmpResult[];
+        const totalContacts = empVals.reduce((s, r) => s + (r.contacts?.length ?? 0), 0);
+        const hunterCount  = empVals.filter(r => r.source === "hunter").length;
+        const aiCount      = empVals.filter(r => r.source === "ai").length;
+        const scraped      = empVals.filter(r => !r.loading).length;
 
         const sourceLabel = (src?: string) =>
           src === "hunter" ? { text: "Hunter.io", cls: "bg-emerald-100 text-emerald-700 border-emerald-200" }
@@ -3582,7 +3583,7 @@ export default function SalesProspectorDashboard({
                                   <Mail className="w-3 h-3 text-slate-400 shrink-0" />
                                   <span className="text-[10px] text-slate-600 font-mono truncate">{c.email}</span>
                                   <button
-                                    onClick={() => navigator.clipboard.writeText(c.email)}
+                                    onClick={() => c.email && navigator.clipboard.writeText(c.email)}
                                     className="text-slate-300 hover:text-slate-500 transition cursor-pointer"
                                     title="Copiar email"
                                   >
