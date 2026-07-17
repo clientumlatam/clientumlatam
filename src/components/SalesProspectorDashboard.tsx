@@ -6,6 +6,11 @@ import CrmFullApp from "./crm-full/CrmFullApp";
 import SidebarEditor from "./SidebarEditor";
 import AsistenteIA from "./AsistenteIA";
 import OrquestadorIA from "./OrquestadorIA";
+import OrganigramaClientum from "./OrganigramaClientum";
+import OrgVariantRadial from "./OrgVariantRadial";
+import OrgVariantLanes from "./OrgVariantLanes";
+import OrgVariantPipeline from "./OrgVariantPipeline";
+import OrgVariantRoster from "./OrgVariantRoster";
 import WpSetup from "./wordpress/WpSetup";
 import WpModulos from "./wordpress/WpModulos";
 import CrmFullLeads from "./crm-full/CrmFullLeads";
@@ -190,7 +195,8 @@ export default function SalesProspectorDashboard({
     "products" | "sellers" | "branches" | "conversations" | "bot" |
     "brochure" | "config" | "pages" | "ai" | "activity" | "quickcreate" |
     "orquestador" |
-    "wp-leads" | "wp-setup" | "wp-modulos"
+    "wp-leads" | "wp-setup" | "wp-modulos" |
+    "org-clientum" | "org-radial" | "org-lanes" | "org-pipeline" | "org-roster"
   >("config");
   // "CRM Completo" reorganizado: barra horizontal de categorías (arriba) + menú vertical (izquierda)
   // Single unified navigation, organized into task-based groups so every AI Client
@@ -265,6 +271,18 @@ export default function SalesProspectorDashboard({
       icon: Network,
       items: [
         { id: "orquestador", label: "Orquestador IA", desc: "Chat con todos los agentes", icon: Network },
+      ],
+    },
+    {
+      id: "organigrama",
+      label: "Organigrama",
+      icon: Network,
+      items: [
+        { id: "org-clientum", label: "Organigrama",    desc: "Vista oficial Clientum",         icon: Network },
+        { id: "org-radial",   label: "V1 · Hub Radial",    desc: "Anillos concéntricos por autoridad", icon: Network },
+        { id: "org-lanes",    label: "V2 · Swimlanes",     desc: "Columnas por departamento",         icon: Network },
+        { id: "org-pipeline", label: "V3 · Pipeline Flow", desc: "El viaje de un lead en 7 etapas",   icon: Network },
+        { id: "org-roster",   label: "V4 · Roster",        desc: "Grid buscable de todos los agentes", icon: Network },
       ],
     },
   ];
@@ -3243,6 +3261,33 @@ export default function SalesProspectorDashboard({
       {activeTab === "wp-modulos" && (
         <div className="flex-1 overflow-y-auto">
           <WpModulos />
+        </div>
+      )}
+
+      {/* TABs: ORGANIGRAMA — 5 variantes */}
+      {activeTab === "org-clientum" && (
+        <div className="flex-1 -m-6 overflow-hidden">
+          <OrganigramaClientum />
+        </div>
+      )}
+      {activeTab === "org-radial" && (
+        <div className="flex-1 -m-6 overflow-auto">
+          <OrgVariantRadial />
+        </div>
+      )}
+      {activeTab === "org-lanes" && (
+        <div className="flex-1 -m-6 overflow-hidden flex flex-col">
+          <OrgVariantLanes />
+        </div>
+      )}
+      {activeTab === "org-pipeline" && (
+        <div className="flex-1 -m-6 overflow-auto">
+          <OrgVariantPipeline />
+        </div>
+      )}
+      {activeTab === "org-roster" && (
+        <div className="flex-1 -m-6 overflow-hidden flex flex-col">
+          <OrgVariantRoster />
         </div>
       )}
 
