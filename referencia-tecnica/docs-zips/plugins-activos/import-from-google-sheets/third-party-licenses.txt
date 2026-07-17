@@ -1,0 +1,72 @@
+THIRD-PARTY NOTICES
+===================
+
+This product bundles third-party open-source software via Composer.
+The original license texts are included in the paths listed below.
+
+Bundled packages:
+
+- gsw/core — Copyright (c) 2026 DITS Agency
+  License file: vendor/gsw/core/LICENSE.txt
+
+- composer/LICENSE
+  License file: vendor/composer/LICENSE
+
+- firebase/php-jwt
+  License file: vendor/firebase/php-jwt/LICENSE
+
+- google/apiclient
+  License file: vendor/google/apiclient/LICENSE
+
+- google/apiclient-services
+  License file: vendor/google/apiclient-services/LICENSE
+
+- google/auth
+  License file: vendor/google/auth/LICENSE
+  Additional file: vendor/google/auth/COPYING
+
+- guzzlehttp/guzzle
+  License file: vendor/guzzlehttp/guzzle/LICENSE
+
+- guzzlehttp/promises
+  License file: vendor/guzzlehttp/promises/LICENSE
+
+- guzzlehttp/psr7
+  License file: vendor/guzzlehttp/psr7/LICENSE
+
+- monolog/monolog
+  License file: vendor/monolog/monolog/LICENSE
+
+- paragonie/constant_time_encoding
+  License file: vendor/paragonie/constant_time_encoding/LICENSE.txt
+
+- paragonie/random_compat
+  License file: vendor/paragonie/random_compat/LICENSE
+
+- phpseclib/phpseclib
+  License file: vendor/phpseclib/phpseclib/LICENSE
+
+- psr/cache
+  License file: vendor/psr/cache/LICENSE.txt
+
+- psr/http-client
+  License file: vendor/psr/http-client/LICENSE
+
+- psr/http-factory
+  License file: vendor/psr/http-factory/LICENSE
+
+- psr/http-message
+  License file: vendor/psr/http-message/LICENSE
+
+- psr/log
+  License file: vendor/psr/log/LICENSE
+
+- ralouphie/getallheaders
+  License file: vendor/ralouphie/getallheaders/LICENSE
+
+- symfony/deprecation-contracts
+  License file: vendor/symfony/deprecation-contracts/LICENSE
+
+Notes:
+- No third-party license files were removed or modified.
+- If any bundled dependency contains a NOTICE file, it is preserved in the vendor directory.
