@@ -78,3 +78,45 @@ id = "cgr3x4t91-Rf7hgQfE0bg"
 uri = "file://exports/clientum-catalogo-final.csv"
 type = "table"
 title = "Clientum — Catálogo Final (WooCommerce)"
+
+[[outputs]]
+id = "ScXpHQTCnWU1E0ec76Oki"
+uri = "file://talleres_donweb.csv"
+type = "table"
+title = "Talleres DonWeb — 140 registros"
+
+[[outputs]]
+id = "vTZzBv4_ZaBnVkTly2_5C"
+uri = "file://docs/catalogo/servicios-y-productos.csv"
+type = "table"
+title = "Servicios y Productos — 456 filas"
+
+[[outputs]]
+id = "N_Z7qEJfZw2vUG3cRZUyz"
+uri = "file://docs/catalogo/cursos.csv"
+type = "table"
+title = "Cursos y Talleres — 289 filas"
+
+[[outputs]]
+id = "NgkR12ctvZASk33qXRpoT"
+uri = "file://docs/sitio/sitio-copy.csv"
+type = "table"
+title = "Sitio Copy — 12 páginas"
+
+[[outputs]]
+id = "XrBxMENat9B5T53eoUvL-"
+uri = "file://docs/sitio/sitemap.csv"
+type = "table"
+title = "Sitemap — 132 URLs"
+
+[[outputs]]
+id = "qBPnLwL8-kqM1w2Zs8VeT"
+uri = "file://docs/informe-docs.csv"
+type = "table"
+title = "Informe de documentación — docs/ completo"
+
+[[outputs]]
+id = "C9_9pvqUg1C_fEqQPlBPY"
+uri = "file://docs/informe-sitio.csv"
+type = "table"
+title = "Informe docs/ raíz + docs/sitio/ — 28 archivos"
