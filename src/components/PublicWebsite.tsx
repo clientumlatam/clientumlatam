@@ -2995,7 +2995,7 @@ export default function PublicWebsite({
                         <p className="text-[10px] font-mono text-white/60 uppercase tracking-wider mt-0.5">Sector público y gremial</p>
                       </div>
                       <p className="text-slate-300 text-xs leading-relaxed">
-                        Organismos como Canal 10 y el Municipio de General Roca pasaron de ser portales informativos a centros de servicios digitales que requieren alta disponibilidad, seguridad y gestión de contenidos permanente.
+                        Organismos como Canal 10, el Municipio de 25 de Mayo y el CEC pasaron de ser portales informativos a centros de servicios digitales que requieren alta disponibilidad, seguridad y gestión de contenidos permanente.
                       </p>
                     </div>
                     <div className="bg-emerald-700 text-white rounded-2xl p-6 flex flex-col gap-4">
@@ -3039,7 +3039,6 @@ export default function PublicWebsite({
                     {[
                       { name: "Canal 10 TV",               rubro: "Medios Públicos",            url: "canal10rn.tv",          icon: Monitor,   logo: "/logos/canal10.webp" },
                       { name: "Diario 10",                  rubro: "Medios Digitales",           url: "diario10.com.ar",        icon: BookOpen,  logo: "/logos/diario-10.webp" },
-                      { name: "Municipio de General Roca",  rubro: "Gobierno Municipal · Río Negro",  url: "generalroca.gob.ar", icon: Building, logo: null },
                       { name: "Municipio de 25 de Mayo",    rubro: "Gobierno Municipal · La Pampa",   url: "25demayo.gob.ar",   icon: Building, logo: "/logos/municipio-25-de-mayo.png" },
                       { name: "Municipio de Maquinchao",    rubro: "Gobierno Municipal · Río Negro",  url: null,                icon: Building, logo: "/logos/maquinchao.png" },
                     ].map(({ name, rubro, url, icon: Icon, logo }) => (
@@ -3091,7 +3090,7 @@ export default function PublicWebsite({
                     icon: Home,
                     clientes: [
                        { name: "Aitue Propiedades",  rubro: "Inmobiliaria",   url: "aitue.com.ar",             logo: null,                        darkLogo: false },
-                       { name: "Terbay Propiedades", rubro: "Inmobiliaria",   url: "terbaypropiedades.com.ar", logo: "/logos/terbay.png",          darkLogo: false },
+                       { name: "Terbay Propiedades", rubro: "Inmobiliaria",   url: "terbaypropiedades.com.ar", logo: "/logos/terbay.png",          darkLogo: true },
                        { name: "Hábitat Sur",         rubro: "Real Estate / Construcción", url: null,         logo: "/logos/habitat-sur.jpg",     darkLogo: false },
                     ]
                   },
@@ -3124,7 +3123,7 @@ export default function PublicWebsite({
                     color: "bg-rose-500",
                     icon: Stethoscope,
                     clientes: [
-                       { name: "Farmacia San Martín",  rubro: "Farmacia",           url: null, logo: null, darkLogo: false },
+                       { name: "Farmacia San Martín",  rubro: "Farmacia",           url: null, logo: "/logos/farmacia-san-martin.png", darkLogo: false },
                        { name: "Coe Consultorio",       rubro: "Consultorio Médico", url: null, logo: null, darkLogo: false },
                        { name: "Consultorio Cerol",     rubro: "Consultorio Médico", url: null, logo: null, darkLogo: false },
                        { name: "Grupo Bio",             rubro: "Salud / Bienestar",  url: null, logo: null, darkLogo: false },
@@ -3154,7 +3153,7 @@ export default function PublicWebsite({
                        { name: "Grupo de Asesores",       rubro: "Consultoría",               url: null,                logo: null, darkLogo: false },
                        { name: "Anmerica",                rubro: "Servicios",                 url: null,                logo: null, darkLogo: false },
                        { name: "Agua Wass",               rubro: "Agua / Servicios",          url: null,                logo: null, darkLogo: false },
-                       { name: "SCT Patagonia",           rubro: "Servicios / Construcción",  url: null,                logo: "/logos/sct-patagonia.png", darkLogo: false },
+                       { name: "SCT Patagonia",           rubro: "Servicios / Construcción",  url: null,                logo: "/logos/sct-patagonia.png", darkLogo: true },
                        { name: "Poliservice Suministros", rubro: "Suministros Industriales",  url: null,                logo: "/logos/poliservice.jpg",   darkLogo: false },
                     ]
                   },
