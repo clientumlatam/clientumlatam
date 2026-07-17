@@ -3551,17 +3551,23 @@ export default function SalesProspectorDashboard({
                     {/* Expandable contacts */}
                     {isOpen && hasContacts && (
                       <div className="border-t border-slate-100 bg-slate-50/60 px-4 py-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {result!.contacts!.map((c, ci) => (
-                          <div key={ci} className="bg-white border border-slate-200 rounded-xl p-3 flex gap-3 shadow-xs">
+                        {result!.contacts!.map((c, ci) => {
+                          const isRealContact = Boolean(c.name); // null name = AI role suggestion
+                          return (
+                          <div key={ci} className={`bg-white border rounded-xl p-3 flex gap-3 shadow-xs ${isRealContact ? "border-slate-200" : "border-dashed border-slate-200"}`}>
                             {/* Avatar */}
-                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white text-xs font-bold shrink-0 select-none">
-                              {initials(c.name) || "?"}
+                            <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 select-none ${isRealContact ? "bg-gradient-to-br from-emerald-400 to-teal-500" : "bg-slate-200"}`}>
+                              {isRealContact ? (initials(c.name) || "?") : <User className="w-4 h-4 text-slate-400" />}
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-start justify-between gap-1">
                                 <div>
-                                  <p className="text-xs font-semibold text-slate-800 leading-tight">{c.name || "—"}</p>
-                                  <p className="text-[10px] text-slate-500">{c.position}</p>
+                                  {isRealContact ? (
+                                    <p className="text-xs font-semibold text-slate-800 leading-tight">{c.name}</p>
+                                  ) : (
+                                    <p className="text-[10px] text-slate-400 italic leading-tight">Nombre desconocido</p>
+                                  )}
+                                  <p className={`text-[10px] mt-0.5 ${isRealContact ? "text-slate-500" : "text-slate-700 font-semibold"}`}>{c.position}</p>
                                 </div>
                                 {c.linkedin && (
                                   <a href={c.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-600 transition shrink-0" title="LinkedIn">
@@ -3584,14 +3590,16 @@ export default function SalesProspectorDashboard({
                                   </button>
                                 </div>
                               ) : (
-                                <p className="text-[10px] text-slate-400 mt-1.5 italic">Email no disponible (sin dominio verificado)</p>
+                                <p className="text-[10px] text-slate-400 mt-1.5 italic">
+                                  {isRealContact ? "Email no disponible" : "Buscá este rol en LinkedIn o con el Scraper IA"}
+                                </p>
                               )}
 
-                              {/* Confidence bar */}
+                              {/* Confidence bar — only for real Hunter.io contacts */}
                               {c.confidence > 0 && (
                                 <div className="mt-1.5">
                                   <div className="flex items-center justify-between mb-0.5">
-                                    <span className="text-[9px] text-slate-400">Confianza</span>
+                                    <span className="text-[9px] text-slate-400">Confianza Hunter.io</span>
                                     <span className="text-[9px] font-semibold text-slate-600">{c.confidence}%</span>
                                   </div>
                                   <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
@@ -3601,7 +3609,8 @@ export default function SalesProspectorDashboard({
                               )}
                             </div>
                           </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
 
