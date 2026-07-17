@@ -23,7 +23,7 @@ const specialtyColors: Record<string, string> = {
 };
 
 interface SellerCardProps { seller: Seller; onEdit: (s: Seller) => void; index: number }
-const SellerCard = ({ seller, onEdit, index }: SellerCardProps) => {
+const SellerCard: React.FC<SellerCardProps> = ({ seller, onEdit, index }) => {
   const sp = specialties.find(s => s.value === seller.specialty);
   const colorClass = specialtyColors[seller.specialty] || specialtyColors.general;
   

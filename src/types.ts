@@ -24,6 +24,8 @@ export interface BrochureData {
   cover: {
     slogan: string;
     sub: string;
+    industry?: string;
+    company?: string;
   };
   chatbot: {
     title: string;
