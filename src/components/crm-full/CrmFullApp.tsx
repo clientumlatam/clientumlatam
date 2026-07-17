@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, Users, Package, Building2, MessageSquare, MessagesSquare, Bot, Database, Blocks, UserPlus, MapPin, MessageCircle, Settings2, Cpu } from 'lucide-react';
+import { LayoutDashboard, Users, Package, Building2, MessageSquare, MessagesSquare, Bot, Database, Blocks, UserPlus, MapPin, MessageCircle, Settings2, Cpu, Network } from 'lucide-react';
 import CrmFullDashboard from './CrmFullDashboard';
 import CrmFullPipeline from './CrmFullPipeline';
 import CrmFullProducts from './CrmFullProducts';
@@ -14,6 +14,7 @@ import CrmFullAgentes from './CrmFullAgentes';
 import CrmFullGoogleMaps from './CrmFullGoogleMaps';
 import CrmFullWhatsApp from './CrmFullWhatsApp';
 import CrmFullConfig from './CrmFullConfig';
+import OrganigramaClientum from '../OrganigramaClientum';
 import { Conversation, Seller, Branch, Product } from './crmTypes';
 import {
   initialConversations,
@@ -22,7 +23,7 @@ import {
   initialProducts,
 } from './crmInitialData';
 
-type SubTab = 'dashboard' | 'crm' | 'products' | 'usecases' | 'sellers' | 'branches' | 'conversations' | 'leads' | 'bot' | 'cmdb' | 'agentes' | 'maps' | 'whatsapp' | 'config';
+type SubTab = 'dashboard' | 'crm' | 'products' | 'usecases' | 'sellers' | 'branches' | 'conversations' | 'leads' | 'bot' | 'cmdb' | 'agentes' | 'maps' | 'whatsapp' | 'config' | 'organigrama';
 
 const tabs: { id: SubTab; label: string; icon: React.ReactNode }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
@@ -39,6 +40,7 @@ const tabs: { id: SubTab; label: string; icon: React.ReactNode }[] = [
   { id: 'bot', label: 'Bot', icon: <Bot className="w-4 h-4" /> },
   { id: 'cmdb', label: 'Infraestructura', icon: <Database className="w-4 h-4" /> },
   { id: 'config', label: 'Config', icon: <Settings2 className="w-4 h-4" /> },
+  { id: 'organigrama', label: 'Organigrama', icon: <Network className="w-4 h-4" /> },
 ];
 
 function loadOrDefault<T>(key: string, defaultValue: T): T {
@@ -147,6 +149,8 @@ export default function CrmFullApp({ activeTabOverride, hideNav = false }: CrmFu
         return <CrmFullBotConfig />;
       case 'cmdb':
         return <CrmFullCMDB />;
+      case 'organigrama':
+        return <OrganigramaClientum />;
       default:
         return null;
     }

@@ -3,6 +3,7 @@ import { CRMDeal, BrochureData, CustomTemplate } from "../types";
 import { INITIAL_DEALS } from "../data";
 import { loadDeals, saveDeals, addActivity, DEALS_EVENT } from "../store/sharedStore";
 import CrmFullApp from "./crm-full/CrmFullApp";
+import OrganigramaClientum from "./OrganigramaClientum";
 import SidebarEditor from "./SidebarEditor";
 import AsistenteIA from "./AsistenteIA";
 import OrquestadorIA from "./OrquestadorIA";
@@ -188,7 +189,8 @@ export default function SalesProspectorDashboard({
     "brochure" | "config" | "pages" | "ai" | "activity" | "quickcreate" |
     "orquestador" |
     "empleados" |
-    "wp-leads" | "wp-setup" | "wp-modulos"
+    "wp-leads" | "wp-setup" | "wp-modulos" |
+    "organigrama"
   >("config");
   // "CRM Completo" reorganizado: barra horizontal de categorías (arriba) + menú vertical (izquierda)
   // Single unified navigation, organized into task-based groups so every AI Client
@@ -264,6 +266,14 @@ export default function SalesProspectorDashboard({
       icon: Network,
       items: [
         { id: "orquestador", label: "Orquestador IA", desc: "Chat con todos los agentes", icon: Network },
+      ],
+    },
+    {
+      id: "empresa",
+      label: "Empresa",
+      icon: Building2,
+      items: [
+        { id: "organigrama", label: "Organigrama", desc: "Árbol, Swimlanes, Pipeline, Roster", icon: Building2 },
       ],
     },
   ];
@@ -2993,6 +3003,13 @@ export default function SalesProspectorDashboard({
         {["products", "sellers", "branches", "conversations", "bot"].includes(activeTab) && (
           <div className="flex-1 -m-6 flex flex-col">
             <CrmFullApp hideNav activeTabOverride={activeTab as "products" | "sellers" | "branches" | "conversations" | "bot"} />
+          </div>
+        )}
+
+        {/* TAB: ORGANIGRAMA — todas las vistas (Árbol, Radial, Swimlanes, Pipeline, Roster) */}
+        {activeTab === "organigrama" && (
+          <div className="flex-1 -m-6 flex flex-col overflow-hidden">
+            <OrganigramaClientum />
           </div>
         )}
 
