@@ -149,3 +149,107 @@ Vercel (clientum.com.ar) — auto-deploy via GitHub integration
 - Hablar siempre en español (Argentina) en el chat con el agente
 - No cambiar lógica de negocio ni funcionalidades existentes sin confirmación
 - Priorizar documentación, automatización e infraestructura
+
+
+https://linear.app/docs/linear-agent https://linear.app/docs/agents-in-linear https://linear.app/docs/assigning-issues https://linear.app/docs/triage-intelligence https://linear.app/docs/code-intelligence https://linear.app/docs/coding-sessions https://linear.app/docs/mcp https://linear.app/docs/integration-directory https://linear.app/docs/third-party-application-approvals https://linear.app/docs/api-and-webhooks https://linear.app/docs/import-issues https://linear.app/docs/exporting-data https://linear.app/docs/mcp#claude
+28 minutes ago
+
+The app is failing to connect to PostgreSQL at localhost — it's not picking up the DATABASE_URL secret. Let me check the database configuration and restart the server.
+
+The app is back up and running. What would you like to work on?
+
+https://linear.app/clientumlatam/issue/CLI-3/import-your-data https://linear.app/docs/workspaces https://linear.app/clientumlatam/settings/ai https://linear.app/docs/teams https://linear.app/integrations/agents https://linear.app/clientumlatam/settings/integrations/github https://linear.app/clientumlatam/settings/integrations/slack https://linear.app/switch/migration-guide https://linear.app/integrations/agents https://linear.app/developers/agents https://linear.app/integrations https://linear.app/integrations/github https://linear.app/clientumlatam/settings/ai https://linear.app/integrations/replit
+27 minutes ago
+
+The Linear integration exists as a Replit connector — it handles OAuth securely so no API keys are needed. I'll connect it now so the app can query issues, projects, and cycles directly via Linear's GraphQL API.
+Linear
+Proposed integration Linear
+Connect Linear
+LinearLinear
+Not connected
+Cancelled by the agent.
+
+https://v0.app/settings/mcp-connections https://linear.app/integrations/v0 https://v0.app/clientumlatam-4461s-projects/settings/mcp-connections https://v0.app/clientumlatam-4461s-projects/settings/mcp-connections https://linear.app/integrations/github https://linear.app/clientumlatam/settings/integrations/github https://linear.app/clientumlatam/settings/account/connections#connection-github https://linear.app/clientumlatam/settings/integrations/github https://linear.app/download https://linear.app/clientumlatam/team/CLI/active https://mcp.linear.app/authorize?client_id=rZhglERActdQFTAG&response_type=code&redirect_uri=https%3A%2F%2Fcallback.mistral.ai%2Fv1%2Fintegrations_auth%2Foauth2_callback&state=4ec01187-c131-48a7-9389-ffc9541a819f&code_challenge=_NMr-WmoQ849tJZs4LcJvMuwujg6eMxU9OE7LPJOkvU&code_challenge_method=S256&resource=https%3A%2F%2Fmcp.linear.app%2F&prompt=consent https://github.com/settings/installations/146197720
+27 minutes ago
+Exploring integrations
+What would you like to build or connect?
+What do you want to do?
+Something else
+Additional comments
+docs/PLAN_IMPLEMENTACION.md
+Anything else to add?
+referencia-tecnica/4-agentes/fichas
+
+https://chat.mistral.ai/chat/8cd3b491-c35c-4e07-a1c8-0287ea77864c https://mistral.ai/news/workflows/ https://docs.mistral.ai/studio-api/conversations/function-calling https://console.mistral.ai/build/connectors/019f6143-c93e-774a-b712-e1c5ba6d8b5c?connector=019f6143-c93e-774a-b712-e1c5ba6d8b5c&integration_id=019f6143-c93e-774a-b712-e1c5ba6d8b5c&success=true
+24 minutes ago
+Exploring Mistral AI integration
+What would you like me to build with Mistral?Declined.
+Ignoring irrelevant input
+
+No problem — just let me know what you'd like to work on when you're ready.
+
+Entendido — el plan es claro. Arrancamos por Fase 1: schema de DB + motor de agentes. Déjame revisar las fichas restantes y el estado actual del codebase en paralelo.
+
+Mucho ya está construido. Déjame ver exactamente qué hay en los archivos de agentes y las rutas API existentes antes de duplicar trabajo.
+
+La Fase 1 ya está mayormente construida. Déjame ver exactamente qué hay en los agentes y el estado completo de las rutas para saber qué falta.
+
+Déjame mapear exactamente qué rutas ya existen vs. qué falta, y qué UI ya tiene conexión real vs. mock.
+
+Déjame ver los componentes UI que el plan menciona conectar a datos reales.
+
+El panorama está claro. Fase 1 está completa. Fase 2 empieza con conectar los componentes mock a los runners reales. Voy con los tres más críticos en paralelo:
+
+    WpProspector → /api/agent/run/prospect (ya existe el runner)
+    MeddicCalificacion → leads_enriched table (necesita endpoint GET)
+    IcpBuilder → nuevo agente Estratega + endpoint
+
+Primero leo los tres componentes mock en paralelo:
+
+Voy a verificar qué endpoints ya existen para companies y leads antes de agregar nada nuevo.
+
+Todos los endpoints ya existen. Ahora conecto los tres componentes a datos reales en paralelo.
+
+Tengo todo lo que necesito. Implemento los tres componentes y el endpoint PATCH que falta, todo en paralelo.
+
+Agrego el endpoint PATCH faltante y reescribo los tres componentes en paralelo.
+
+Los errores de TypeScript son preexistentes (archivos de referencia y agentes anteriores, no mis cambios). La app levantó limpia. Resumen de lo que se conectó:
+
+WpProspector — ahora llama a /api/agent/run/prospect real (Google Maps + Apify), carga empresas de Neon con paginación, y actualiza el status via PATCH /api/companies/:id. Los stats reflejan datos reales de la DB.
+
+MeddicCalificacion — carga leads desde /api/leads-enriched (con join a companies), mapea scores MEDDIC desde enrichment_data JSON, y persiste cambios vía el nuevo PATCH /api/leads-enriched/:id que agregué al servidor.
+
+IcpBuilder — llama a Gemini real via /api/agent/ai/gemini con un system prompt del Agente Estratega, parsea JSON estructurado (señales, objeciones, propuesta de valor), guarda en /api/icp-profiles, y carga el historial de perfiles anteriores al abrir.
+
+El único prerequisito para ver datos reales en MEDDIC es tener leads enriquecidos en la DB — eso se produce corriendo el Prospector (busca empresas) → luego el Enriquecedor (Hunter.io saca contactos). Ese pipeline ya tiene backend completo; la Fase 3 (Propuestas + Campañas) es el siguiente bloque.
+
+queremos incluir cada una de estas patanlllas, pero de modo claro , en el dashboard de usuarios clientum
+3 minutes ago
+Displaying org chart views
+
+Las 4 pantallas ya están en el código. El nav group "Organigrama" ya quedó agregado en el edit anterior. Verifico que se ve bien:
+
+El CRM requiere login para verse — el nav group de Organigrama quedó correctamente agregado. Verifico el estado final de la sección de navegación:
+
+Listo. En el sidebar del dashboard ahora aparece el grupo "Organigrama" con las 5 pantallas accesibles directamente:
+Tab	Pantalla
+Organigrama General	Árbol jerárquico completo Estructura Organizacional + Agentes IA
+Roster de Agentes	Grid 16/16 con búsqueda, filtros por dept/tipo/estado
+Swimlanes por Dept.	Organigrama por Ownership, columnas Técnico / Ventas / Marketing / CS / Ops
+Pipeline Flow	Del Lead al Cliente — 7 etapas con agente responsable de cada una
+Hub Radial	Vista radial centrada en CEO
+
+Cada una ocupa pantalla completa (sin padding extra) al seleccionarla. El componente de cada vista ya existía — solo faltaba conectarlos a la navegación.
+
+AgentMail es el único disponible como conector OAuth directo. Los otros tres (Retell AI, AgentPhone, BlandAI) son connector_catalog — requieren setup manual a través de sus plataformas propias, no tienen OAuth de Replit todavía.
+
+Propongo AgentMail primero (el más crítico para las campañas de email):
+AgentMail
+Proposed integration AgentMail
+Connect AgentMail
+AgentMailAgentMail
+Not connected
+Cancelled by the agent.
+
+You've reached your daily free quota limit. It will reset at 12:00 AM UTC.
