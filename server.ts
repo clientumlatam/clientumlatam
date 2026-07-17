@@ -1,4 +1,3 @@
-/// <reference lib="dom" />
 import express from "express";
 import path from "path";
 import dotenv from "dotenv";
@@ -11,19 +10,8 @@ import nodemailer from "nodemailer";
 import crypto from "crypto";
 
 dotenv.config();
-// En un Remix recién configurado, los secrets vienen de .env.local (generado por pull-secrets.mjs)
-// .env.local fills in any values not already set by Replit Secrets.
-// override:false keeps real Replit Secret values intact; dotenvx-encrypted
-// blobs in .env.local are handled by isDotenvxBlob() in resolveDatabaseUrl.
-dotenv.config({ path: ".env.local", override: false });
 
 const app = express();
-// Trust Vercel's (and any other reverse proxy's) X-Forwarded-* headers so
-// that req.secure, req.ip, and cookie Secure/SameSite behaviour work
-// correctly in production. Without this, Express sees every request as HTTP
-// even though the actual browser connection is HTTPS, which prevents Secure
-// cookies from being set and silently breaks sessions behind Vercel's edge.
-app.set("trust proxy", 1);
 app.use(express.json({ limit: "10mb" }));
 
 // This app only ever serves /api/* on Vercel (see vercel.json routes) — the
@@ -48,21 +36,13 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT) : 5000;
 // from Neon's API (avoids hand-copying a connection string that can go
 // stale if it's ever rotated). Otherwise falls back to DATABASE_URL
 // (Replit's own internal Postgres) for local-only setups.
-// Returns true when a value is a dotenvx-encrypted blob (not yet decrypted).
-// These values are unusable as connection strings / API keys.
-function isDotenvxBlob(val: string | undefined): boolean {
-  if (!val) return false;
-  try { return val.startsWith("eyJ2IjoidjIi"); } catch { return false; }
-}
-
 async function resolveDatabaseUrl(): Promise<string> {
   // Prefer an explicit connection string when available — fastest path.
-  // Skip dotenvx-encrypted blobs that haven't been decrypted yet.
-  if (process.env.NEON_DATABASE_URL && !isDotenvxBlob(process.env.NEON_DATABASE_URL)) {
+  if (process.env.NEON_DATABASE_URL) {
     return process.env.NEON_DATABASE_URL;
   }
-  const neonApiKey = isDotenvxBlob(process.env.NEON_API_KEY) ? undefined : process.env.NEON_API_KEY;
-  const neonProjectId = isDotenvxBlob(process.env.NEON_PROJECT_ID) ? undefined : process.env.NEON_PROJECT_ID;
+  const neonApiKey = process.env.NEON_API_KEY;
+  const neonProjectId = process.env.NEON_PROJECT_ID;
   if (neonApiKey && neonProjectId) {
     const headers = { Authorization: `Bearer ${neonApiKey}`, Accept: "application/json" };
     const branchesRes = await fetch(`https://console.neon.tech/api/v2/projects/${neonProjectId}/branches`, { headers });
@@ -79,32 +59,23 @@ async function resolveDatabaseUrl(): Promise<string> {
     if (!data.uri) throw new Error("Neon no devolvió un connection string.");
     return data.uri;
   }
-  const dbUrl = isDotenvxBlob(process.env.DATABASE_URL) ? "" : (process.env.DATABASE_URL ?? "");
-  return dbUrl;
+  return process.env.DATABASE_URL ?? "";
 }
 
 const databaseUrl = await resolveDatabaseUrl();
-// If PGPASSWORD is a dotenvx-encrypted blob it's useless; remove it so pg
-// doesn't try to auth with garbage and instead falls to a clear error.
-if (isDotenvxBlob(process.env.PGPASSWORD)) {
-  delete process.env.PGPASSWORD;
-}
-// When no connection string is resolved, pg falls back to
-// PGHOST/PGUSER/PGPASSWORD/PGDATABASE/PGPORT env vars.
-// Neon (external host) requires SSL; local Replit Postgres does not.
-const pgHostIsExternal =
-  process.env.PGHOST &&
-  process.env.PGHOST !== "localhost" &&
-  process.env.PGHOST !== "127.0.0.1";
+// When no connection string is resolved (e.g. DATABASE_URL/Neon secrets not
+// set), `pg` falls back to PGHOST/PGUSER/PGPASSWORD/PGDATABASE/PGPORT, which
+// point at Replit's own built-in Postgres for local development. That
+// instance does not support SSL, so SSL must only be forced when we actually
+// have an external (Neon) connection string that doesn't opt out via
+// sslmode=disable.
 const pgPool = new Pool(
   databaseUrl
     ? {
         connectionString: databaseUrl,
         ssl: /sslmode=disable/i.test(databaseUrl) ? false : { rejectUnauthorized: false },
       }
-    : pgHostIsExternal
-      ? { ssl: { rejectUnauthorized: false } }
-      : {}
+    : {}
 );
 const PgSession = connectPgSimple(session);
 
@@ -388,42 +359,6 @@ app.post("/api/auth/logout", (req, res) => {
   });
 });
 
-// POST /api/auth/change-password — authenticated users only
-app.post("/api/auth/change-password", requireAuth, async (req, res) => {
-  try {
-    const { currentPassword, newPassword } = req.body || {};
-    if (typeof currentPassword !== "string" || typeof newPassword !== "string") {
-      return res.status(400).json({ error: "Se requieren contraseña actual y nueva." });
-    }
-    if (newPassword.length < 8) {
-      return res.status(400).json({ error: "La nueva contraseña debe tener al menos 8 caracteres." });
-    }
-
-    const userId = req.session.userId!;
-    const result = await pgPool.query(
-      "SELECT password_hash FROM users WHERE id = $1",
-      [userId]
-    );
-    const user = result.rows[0];
-    if (!user) {
-      return res.status(404).json({ error: "Usuario no encontrado." });
-    }
-
-    const isValid = await bcrypt.compare(currentPassword, user.password_hash || "");
-    if (!isValid) {
-      return res.status(401).json({ error: "La contraseña actual es incorrecta." });
-    }
-
-    const newHash = await bcrypt.hash(newPassword, 12);
-    await pgPool.query("UPDATE users SET password_hash = $1 WHERE id = $2", [newHash, userId]);
-
-    return res.json({ ok: true });
-  } catch (error: any) {
-    console.error("[Auth] Error en change-password:", error.message);
-    return res.status(500).json({ error: "Ocurrió un error al cambiar la contraseña." });
-  }
-});
-
 // ─── NEON AUTH — email-based register / login ───────────────────────────────
 // These endpoints proxy sign-up / sign-in to the actual Neon Auth (Better Auth)
 // REST API server-side (avoids CORS, no SDK needed), then upsert the identity
@@ -678,17 +613,6 @@ app.post("/api/auth/neon-register", async (req, res) => {
         return createSession(req, res, localUser, 200);
       }
 
-      // INVALID_ORIGIN means Neon Auth doesn't accept our origin right now →
-      // silently fall through to local-only registration.
-      const isOriginRejected =
-        neonRes.status === 403 &&
-        (rawText.includes("INVALID_ORIGIN") || rawText.includes("Invalid origin") || rawText.includes("MISSING_ORIGIN"));
-      if (isOriginRejected) {
-        console.log("[NeonAuth] INVALID_ORIGIN — usando auth local como fallback");
-        const localUser = await localNeonRegister(email.toLowerCase(), password, name);
-        return createSession(req, res, localUser, 201);
-      }
-
       if (!neonRes.ok) {
         const msg =
           neonData?.message ||
@@ -766,48 +690,10 @@ app.post("/api/auth/neon-login", async (req, res) => {
       console.log("[NeonAuth] sign-in status:", neonRes.status, "body:", rawText.slice(0, 200));
 
       if (!neonRes.ok) {
-        // INVALID_ORIGIN: Neon Auth rejects our origin → fall back to local auth.
-        // Store the hash now so next login skips Neon Auth entirely.
-        const isOriginRejected =
-          neonRes.status === 403 &&
-          (rawText.includes("INVALID_ORIGIN") || rawText.includes("Invalid origin") || rawText.includes("MISSING_ORIGIN"));
-        if (isOriginRejected) {
-          console.log("[NeonAuth] INVALID_ORIGIN en login — intentando auth local como fallback");
-          const existingRow = await pgPool.query(
-            "SELECT id, username, role FROM users WHERE email = $1 LIMIT 1",
-            [emailLower]
-          );
-          if ((existingRow.rowCount ?? 0) > 0) {
-            // User exists locally with no hash → store hash + create session
-            const localUser = existingRow.rows[0];
-            const newHash = await bcrypt.hash(password, 12);
-            await pgPool.query("UPDATE users SET password_hash = $1 WHERE id = $2", [newHash, localUser.id]);
-            console.log("[Auth] INVALID_ORIGIN fallback — hash guardado y sesión creada para", emailLower);
-            return createSession(req, res, { id: localUser.id, username: localUser.username, role: localUser.role }, 200);
-          }
-          // User not in local DB yet — can't verify, ask them to register
-          return res.status(401).json({ error: "Email o contraseña incorrectos." });
-        }
-
         const isEmailNotVerified = neonRes.status === 403 && rawText.includes("EMAIL_NOT_VERIFIED");
         if (isEmailNotVerified) {
-          // The user exists in Neon Auth but their email isn't verified.
-          // If they exist in our local DB we trust them — save the bcrypt hash
-          // so future logins go through the fast local path and bypass Neon Auth.
-          const existingRow = await pgPool.query(
-            "SELECT id, username, role FROM users WHERE email = $1 LIMIT 1",
-            [emailLower]
-          );
-          if ((existingRow.rowCount ?? 0) > 0) {
-            const localUser = existingRow.rows[0];
-            const newHash = await bcrypt.hash(password, 12);
-            await pgPool.query("UPDATE users SET password_hash = $1 WHERE id = $2", [newHash, localUser.id]);
-            console.log("[Auth] EMAIL_NOT_VERIFIED — hash local guardado, sesión creada para", emailLower);
-            return createSession(req, res, { id: localUser.id, username: localUser.username, role: localUser.role }, 200);
-          }
-          // User not in our DB at all — they need to register
           return res.status(403).json({
-            error: "Tu email no está verificado. Usá '¿Olvidaste tu contraseña?' para configurar el acceso.",
+            error: "Registrate primero con el botón 'Registrarse' para sincronizar el acceso.",
           });
         }
         const msg = neonData?.message || neonData?.error || rawText.slice(0, 200) || "Email o contraseña incorrectos.";
@@ -935,18 +821,12 @@ app.get("/api/auth/me", async (req, res) => {
 // Lazy client initialization for safety
 let aiClient: GoogleGenAI | null = null;
 function getAI(): GoogleGenAI | null {
-  const key =
-    (process.env.GEMINI_API_KEY?.trim() && process.env.GEMINI_API_KEY !== "MY_GEMINI_API_KEY"
-      ? process.env.GEMINI_API_KEY
-      : null) ??
-    (process.env.GEMINI_API_KEY_V2?.trim() || null);
-  if (!key) {
-    console.warn("[Gemini API] GEMINI_API_KEY y GEMINI_API_KEY_V2 no están configuradas. Las solicitudes usarán el fallback local de alta calidad.");
+  const key = process.env.GEMINI_API_KEY;
+  if (!key || key === "MY_GEMINI_API_KEY" || key.trim() === "") {
+    console.warn("[Gemini API] La clave GEMINI_API_KEY no está configurada o es de prueba. Las solicitudes usarán el fallback local de alta calidad.");
     return null;
   }
   if (!aiClient) {
-    const usingV2 = !process.env.GEMINI_API_KEY?.trim() || process.env.GEMINI_API_KEY === "MY_GEMINI_API_KEY";
-    if (usingV2) console.log("[Gemini API] Usando GEMINI_API_KEY_V2 como clave activa.");
     aiClient = new GoogleGenAI({
       apiKey: key,
       httpOptions: {
@@ -1020,27 +900,7 @@ async function generateContentWithFallback(
 }
 
 // ── Free AI fallback: Groq → OpenRouter (used when Gemini quota is exhausted) ─
-
-/**
- * Strip markdown code fences and extract raw JSON from a model response.
- * Models often wrap JSON in ```json ... ``` even when asked not to.
- */
-function extractJSON(text: string): string {
-  // Remove ```json ... ``` or ``` ... ``` fences
-  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-  if (fenced) return fenced[1].trim();
-  // Try to find the first { or [ and return from there
-  const start = text.search(/[\[{]/);
-  if (start !== -1) return text.slice(start);
-  return text.trim();
-}
-
-async function tryFreeAI(prompt: string, opts?: { jsonMode?: boolean }): Promise<string | null> {
-  const jsonMode = opts?.jsonMode ?? false;
-  const systemMsg = jsonMode
-    ? "Respondé SOLO con JSON válido, sin texto adicional, sin markdown, sin explicaciones. Solo el objeto JSON."
-    : "Respondé en español rioplatense (voseo argentino), de forma concisa y directa.";
-
+async function tryFreeAI(prompt: string): Promise<string | null> {
   // 1. Groq — fastest, generous free tier
   const groqKey = process.env.GROQ_API_KEY;
   if (groqKey) {
@@ -1051,13 +911,9 @@ async function tryFreeAI(prompt: string, opts?: { jsonMode?: boolean }): Promise
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${groqKey}` },
         body: JSON.stringify({
           model: "llama-3.3-70b-versatile",
-          messages: [
-            { role: "system", content: systemMsg },
-            { role: "user", content: prompt },
-          ],
+          messages: [{ role: "user", content: prompt }],
           temperature: 0.7,
           max_tokens: 4096,
-          ...(jsonMode ? { response_format: { type: "json_object" } } : {}),
         }),
       });
       if (gr.ok) {
@@ -1074,10 +930,9 @@ async function tryFreeAI(prompt: string, opts?: { jsonMode?: boolean }): Promise
   const orKey = process.env.OPENROUTER_API_KEY;
   if (orKey) {
     const orModels = [
-      "meta-llama/llama-3.1-8b-instruct:free",
-      "qwen/qwen3-8b:free",
-      "mistralai/mistral-7b-instruct:free",
-      "google/gemma-3-12b-it:free",
+      "meta-llama/llama-3.3-70b-instruct:free",
+      "deepseek/deepseek-r1:free",
+      "google/gemini-2.0-flash-exp:free",
     ];
     for (const model of orModels) {
       try {
@@ -1090,14 +945,7 @@ async function tryFreeAI(prompt: string, opts?: { jsonMode?: boolean }): Promise
             "HTTP-Referer": "https://clientum.com.ar",
             "X-Title": "Clientum CRM",
           },
-          body: JSON.stringify({
-            model,
-            messages: [
-              { role: "system", content: systemMsg },
-              { role: "user", content: prompt },
-            ],
-            max_tokens: 4096,
-          }),
+          body: JSON.stringify({ model, messages: [{ role: "user", content: prompt }], max_tokens: 4096 }),
         });
         if (or.ok) {
           const d = await or.json();
@@ -1113,45 +961,8 @@ async function tryFreeAI(prompt: string, opts?: { jsonMode?: boolean }): Promise
   return null;
 }
 
-/**
- * Primary AI dispatcher: Groq → OpenRouter → Gemini → null
- * Uses the server's own API secrets for ALL users.
- * Free tiers (Groq / OpenRouter) are tried first to avoid Gemini quota burns.
- */
-async function generateAny(
-  ai: GoogleGenAI | null,
-  prompt: string,
-  opts?: { jsonMode?: boolean; geminiConfig?: any; defaultModel?: string }
-): Promise<string | null> {
-  const jm = opts?.jsonMode ?? false;
-
-  // 1. Groq → OpenRouter (free, server-side secrets, no per-user quota)
-  const freeText = await tryFreeAI(prompt, { jsonMode: jm });
-  if (freeText) {
-    console.log("[generateAny] Free AI respondió exitosamente.");
-    return freeText;
-  }
-
-  // 2. Gemini as last resort
-  if (!ai) {
-    console.warn("[generateAny] Gemini no disponible y Free AI falló.");
-    return null;
-  }
-  try {
-    const response = await generateContentWithFallback(ai, {
-      contents: prompt,
-      config: opts?.geminiConfig,
-      defaultModel: opts?.defaultModel,
-    });
-    return response.text?.trim() || null;
-  } catch (err: any) {
-    console.warn("[generateAny] Gemini también falló:", err.message || err);
-    return null;
-  }
-}
-
 // API Routes
-// --- HIGH-QUALITY LOCAL FALLBACK GENERATORS (when all AI providers are out of quota) ---
+// --- HIGH-QUALITY LOCAL FALLBACK GENERATORS (when Gemini API is out of quota/429) ---
 
 function getMockIndustryCopy(industry: string): any {
   const normalized = (industry || "").toLowerCase().trim();
@@ -1788,93 +1599,6 @@ function getMockOutreach(company: string, contact: string, title: string, indust
 }
 
 // Helper function to query real-time businesses using Google Places API (New)
-// --------------------------------------------------------------------------
-// Classify a URL returned by Google Places as a real website or a social URL.
-// Google Maps often stores an Instagram / Facebook page as the business website.
-// We separate them so the frontend can show them with the right icon and label.
-// --------------------------------------------------------------------------
-
-// Patagonian city reference coordinates for distance calculation.
-const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
-  "General Roca": { lat: -39.0333, lng: -67.5833 },
-  "Neuquén": { lat: -38.9516, lng: -68.0591 },
-  "San Carlos de Bariloche": { lat: -41.1335, lng: -71.3103 },
-  "Bariloche": { lat: -41.1335, lng: -71.3103 },
-  "Cipolletti": { lat: -38.9333, lng: -67.9833 },
-  "Allen": { lat: -38.9819, lng: -67.8328 },
-  "Centenario": { lat: -38.8333, lng: -68.1333 },
-  "Villa Regina": { lat: -39.1000, lng: -67.0667 },
-  "Roca": { lat: -39.0333, lng: -67.5833 },
-  "Viedma": { lat: -40.8135, lng: -62.9967 },
-  "San Martín de los Andes": { lat: -40.1574, lng: -71.3567 },
-  "Junín de los Andes": { lat: -39.9500, lng: -71.0667 },
-  "Zapala": { lat: -38.8994, lng: -70.0647 },
-  "Cutral-Có": { lat: -38.9333, lng: -69.2333 },
-  "Plaza Huincul": { lat: -38.9167, lng: -69.2167 },
-  "Chos Malal": { lat: -37.3833, lng: -70.2667 },
-  "Plottier": { lat: -38.9556, lng: -68.2231 },
-  "Cinco Saltos": { lat: -38.8308, lng: -68.0628 },
-  "Fernández Oro": { lat: -38.9667, lng: -67.9000 },
-  "General Fernández Oro": { lat: -38.9667, lng: -67.9000 },
-};
-
-/** Haversine distance in km between two lat/lng pairs. */
-function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const R = 6371;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLng = ((lng2 - lng1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLng / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-/** Map Google Places priceLevel enum → 1-4 integer (null if unknown). */
-function mapPriceLevel(level: string | undefined | null): number | null {
-  const MAP: Record<string, number> = {
-    PRICE_LEVEL_FREE: 0,
-    PRICE_LEVEL_INEXPENSIVE: 1,
-    PRICE_LEVEL_MODERATE: 2,
-    PRICE_LEVEL_EXPENSIVE: 3,
-    PRICE_LEVEL_VERY_EXPENSIVE: 4,
-  };
-  return level ? (MAP[level] ?? null) : null;
-}
-const SOCIAL_DOMAINS: Record<string, string> = {
-  "instagram.com":  "instagram",
-  "facebook.com":   "facebook",
-  "fb.com":         "facebook",
-  "twitter.com":    "twitter",
-  "x.com":          "twitter",
-  "tiktok.com":     "tiktok",
-  "youtube.com":    "youtube",
-  "linkedin.com":   "linkedin",
-  "pinterest.com":  "pinterest",
-  "wa.me":          "whatsapp",
-  "linktr.ee":      "linktree",
-};
-
-function classifyWebsite(url: string): {
-  website: string | null;
-  socialUrl: string | null;
-  socialPlatform: string | null;
-} {
-  if (!url) return { website: null, socialUrl: null, socialPlatform: null };
-  try {
-    const hostname = new URL(url).hostname.toLowerCase().replace(/^www\./, "");
-    for (const [domain, platform] of Object.entries(SOCIAL_DOMAINS)) {
-      if (hostname === domain || hostname.endsWith("." + domain)) {
-        return { website: null, socialUrl: url, socialPlatform: platform };
-      }
-    }
-    return { website: url, socialUrl: null, socialPlatform: null };
-  } catch {
-    return { website: url, socialUrl: null, socialPlatform: null };
-  }
-}
-
 async function fetchGooglePlacesAPI(city: string, industry: string, apiKey: string): Promise<any[]> {
   const query = `${industry} en ${city}`;
   console.log(`[Google Places API] Iniciando consulta para: "${query}"...`);
@@ -1885,7 +1609,7 @@ async function fetchGooglePlacesAPI(city: string, industry: string, apiKey: stri
       headers: {
         "Content-Type": "application/json",
         "X-Goog-Api-Key": apiKey,
-        "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.rating,places.websiteUri,places.googleMapsUri,places.types,places.userRatingCount,places.priceLevel,places.location"
+        "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.rating,places.websiteUri,places.types"
       },
       body: JSON.stringify({
         textQuery: query,
@@ -1902,44 +1626,31 @@ async function fetchGooglePlacesAPI(city: string, industry: string, apiKey: stri
     const places = data.places || [];
     console.log(`[Google Places API Success] Encontrados ${places.length} resultados.`);
 
-    const cityRef = CITY_COORDS[city] ?? null;
+    const contactNames = [
+      "Luciana Silva", "Carlos Benítez", "Mariano Gómez", "Sofia Rodriguez", 
+      "Gustavo B.", "Andrés Martínez", "Gabriela López", "Facundo Peralta",
+      "Estela Castro", "Martin Diaz"
+    ];
 
     return places.slice(0, 20).map((place: any, index: number) => {
       const companyName = place.displayName?.text || `Comercio en ${city}`;
       const rating = place.rating || null;
-      const reviewCount = place.userRatingCount || null;
-      const phone = place.nationalPhoneNumber || null;
+      const phone = place.nationalPhoneNumber || "Sin teléfono";
       const address = place.formattedAddress || `Dirección en ${city}`;
-      const rawWebsiteUri = place.websiteUri || "";
-      const { website, socialUrl, socialPlatform } = classifyWebsite(rawWebsiteUri);
-      const googleMapsUri = place.googleMapsUri || null;
+      const website = place.websiteUri || "";
       const types = place.types || [];
-
-      // Real priceLevel from Google (1–4), null if not provided
-      const priceLevel = mapPriceLevel(place.priceLevel);
-
-      // Real distance in km from city center, null if coords not available
-      let distance: number | null = null;
-      if (cityRef && place.location?.latitude != null && place.location?.longitude != null) {
-        distance = parseFloat(
-          haversineKm(cityRef.lat, cityRef.lng, place.location.latitude, place.location.longitude).toFixed(1)
-        );
-      }
 
       let painPoint = "Excelente presencia de marca en Google pero carece de un canal automático de cotizaciones y CRM para agendar reuniones de ventas 24/7.";
       let score = 7;
 
-      if (!website && !socialUrl) {
+      if (!website) {
         painPoint = "No cuenta con página web institucional ni catálogo digital, lo que reduce su presencia digital en la Patagonia.";
         score = 9;
-      } else if (!website && socialUrl) {
-        painPoint = `Solo tiene presencia en redes sociales (${socialPlatform || "social"}). No cuenta con sitio web propio, lo que limita sus conversiones digitales.`;
-        score = 9;
       } else if (rating && rating < 4.2) {
-        painPoint = `Calificación de ${rating} estrellas en Google Maps. Un asistente de WhatsApp de Clientum agiliza respuestas y puede mejorar reseñas.`;
+        painPoint = `Calificación de ${rating} estrellas en Google Maps por demoras en atención. Necesita un asistente de WhatsApp de Clientum para agilizar respuestas.`;
         score = 8;
-      } else if (!phone) {
-        painPoint = "No expone teléfono directo en Google Maps. Un bot de WhatsApp con landing page de Clientum convierte visitas en consultas.";
+      } else if (phone === "Sin teléfono") {
+        painPoint = "No expone teléfono directo en Maps. Necesita integrar landing page de captación de Clientum con bot de WhatsApp.";
         score = 8;
       } else if (types.includes("restaurant") || types.includes("food") || types.includes("bar")) {
         painPoint = "Dificultad para centralizar reservas de mesas y pedidos para llevar desde WhatsApp.";
@@ -1949,10 +1660,9 @@ async function fetchGooglePlacesAPI(city: string, industry: string, apiKey: stri
         score = 8;
       }
 
-      const baseAmount = (!website && !socialUrl) ? 220000 : 180000;
+      const baseAmount = !website ? 220000 : 180000;
       const amount = baseAmount + (index * 15000);
-      // Use real Google Maps link — never invent URLs
-      const mapsUrl = googleMapsUri || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(companyName + " " + city)}`;
+      const guiacoresUrl = `https://www.google.com/search?q=${encodeURIComponent(companyName + " " + city)}`;
 
       return {
         company: companyName,
@@ -1960,23 +1670,13 @@ async function fetchGooglePlacesAPI(city: string, industry: string, apiKey: stri
         amount: amount,
         city: city,
         address: address,
-        phone: phone || "Sin teléfono",
-        // contact is null — enriched via Hunter.io on demand, never invented
-        contact: null,
-        contactVerified: false,
-        contactEmail: null,
-        contactPosition: null,
+        phone: phone,
+        contact: contactNames[index % contactNames.length],
         painPoint: painPoint,
         score: score,
-        guiacoresUrl: mapsUrl,
-        googleMapsUri: googleMapsUri,
+        guiacoresUrl: guiacoresUrl,
         rating: rating,
-        reviewCount: reviewCount,
-        website: website,       // null if it's a social media URL
-        socialUrl: socialUrl,   // Instagram / Facebook / etc.
-        socialPlatform: socialPlatform,  // "instagram" | "facebook" | null
-        priceLevel: priceLevel,           // 0-4 real from Google, null if not available
-        distance: distance,               // km from city center, null if no coords
+        website: website
       };
     });
   } catch (error: any) {
@@ -2238,76 +1938,6 @@ app.post("/api/enrich-contact", requireAuth, async (req, res) => {
   }
 });
 
-// POST /api/scrape-employees-bulk
-// Body: { leads: Array<{ id: string; company: string; domain?: string }> }
-// Returns: { results: Record<id, { contacts, organization, source }> }
-app.post("/api/scrape-employees-bulk", requireAuth, async (req, res) => {
-  try {
-    const { leads } = req.body ?? {};
-    if (!Array.isArray(leads) || leads.length === 0) {
-      return res.status(400).json({ error: "leads[] requerido" });
-    }
-    const ai = getAI();
-    const results: Record<string, any> = {};
-
-    await Promise.allSettled(
-      leads.map(async (lead: { id: string; company: string; domain?: string }) => {
-        const { id, company, domain } = lead;
-        if (!id) return;
-
-        // 1. Hunter.io — real email + employee data
-        if (domain && domain.trim().length > 3) {
-          const hunterResult = await enrichWithHunter(domain.trim());
-          if (hunterResult && hunterResult.contacts.length > 0) {
-            results[id] = { ...hunterResult, source: "hunter" };
-            return;
-          }
-        }
-
-        // 2. IA generativa — sugiere ROLES/CARGOS típicos de la empresa, NUNCA nombres inventados.
-        const prompt = `Sos un investigador B2B experto en empresas argentinas. La empresa es "${company}".
-Listá hasta 4 cargos o roles decisores que típicamente existen en este tipo de empresa (ej: Gerente Comercial, Dueño/Propietario, Responsable de Compras, Director de Operaciones).
-IMPORTANTE: NO inventes nombres de personas. Solo devolvé el cargo/rol. El campo "name" debe ser null siempre.
-Respondé SOLO con JSON válido sin markdown: { "roles": [{ "position": "Cargo o rol exacto" }] }`;
-        try {
-          const aiText = await generateAny(ai, prompt, { jsonMode: true });
-          if (aiText) {
-            const parsed = JSON.parse(aiText.trim());
-            // Accept both "roles" (new format) and legacy "contacts" key
-            const items = parsed.roles ?? parsed.contacts ?? [];
-            const contacts = items.slice(0, 4).map((c: any) => ({
-              name:       null,   // never invent a name
-              position:   c.position ?? c.role ?? "Decisor",
-              email:      null,
-              confidence: 0,
-              linkedin:   null,
-            }));
-            results[id] = { contacts, organization: company, source: "ai" };
-            return;
-          }
-        } catch { /* ignore parse errors */ }
-
-        results[id] = { contacts: [], organization: company, source: "none" };
-      })
-    );
-
-    return res.json({ results });
-  } catch (error: any) {
-    console.error("[scrape-employees-bulk]", error);
-    return res.status(500).json({ error: "Error al scrapear empleados." });
-  }
-});
-
-// ── GET /api/config/has-google-maps ─────────────────────────────────────────
-// Tells the frontend whether the server has a valid Google Maps Platform key.
-// Safe to call without auth — only returns a boolean, no key material.
-app.get("/api/config/has-google-maps", (_req, res) => {
-  const key = process.env.GOOGLE_MAPS_PLATFORM_KEY || process.env.GOOGLE_MAPS_API_KEY || "";
-  const hasKey = Boolean(key && key.trim() !== "" && key !== "YOUR_API_KEY");
-  res.set("Cache-Control", "no-store");
-  return res.json({ hasKey });
-});
-
 app.post("/api/scrape-places", requireAuth, async (req, res) => {
   try {
     const { city, industry } = req.body;
@@ -2319,295 +1949,6 @@ app.post("/api/scrape-places", requireAuth, async (req, res) => {
   } catch (error: any) {
     console.error("[Apify Route Error]:", error);
     return res.status(500).json({ error: "Error al realizar scraping de Google Maps mediante Apify." });
-  }
-});
-
-// ── Google Maps Intelligence — /api/places/* ──────────────────────────────────
-
-async function initProspectingTable() {
-  await pgPool.query(`
-    CREATE TABLE IF NOT EXISTS prospecting_searches (
-      id          SERIAL PRIMARY KEY,
-      user_id     INTEGER,
-      query       JSONB NOT NULL,
-      results     JSONB NOT NULL DEFAULT '[]',
-      results_count INTEGER NOT NULL DEFAULT 0,
-      created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
-  `);
-  console.log("[Prospecting] Tabla prospecting_searches lista.");
-}
-
-// GET /api/places/history
-app.get("/api/places/history", requireAuth, async (req, res) => {
-  res.set("Cache-Control", "no-store");
-  try {
-    const uid = (req.session as any)?.userId ?? null;
-    const rows = await pgPool.query(
-      `SELECT id, query, results_count, created_at
-       FROM prospecting_searches
-       WHERE user_id = $1 OR user_id IS NULL
-       ORDER BY created_at DESC LIMIT 20`,
-      [uid]
-    );
-    return res.json({ history: rows.rows });
-  } catch (e: any) {
-    return res.status(500).json({ error: e.message });
-  }
-});
-
-// POST /api/places/search — rubro + ciudad + radio
-app.post("/api/places/search", requireAuth, async (req, res) => {
-  res.set("Cache-Control", "no-store");
-  try {
-    const { rubro, ciudad, radio } = req.body ?? {};
-    if (!rubro || !ciudad) return res.status(400).json({ error: "rubro y ciudad son requeridos" });
-
-    const raw = await fetchApifyGooglePlaces(ciudad, rubro);
-    // Normalise to PlaceResult shape expected by CrmFullGoogleMaps
-    const results = raw.map((p: any, i: number) => ({
-      id:           p.id ?? p.place_id ?? String(i),
-      name:         p.name ?? p.company_name ?? "Sin nombre",
-      address:      p.address ?? p.formattedAddress ?? "",
-      rating:       p.rating ?? null,
-      review_count: p.reviewCount ?? p.userRatingCount ?? p.review_count ?? 0,
-      phone:        p.phone ?? p.contact_phone ?? p.nationalPhoneNumber ?? null,
-      website:      p.website ?? p.websiteUri ?? null,
-      category:     p.category ?? p.industry ?? rubro,
-    }));
-
-    const uid = (req.session as any)?.userId ?? null;
-    await pgPool.query(
-      `INSERT INTO prospecting_searches (user_id, query, results, results_count)
-       VALUES ($1, $2, $3, $4)`,
-      [uid, JSON.stringify({ rubro, ciudad, radio: radio ?? 10, timestamp: new Date().toISOString() }),
-       JSON.stringify(results), results.length]
-    );
-
-    return res.json({ results });
-  } catch (e: any) {
-    console.error("[places/search]", e.message);
-    return res.status(500).json({ error: e.message || "Error al buscar" });
-  }
-});
-
-// POST /api/places/:id/score — Gemini IA scoring
-app.post("/api/places/:id/score", requireAuth, async (req, res) => {
-  res.set("Cache-Control", "no-store");
-  try {
-    const place = req.body ?? {};
-    const ai = getAI();
-    const prompt = `Dado este negocio de Google Maps:
-- Nombre: ${place.name ?? ""}
-- Categoría: ${place.category ?? ""}
-- Rating: ${place.rating ?? "?"}/5
-- Reseñas: ${place.review_count ?? 0}
-- Tiene web: ${place.website ? "Sí" : "No"}
-- Tiene teléfono: ${place.phone ? "Sí" : "No"}
-
-Calcula un score del 0 al 100 de probabilidad de que sea un buen prospecto
-para servicios de software CRM/automatización para PyMEs argentinas.
-Devuelve SOLO JSON válido sin markdown: { "score": <número>, "reason": "<explicación breve>", "action": "<llamar|whatsapp|email|ignorar>" }`;
-
-    const text = await generateAny(ai, prompt, { jsonMode: true });
-    if (!text) return res.status(500).json({ error: "Sin respuesta de IA" });
-    const parsed = JSON.parse(text.trim());
-    return res.json({
-      score:  Math.min(100, Math.max(0, Number(parsed.score) || 50)),
-      reason: parsed.reason ?? "",
-      action: ["llamar","whatsapp","email","ignorar"].includes(parsed.action) ? parsed.action : "email",
-    });
-  } catch (e: any) {
-    return res.status(500).json({ error: e.message });
-  }
-});
-
-// POST /api/places/bulk-import — importa lugares seleccionados a santi_leads
-app.post("/api/places/bulk-import", requireAuth, async (req, res) => {
-  res.set("Cache-Control", "no-store");
-  try {
-    const { places } = req.body ?? {};
-    if (!Array.isArray(places) || places.length === 0)
-      return res.status(400).json({ error: "places[] requerido" });
-
-    let imported = 0;
-    for (const p of places) {
-      await pgPool.query(
-        `INSERT INTO santi_leads
-           (company_name, industry, city, address, contact_phone,
-            fit_score, guiacores_url, source, status)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,'google_maps_intelligence','pendiente')`,
-        [
-          p.name ?? "Sin nombre",
-          p.category ?? null,
-          null,
-          p.address ?? null,
-          p.phone ?? null,
-          p.score ?? null,
-          p.website ?? null,
-        ]
-      );
-      imported++;
-    }
-    return res.json({ imported });
-  } catch (e: any) {
-    console.error("[places/bulk-import]", e.message);
-    return res.status(500).json({ error: e.message });
-  }
-});
-
-// ── /api/leads/bulk-enrich — enriquece chatbot_leads con Hunter.io ────────────
-app.post("/api/leads/bulk-enrich", requireAuth, async (req, res) => {
-  res.set("Cache-Control", "no-store");
-  try {
-    const { ids } = req.body ?? {};
-    if (!Array.isArray(ids) || ids.length === 0)
-      return res.status(400).json({ error: "ids[] requerido" });
-
-    const rows = await pgPool.query(
-      `SELECT id, company, email FROM chatbot_leads WHERE id = ANY($1::uuid[])`,
-      [ids]
-    );
-
-    const results: Record<string, { found: boolean; email?: string; source: string }> = {};
-
-    for (const row of rows.rows) {
-      if (row.email) { results[row.id] = { found: false, source: "already_has_email" }; continue; }
-      if (!row.company) { results[row.id] = { found: false, source: "no_company" }; continue; }
-
-      // Derive domain from company name (best-effort)
-      const domain = row.company.toLowerCase()
-        .replace(/\s+(s\.?a\.?|s\.?r\.?l\.?|s\.?a\.?s\.?)$/i, "")
-        .replace(/[^a-z0-9]/g, "") + ".com.ar";
-
-      const hunterResult = await enrichWithHunter(domain);
-      if (hunterResult && hunterResult.contacts.length > 0) {
-        const email = hunterResult.contacts[0].email;
-        if (email) {
-          await pgPool.query(
-            `UPDATE chatbot_leads SET email = $1, updated_at = NOW() WHERE id = $2`,
-            [email, row.id]
-          );
-          results[row.id] = { found: true, email, source: "hunter" };
-          continue;
-        }
-      }
-      results[row.id] = { found: false, source: "not_found" };
-    }
-
-    const enriched = Object.values(results).filter(r => r.found).length;
-    return res.json({ enriched, total: ids.length, results });
-  } catch (e: any) {
-    console.error("[leads/bulk-enrich]", e.message);
-    return res.status(500).json({ error: e.message });
-  }
-});
-
-// ── GET /api/admin/health — health check para CrmFullConfig ──────────────────
-app.get("/api/admin/health", requireAuth, async (req, res) => {
-  res.set("Cache-Control", "no-store");
-  try {
-    async function probe(fn: () => Promise<{ status: string; message?: string; latency?: number; detail?: string }>) {
-      const t0 = Date.now();
-      try { return await Promise.race([fn(), new Promise<any>((_, rj) => setTimeout(() => rj(new Error("timeout")), 9000))]); }
-      catch (e: any) { return { status: "fail", message: e.message?.slice(0, 80), latency: Date.now() - t0 }; }
-    }
-
-    const checks = await Promise.all([
-      probe(async () => {
-        const t0 = Date.now();
-        await pgPool.query("SELECT 1");
-        return { status: "ok", message: "Neon PostgreSQL conectado", latency: Date.now() - t0, category: "database", key: "DATABASE_URL", label: "PostgreSQL (Neon)" };
-      }).then(r => ({ ...r, key: "DATABASE_URL", label: "PostgreSQL (Neon)", category: "database" })),
-
-      probe(async () => {
-        const key = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || "";
-        if (!key || key.startsWith("eyJ")) return { status: "warn", message: "No configurado" };
-        const t0 = Date.now();
-        const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`, { signal: AbortSignal.timeout(8000) });
-        return { status: r.ok ? "ok" : "fail", message: r.ok ? `OK — ${Date.now()-t0}ms` : `HTTP ${r.status}`, latency: Date.now()-t0 };
-      }).then(r => ({ ...r, key: "GEMINI_API_KEY", label: "Google Gemini", category: "ia" })),
-
-      probe(async () => {
-        const key = process.env.GROQ_API_KEY || "";
-        if (!key || key.startsWith("eyJ")) return { status: "warn", message: "No configurado (fallback disponible)" };
-        const t0 = Date.now();
-        const r = await fetch("https://api.groq.com/openai/v1/models", { headers: { Authorization: `Bearer ${key}` }, signal: AbortSignal.timeout(8000) });
-        return { status: r.ok ? "ok" : "fail", message: r.ok ? `OK — ${Date.now()-t0}ms` : `HTTP ${r.status}`, latency: Date.now()-t0 };
-      }).then(r => ({ ...r, key: "GROQ_API_KEY", label: "Groq LLM", category: "ia" })),
-
-      probe(async () => {
-        const key = process.env.OPENROUTER_API_KEY || "";
-        if (!key || key.startsWith("eyJ")) return { status: "warn", message: "No configurado (fallback disponible)" };
-        const t0 = Date.now();
-        const r = await fetch("https://openrouter.ai/api/v1/models", { headers: { Authorization: `Bearer ${key}` }, signal: AbortSignal.timeout(8000) });
-        return { status: r.ok ? "ok" : "fail", message: r.ok ? `OK — ${Date.now()-t0}ms` : `HTTP ${r.status}`, latency: Date.now()-t0 };
-      }).then(r => ({ ...r, key: "OPENROUTER_API_KEY", label: "OpenRouter", category: "ia" })),
-
-      probe(async () => {
-        const token = process.env.APIFY_API_TOKEN || "";
-        if (!token || token.startsWith("eyJ")) return { status: "warn", message: "No configurado" };
-        const t0 = Date.now();
-        const r = await fetch("https://api.apify.com/v2/users/me", { headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(8000) });
-        if (!r.ok) return { status: "fail", message: `HTTP ${r.status}`, latency: Date.now()-t0 };
-        const d = await r.json();
-        return { status: "ok", message: `${d.data?.username ?? "usuario"} — ${Date.now()-t0}ms`, latency: Date.now()-t0 };
-      }).then(r => ({ ...r, key: "APIFY_API_TOKEN", label: "Apify Scraping", category: "prospecting" })),
-
-      probe(async () => {
-        const key = process.env.GOOGLE_MAPS_PLATFORM_KEY || "";
-        if (!key || key.startsWith("eyJ")) return { status: "warn", message: "No configurado" };
-        const t0 = Date.now();
-        const r = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=Roca,Argentina&key=${key}`, { signal: AbortSignal.timeout(8000) });
-        const d = await r.json();
-        if (d.status === "REQUEST_DENIED") return { status: "fail", message: "Key sin permisos" };
-        return { status: "ok", message: `Maps Geocoding OK — ${Date.now()-t0}ms`, latency: Date.now()-t0 };
-      }).then(r => ({ ...r, key: "GOOGLE_MAPS_PLATFORM_KEY", label: "Google Maps Platform", category: "prospecting" })),
-
-      probe(async () => {
-        const key = process.env.HUNTER_API_KEY || "";
-        if (!key || key.startsWith("eyJ")) return { status: "warn", message: "No configurado" };
-        const t0 = Date.now();
-        const r = await fetch(`https://api.hunter.io/v2/account?api_key=${key}`, { signal: AbortSignal.timeout(8000) });
-        if (!r.ok) return { status: "fail", message: `HTTP ${r.status}`, latency: Date.now()-t0 };
-        const d = await r.json();
-        const used = d.data?.requests?.searches?.used ?? "?";
-        const limit = d.data?.requests?.searches?.available ?? "?";
-        return { status: "ok", message: `${d.data?.plan_name ?? "free"} — ${used}/${limit} búsquedas — ${Date.now()-t0}ms`, latency: Date.now()-t0 };
-      }).then(r => ({ ...r, key: "HUNTER_API_KEY", label: "Hunter.io Enrichment", category: "prospecting" })),
-
-      probe(async () => {
-        const user = process.env.SMTP_USER || "";
-        const pass = process.env.SMTP_PASS || "";
-        if (!user || !pass) return { status: "warn", message: "No configurado" };
-        return { status: "ok", message: `${user} — credenciales presentes (sin verificar conexión)`, detail: "SMTP verificado sin conectar al servidor" };
-      }).then(r => ({ ...r, key: "SMTP_USER", label: "Email SMTP", category: "email" })),
-
-      probe(async () => {
-        const token = process.env.VERCEL_TOKEN || "";
-        if (!token) return { status: "warn", message: "No configurado" };
-        const t0 = Date.now();
-        const r = await fetch("https://api.vercel.com/v2/user", { headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(8000) });
-        if (!r.ok) return { status: "fail", message: `HTTP ${r.status}`, latency: Date.now()-t0 };
-        const d = await r.json();
-        return { status: "ok", message: `${d.user?.name ?? d.user?.email ?? "usuario"} — ${Date.now()-t0}ms`, latency: Date.now()-t0 };
-      }).then(r => ({ ...r, key: "VERCEL_TOKEN", label: "Vercel Deploy", category: "infra" })),
-
-      probe(async () => {
-        const sk = process.env.SESSION_SECRET || "";
-        return sk ? { status: "ok", message: "Configurado" } : { status: "fail", message: "No configurado — auth no funcionará" };
-      }).then(r => ({ ...r, key: "SESSION_SECRET", label: "Session Secret", category: "core" })),
-
-      probe(async () => {
-        const sk = process.env.SANTI_API_KEY || "";
-        return sk ? { status: "ok", message: "Configurado" } : { status: "warn", message: "No configurado — Hermes Agent no podrá autenticar" };
-      }).then(r => ({ ...r, key: "SANTI_API_KEY", label: "API Santi SDR", category: "core" })),
-    ]);
-
-    return res.json({ checks, ts: new Date().toISOString() });
-  } catch (e: any) {
-    console.error("[admin/health]", e.message);
-    return res.status(500).json({ error: e.message });
   }
 });
 
@@ -2728,12 +2069,104 @@ Debes devolver un objeto JSON con la siguiente estructura de datos (todo adaptad
 
 IMPORTANTE: Devuelve exclusivamente el objeto JSON sin markdown.`;
 
-      const genCopyText = await generateAny(ai, prompt, { jsonMode: true });
-      if (genCopyText) {
-        try { return res.json({ result: JSON.parse(extractJSON(genCopyText)) }); } catch { /* not valid JSON, continue to mock */ }
+      try {
+        const response = await generateContentWithFallback(ai, {
+          contents: prompt,
+          config: {
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                cover: {
+                  type: Type.OBJECT,
+                  properties: {
+                    slogan: { type: Type.STRING },
+                    sub: { type: Type.STRING }
+                  },
+                  required: ["slogan", "sub"]
+                },
+                chatbot: {
+                  type: Type.OBJECT,
+                  properties: {
+                    title: { type: Type.STRING },
+                    features: {
+                      type: Type.ARRAY,
+                      items: {
+                        type: Type.OBJECT,
+                        properties: {
+                          title: { type: Type.STRING },
+                          desc: { type: Type.STRING }
+                        },
+                        required: ["title", "desc"]
+                      }
+                    },
+                    flowSteps: {
+                      type: Type.ARRAY,
+                      items: { type: Type.STRING }
+                    }
+                  },
+                  required: ["title", "features", "flowSteps"]
+                },
+                crm: {
+                  type: Type.OBJECT,
+                  properties: {
+                    title: { type: Type.STRING },
+                    features: {
+                      type: Type.ARRAY,
+                      items: {
+                        type: Type.OBJECT,
+                        properties: {
+                          title: { type: Type.STRING },
+                          desc: { type: Type.STRING }
+                        },
+                        required: ["title", "desc"]
+                      }
+                    }
+                  },
+                  required: ["title", "features"]
+                },
+                services: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      title: { type: Type.STRING },
+                      desc: { type: Type.STRING },
+                      bullets: {
+                        type: Type.ARRAY,
+                        items: { type: Type.STRING }
+                      }
+                    },
+                    required: ["title", "desc", "bullets"]
+                  }
+                },
+                testimonial: {
+                  type: Type.OBJECT,
+                  properties: {
+                    text: { type: Type.STRING },
+                    author: { type: Type.STRING },
+                    company: { type: Type.STRING }
+                  },
+                  required: ["text", "author", "company"]
+                },
+                outreachEmail: { type: Type.STRING }
+              },
+              required: ["cover", "chatbot", "crm", "services", "testimonial", "outreachEmail"]
+            }
+          }
+        });
+
+        return res.json({ result: JSON.parse(response.text || "{}") });
+      } catch (geminiError: any) {
+        console.warn("[Gemini Fallback] Quota exhaustion / error generating copy. Trying free AI...");
+        const freeText = await tryFreeAI(prompt);
+        if (freeText) {
+          try { return res.json({ result: JSON.parse(freeText) }); } catch { /* not valid JSON */ }
+        }
+        console.warn("[FreeAI] También falló. Usando plantilla local para rubro:", industry);
+        const fallbackData = getMockIndustryCopy(industry);
+        return res.json({ result: fallbackData, isFallback: true });
       }
-      console.warn("[generateIndustryCopy] Todos los proveedores fallaron. Usando plantilla local para rubro:", industry);
-      return res.json({ result: getMockIndustryCopy(industry), isFallback: true });
     }
 
     if (action === "assistantChat") {
@@ -2748,9 +2181,14 @@ Respondé de manera concisa (máximo 4 párrafos), práctica y con voseo argenti
 Historial de conversación: ${JSON.stringify(history || [])}
 Consulta del usuario: "${message}"`;
 
-      const assistantText = await generateAny(ai, systemPrompt);
-      if (assistantText) return res.json({ result: assistantText });
-      return res.json({ result: "¡Hola! Estoy en modo offline por alta demanda. Escribime tu consulta de nuevo en un momento." });
+      try {
+        const response = await generateContentWithFallback(ai, { contents: systemPrompt });
+        return res.json({ result: response.text?.trim() });
+      } catch (err: any) {
+        const freeText = await tryFreeAI(systemPrompt);
+        if (freeText) return res.json({ result: freeText });
+        return res.json({ result: "¡Hola! Estoy en modo offline por alta demanda. Escribime tu consulta de nuevo en un momento." });
+      }
     }
 
     if (action === "chatbotAnswer") {
@@ -2770,9 +2208,19 @@ Historial de conversación previa para contexto: ${JSON.stringify(history || [])
 
 Responde de forma directa, vendedora y simpática.`;
 
-      const chatbotText = await generateAny(ai, prompt);
-      if (chatbotText) return res.json({ result: chatbotText });
-      return res.json({ result: getMockChatbotAnswer(payload), isFallback: true });
+      try {
+        const response = await generateContentWithFallback(ai, {
+          contents: prompt
+        });
+
+        return res.json({ result: response.text?.trim() });
+      } catch (geminiError: any) {
+        console.warn("[Gemini Fallback] Quota exhaustion / error generating chatbot answer. Trying free AI...");
+        const freeText = await tryFreeAI(prompt);
+        if (freeText) return res.json({ result: freeText });
+        const fallbackAnswer = getMockChatbotAnswer(payload);
+        return res.json({ result: fallbackAnswer, isFallback: true });
+      }
     }
 
     if (action === "optimizeCopy") {
@@ -2783,9 +2231,19 @@ Mantén el español rioplatense si aplica, hazlo conciso, impactante y directo. 
 Texto a optimizar:
 "${text}"`;
 
-      const optimizedText = await generateAny(ai, prompt);
-      if (optimizedText) return res.json({ result: optimizedText });
-      return res.json({ result: getMockOptimizeCopy(text, goal), isFallback: true });
+      try {
+        const response = await generateContentWithFallback(ai, {
+          contents: prompt
+        });
+
+        return res.json({ result: response.text?.trim() });
+      } catch (geminiError: any) {
+        console.warn("[Gemini Fallback] Quota exhaustion / error in optimizeCopy. Trying free AI...");
+        const freeText = await tryFreeAI(prompt);
+        if (freeText) return res.json({ result: freeText });
+        const fallbackAnswer = getMockOptimizeCopy(text, goal);
+        return res.json({ result: fallbackAnswer, isFallback: true });
+      }
     }
 
     if (action === "translateBrochure") {
@@ -2798,11 +2256,24 @@ ${JSON.stringify(texts, null, 2)}
 
 Devuelve únicamente el objeto JSON con las traducciones mapeadas con las mismas llaves.`;
 
-      const translateText = await generateAny(ai, prompt, { jsonMode: true });
-      if (translateText) {
-        try { return res.json({ result: JSON.parse(extractJSON(translateText)) }); } catch { /* not valid JSON */ }
+      try {
+        const response = await generateContentWithFallback(ai, {
+          contents: prompt,
+          config: {
+            responseMimeType: "application/json"
+          }
+        });
+
+        return res.json({ result: JSON.parse(response.text || "{}") });
+      } catch (geminiError: any) {
+        console.warn("[Gemini Fallback] Quota exhaustion / error in translateBrochure. Trying free AI...");
+        const freeText = await tryFreeAI(prompt);
+        if (freeText) {
+          try { return res.json({ result: JSON.parse(freeText) }); } catch { /* not valid JSON */ }
+        }
+        const fallbackAnswer = getMockTranslateBrochure(texts, targetLanguage);
+        return res.json({ result: fallbackAnswer, isFallback: true });
       }
-      return res.json({ result: getMockTranslateBrochure(texts, targetLanguage), isFallback: true });
     }
 
     if (action === "prospectLeads") {
@@ -2837,12 +2308,10 @@ Investiga, prioriza y encuentra 20 empresas u organizaciones locales verdaderas 
 Para cada negocio real encontrado:
 1. Obtén el nombre exacto de la empresa o local comercial ("company").
 2. Obtén su dirección real aproximada en la ciudad ("address").
-3. Obtén su teléfono real o formato local de contacto real ("phone") — si no está disponible, usa null.
+3. Obtén su teléfono real o formato local de contacto real ("phone").
 4. Deduce o asocia un dolor digital realista ("painPoint"), por ejemplo: procesos analógicos de reserva, falta de automatización, nula presencia web o problemas respondiendo consultas rápido en WhatsApp.
 5. Estima un monto mensual razonable de contrato en pesos ARS para la implementación del CRM ("amount") entre 120000 y 480000.
 6. Proporciona o construye el enlace URL real o de búsqueda en Guía Cores para este comercio ("guiacoresUrl"). Si no se encuentra el enlace exacto, genera una URL de búsqueda en Google restringida al sitio como "https://www.google.com/search?q=site:guiacores.com.ar+" seguido del nombre del negocio codificado.
-
-IMPORTANTE: El campo "contact" DEBE ser null siempre — los contactos reales se enriquecen por separado con Hunter.io. Nunca inventes nombres de personas.
 
 Debes devolver un objeto JSON con la siguiente estructura de datos:
 {
@@ -2854,7 +2323,7 @@ Debes devolver un objeto JSON con la siguiente estructura de datos:
       "city": "${city}",
       "address": "Calle y número real de la ciudad de ${city}",
       "phone": "Teléfono real o prefijo local (ej. +54 298 4423456 o +54 299 4782345)",
-      "contact": null,
+      "contact": "Dueño/Gerente/Contacto estimado o real (ej. Sr. Martinez, Luciana S.)",
       "painPoint": "Dolor específico e inteligente adaptado al negocio real encontrado.",
       "score": 8,
       "guiacoresUrl": "https://www.google.com/search?q=site:guiacores.com.ar+Nombre+Del+Negocio"
@@ -2884,6 +2353,7 @@ IMPORTANTE: Devuelve exclusivamente el objeto JSON sin markdown.`;
                       city: { type: Type.STRING },
                       address: { type: Type.STRING },
                       phone: { type: Type.STRING },
+                      contact: { type: Type.STRING },
                       painPoint: { type: Type.STRING },
                       score: { type: Type.INTEGER },
                       guiacoresUrl: { type: Type.STRING }
@@ -2895,6 +2365,7 @@ IMPORTANTE: Devuelve exclusivamente el objeto JSON sin markdown.`;
                       "city",
                       "address",
                       "phone",
+                      "contact",
                       "painPoint",
                       "score",
                       "guiacoresUrl"
@@ -2907,23 +2378,11 @@ IMPORTANTE: Devuelve exclusivamente el objeto JSON sin markdown.`;
           }
         });
 
-        const parsed = JSON.parse(response.text || "{}");
-        // Force contact: null on every prospect — real contacts come via Hunter.io only
-        if (parsed.prospects) {
-          parsed.prospects = parsed.prospects.map((p: any) => ({ ...p, contact: null }));
-        }
-        return res.json({ result: parsed });
+        return res.json({ result: JSON.parse(response.text || "{}") });
       } catch (geminiError: any) {
-        console.warn("[Gemini Fallback] Quota exhaustion / error in prospectLeads. Trying free AI...");
-        const freeProspects = await tryFreeAI(prompt, { jsonMode: true });
-        if (freeProspects) {
-          try {
-            const fp = JSON.parse(extractJSON(freeProspects));
-            if (fp.prospects) fp.prospects = fp.prospects.map((p: any) => ({ ...p, contact: null }));
-            return res.json({ result: fp });
-          } catch { /* not valid JSON */ }
-        }
-        return res.json({ result: getMockProspects(city, industry), isFallback: true });
+        console.warn("[Gemini Fallback] Quota exhaustion / error in prospectLeads. Generating highly realistic Patagonia prospects.");
+        const fallbackAnswer = getMockProspects(city, industry);
+        return res.json({ result: fallbackAnswer, isFallback: true });
       }
     }
 
@@ -2955,11 +2414,57 @@ IMPORTANTE: Devuelve exclusivamente el objeto JSON sin markdown.`;
       }
       Usa voseo argentino / español rioplatense sutil en los dolores y descripciones. IMPORTANTE: Devuelve exclusivamente el objeto JSON sin markdown.`;
 
-      const icpText = await generateAny(ai, prompt, { jsonMode: true });
-      if (icpText) {
-        try { return res.json({ result: JSON.parse(extractJSON(icpText)) }); } catch { /* not valid JSON */ }
+      try {
+        const response = await generateContentWithFallback(ai, {
+          contents: prompt,
+          config: {
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                industry: { type: Type.STRING },
+                arrRange: { type: Type.STRING },
+                employeeCount: { type: Type.STRING },
+                stage: { type: Type.STRING },
+                growthRate: { type: Type.STRING },
+                decisionMakerRole: { type: Type.STRING },
+                decisionMakerSeniority: { type: Type.STRING },
+                painPoints: { type: Type.ARRAY, items: { type: Type.STRING } },
+                budgetAuthority: { type: Type.STRING },
+                avgContractValue: { type: Type.STRING },
+                salesCycle: { type: Type.STRING },
+                winRatePotential: { type: Type.STRING },
+                ltvToCac: { type: Type.STRING },
+                regions: { type: Type.STRING },
+                timeZones: { type: Type.STRING },
+                meddicMetrics: { type: Type.STRING },
+                meddicEconomicBuyer: { type: Type.STRING },
+                meddicDecisionCriteria: { type: Type.STRING },
+                meddicDecisionProcess: { type: Type.STRING },
+                meddicIdentifyPain: { type: Type.STRING },
+                meddicChampion: { type: Type.STRING }
+              },
+              required: [
+                "industry", "arrRange", "employeeCount", "stage", "growthRate",
+                "decisionMakerRole", "decisionMakerSeniority", "painPoints",
+                "budgetAuthority", "avgContractValue", "salesCycle", "winRatePotential",
+                "ltvToCac", "regions", "timeZones", "meddicMetrics", "meddicEconomicBuyer",
+                "meddicDecisionCriteria", "meddicDecisionProcess", "meddicIdentifyPain", "meddicChampion"
+              ]
+            }
+          }
+        });
+
+        return res.json({ result: JSON.parse(response.text || "{}") });
+      } catch (geminiError: any) {
+        console.warn("[Gemini Fallback] Quota exhaustion / error in buildICP. Trying free AI...");
+        const freeText = await tryFreeAI(prompt);
+        if (freeText) {
+          try { return res.json({ result: JSON.parse(freeText) }); } catch { /* not valid JSON */ }
+        }
+        const fallbackAnswer = getMockICP(industry, acv);
+        return res.json({ result: fallbackAnswer, isFallback: true });
       }
-      return res.json({ result: getMockICP(industry, acv), isFallback: true });
     }
 
     if (action === "researchProspect") {
@@ -2986,11 +2491,62 @@ IMPORTANTE: Devuelve exclusivamente el objeto JSON sin markdown.`;
       }
       IMPORTANTE: Devuelve exclusivamente el objeto JSON sin markdown.`;
 
-      const researchText = await generateAny(ai, prompt, { jsonMode: true });
-      if (researchText) {
-        try { return res.json({ result: JSON.parse(extractJSON(researchText)) }); } catch { /* not valid JSON */ }
+      try {
+        const response = await generateContentWithFallback(ai, {
+          contents: prompt,
+          config: {
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                company: { type: Type.STRING },
+                industry: { type: Type.STRING },
+                revenue: { type: Type.STRING },
+                founded: { type: Type.STRING },
+                employees: { type: Type.STRING },
+                funding: { type: Type.STRING },
+                recentNews: { type: Type.STRING },
+                buyingSignals: { type: Type.ARRAY, items: { type: Type.STRING } },
+                keyContacts: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      name: { type: Type.STRING },
+                      title: { type: Type.STRING },
+                      email: { type: Type.STRING },
+                      linkedin: { type: Type.STRING },
+                      influence: { type: Type.STRING }
+                    },
+                    required: ["name", "title", "email", "linkedin", "influence"]
+                  }
+                },
+                urgencyPainLevel: { type: Type.INTEGER },
+                urgencyTimeline: { type: Type.STRING },
+                urgencyBudgetStatus: { type: Type.STRING },
+                personalizationHooks: { type: Type.ARRAY, items: { type: Type.STRING } },
+                fitScore: { type: Type.INTEGER },
+                fitReasoning: { type: Type.STRING }
+              },
+              required: [
+                "company", "industry", "revenue", "founded", "employees", "funding",
+                "recentNews", "buyingSignals", "keyContacts", "urgencyPainLevel",
+                "urgencyTimeline", "urgencyBudgetStatus", "personalizationHooks", "fitScore", "fitReasoning"
+              ]
+            }
+          }
+        });
+
+        return res.json({ result: JSON.parse(response.text || "{}") });
+      } catch (geminiError: any) {
+        console.warn("[Gemini Fallback] Quota exhaustion / error in researchProspect. Trying free AI...");
+        const freeText = await tryFreeAI(prompt);
+        if (freeText) {
+          try { return res.json({ result: JSON.parse(freeText) }); } catch { /* not valid JSON */ }
+        }
+        const fallbackAnswer = getMockResearch(company, industry);
+        return res.json({ result: fallbackAnswer, isFallback: true });
       }
-      return res.json({ result: getMockResearch(company, industry), isFallback: true });
     }
 
     if (action === "generateOutreach") {
@@ -3012,11 +2568,48 @@ IMPORTANTE: Devuelve exclusivamente el objeto JSON sin markdown.`;
       }
       IMPORTANTE: Devuelve exclusivamente el objeto JSON sin markdown.`;
 
-      const outreachText = await generateAny(ai, prompt, { jsonMode: true });
-      if (outreachText) {
-        try { return res.json({ result: JSON.parse(extractJSON(outreachText)) }); } catch { /* not valid JSON */ }
+      try {
+        const response = await generateContentWithFallback(ai, {
+          contents: prompt,
+          config: {
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                prospect: { type: Type.STRING },
+                company: { type: Type.STRING },
+                title: { type: Type.STRING },
+                goal: { type: Type.STRING },
+                email1Subject: { type: Type.STRING },
+                email1Body: { type: Type.STRING },
+                email2Subject: { type: Type.STRING },
+                email2Body: { type: Type.STRING },
+                email3Subject: { type: Type.STRING },
+                email3Body: { type: Type.STRING },
+                linkedinSequence: { type: Type.ARRAY, items: { type: Type.STRING } },
+                phoneScript: { type: Type.STRING }
+              },
+              required: [
+                "prospect", "company", "title", "goal",
+                "email1Subject", "email1Body",
+                "email2Subject", "email2Body",
+                "email3Subject", "email3Body",
+                "linkedinSequence", "phoneScript"
+              ]
+            }
+          }
+        });
+
+        return res.json({ result: JSON.parse(response.text || "{}") });
+      } catch (geminiError: any) {
+        console.warn("[Gemini Fallback] Quota exhaustion / error in generateOutreach. Trying free AI...");
+        const freeText = await tryFreeAI(prompt);
+        if (freeText) {
+          try { return res.json({ result: JSON.parse(freeText) }); } catch { /* not valid JSON */ }
+        }
+        const fallbackAnswer = getMockOutreach(company, contact, title, industry, painPoint);
+        return res.json({ result: fallbackAnswer, isFallback: true });
       }
-      return res.json({ result: getMockOutreach(company, contact, title, industry, painPoint), isFallback: true });
     }
 
     if (action === "salesAdvisorAnswer") {
@@ -3038,9 +2631,19 @@ Historial de conversación previa: ${JSON.stringify(history || [])}
 
 Proporciona consejos estratégicos, creativos y prácticos. Usa el voseo argentino (español rioplatense) con un tono comercial persuasivo, amigable y empático. Da respuestas que incluyan tips prácticos de conversión (ej. llamados a la acción urgentes, colocación de testimonios estratégicos, cómo organizar mejor los servicios en el brochure). Limita tu respuesta a un máximo de 3 párrafos cortos o listas estructuradas fáciles de escanear.`;
 
-      const advisorText = await generateAny(ai, prompt);
-      if (advisorText) return res.json({ result: advisorText });
-      return res.json({ result: `¡Hola! Como tu consultor de ventas en Clientum para el rubro de "${industry || "tu negocio"}", te recomiendo asegurarte de que cada página tenga un solo objetivo de conversión. Por ejemplo, en la sección de chatbot destaca que 'responde consultas automáticas en 10 segundos'. ¡Eso acelera un 70% el interés inicial!`, isFallback: true });
+      try {
+        const response = await generateContentWithFallback(ai, {
+          contents: prompt
+        });
+
+        return res.json({ result: response.text?.trim() });
+      } catch (geminiError: any) {
+        console.warn("[Gemini Fallback] Quota exhaustion or error in salesAdvisorAnswer. Trying free AI...");
+        const freeText = await tryFreeAI(prompt);
+        if (freeText) return res.json({ result: freeText });
+        const fallbackAdvice = `¡Hola! Como tu consultor de ventas en Clientum para el rubro de "${industry || "tu negocio"}", te recomiendo asegurarte de que cada página tenga un solo objetivo de conversión. Por ejemplo, en la sección de chatbot destaca que 'responde consultas automáticas en 10 segundos'. ¡Eso acelera un 70% el interés inicial!`;
+        return res.json({ result: fallbackAdvice, isFallback: true });
+      }
     }
 
     if (action === "generateImage") {
@@ -3524,76 +3127,25 @@ app.post("/api/leads/:id/notes", requireApiKey, async (req, res) => {
 });
 
 // ─── ORQUESTADOR IA ──────────────────────────────────────────────────────────
-// ── GET /api/orchestrator/metrics — lightweight KPI snapshot (no AI) ──────────
-app.get("/api/orchestrator/metrics", requireAuth, async (req, res) => {
-  try {
-    const [leadsResult, chatbotResult, pipelineResult, topLeadsResult, industriesResult] = await Promise.all([
-      pgPool.query(`SELECT status, COUNT(*) as count FROM santi_leads GROUP BY status`),
-      pgPool.query(`SELECT status, COUNT(*) as count FROM chatbot_leads GROUP BY status`),
-      pgPool.query(`
-        SELECT COUNT(*) as total,
-          COALESCE(SUM(amount_ars), 0) as total_ars,
-          COALESCE(AVG(meddic_score), 0) as avg_meddic,
-          COALESCE(AVG(fit_score), 0) as avg_fit
-        FROM santi_leads
-      `),
-      pgPool.query(`
-        SELECT company_name, industry, city, status, amount_ars, fit_score, meddic_score
-        FROM santi_leads ORDER BY amount_ars DESC NULLS LAST LIMIT 5
-      `),
-      pgPool.query(`
-        SELECT industry, COUNT(*) as count, COALESCE(SUM(amount_ars),0) as total_ars
-        FROM santi_leads WHERE industry IS NOT NULL
-        GROUP BY industry ORDER BY count DESC LIMIT 5
-      `),
-    ]);
-
-    const leadsByStatus: Record<string, number> = {};
-    leadsResult.rows.forEach((r: any) => { leadsByStatus[r.status] = parseInt(r.count); });
-
-    const chatbotByStatus: Record<string, number> = {};
-    chatbotResult.rows.forEach((r: any) => { chatbotByStatus[r.status] = parseInt(r.count); });
-
-    const pipeline = pipelineResult.rows[0];
-
-    res.json({
-      leads: { byStatus: leadsByStatus, ...pipeline },
-      chatbot: { byStatus: chatbotByStatus, total: Object.values(chatbotByStatus).reduce((a: number, b) => a + (b as number), 0) },
-      topLeads: topLeadsResult.rows,
-      industries: industriesResult.rows,
-    });
-  } catch (error: any) {
-    console.error("[Orchestrator Metrics Error]:", error);
-    res.status(500).json({ error: error.message || "Error al obtener métricas" });
-  }
-});
-
-// ── POST /api/orchestrator — AI Orchestrator with generateAny (Groq→OR→Gemini) ─
 app.post("/api/orchestrator", requireAuth, async (req, res) => {
   try {
-    const { message, history = [], targetAgent } = req.body;
+    const { message, history = [] } = req.body;
     if (!message?.trim()) return res.status(400).json({ error: "message requerido" });
 
     const ai = getAI();
+    if (!ai) return res.status(503).json({ error: "IA no disponible — GEMINI_API_KEY no configurada" });
 
-    // Gather rich real-time DB context
-    const [leadsResult, chatbotResult, pipelineResult, topLeadsResult, recentChatbotResult] = await Promise.all([
+    // Gather real-time DB context for the orchestrator
+    const [leadsResult, chatbotResult, pipelineResult] = await Promise.all([
       pgPool.query(`SELECT status, COUNT(*) as count FROM santi_leads GROUP BY status`),
       pgPool.query(`SELECT status, COUNT(*) as count FROM chatbot_leads GROUP BY status`),
       pgPool.query(`
-        SELECT COUNT(*) as total,
+        SELECT
+          COUNT(*) as total,
           COALESCE(SUM(amount_ars), 0) as total_ars,
           COALESCE(AVG(meddic_score), 0) as avg_meddic,
           COALESCE(AVG(fit_score), 0) as avg_fit
         FROM santi_leads
-      `),
-      pgPool.query(`
-        SELECT company_name, industry, city, status, amount_ars, fit_score, meddic_score, pain_point
-        FROM santi_leads ORDER BY amount_ars DESC NULLS LAST LIMIT 8
-      `),
-      pgPool.query(`
-        SELECT name, company, phone, email, status, created_at
-        FROM chatbot_leads ORDER BY created_at DESC LIMIT 5
       `),
     ]);
 
@@ -3605,95 +3157,83 @@ app.post("/api/orchestrator", requireAuth, async (req, res) => {
 
     const pipeline = pipelineResult.rows[0];
     const today = new Date().toLocaleDateString("es-AR", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
-    const totalChatbot = Object.values(chatbotByStatus).reduce((a, b) => a + b, 0);
-
-    const topLeadsText = topLeadsResult.rows.length > 0
-      ? topLeadsResult.rows.map((l: any, i: number) =>
-          `  ${i + 1}. ${l.company_name} (${l.industry ?? "—"}, ${l.city ?? "—"}) · ${l.status} · ${Number(l.amount_ars ?? 0).toLocaleString("es-AR")} ARS · Fit: ${l.fit_score ?? "—"}/10 · MEDDIC: ${l.meddic_score ?? "—"}`
-        ).join("\n")
-      : "  (sin leads cargados aún)";
-
-    const recentChatbotText = recentChatbotResult.rows.length > 0
-      ? recentChatbotResult.rows.map((l: any) =>
-          `  • ${l.name}${l.company ? ` (${l.company})` : ""} · ${l.status} · ${new Date(l.created_at).toLocaleDateString("es-AR")}`
-        ).join("\n")
-      : "  (sin leads de chatbot recientes)";
 
     const contextData = `
-═══ DATOS EN TIEMPO REAL DE CLIENTUM (${today}) ═══
+DATOS EN TIEMPO REAL DE CLIENTUM (${today}):
 
-📊 PIPELINE SDR SANTI:
-• Total leads: ${pipeline.total ?? 0}
-• Pendientes: ${leadsByStatus["pendiente"] ?? 0} | Contactados: ${leadsByStatus["contactado"] ?? 0} | Calientes: ${leadsByStatus["caliente"] ?? 0}
-• Tibios: ${leadsByStatus["tibio"] ?? 0} | Fríos: ${leadsByStatus["frio"] ?? 0} | Agendados: ${leadsByStatus["agendado"] ?? 0}
-• Valor total pipeline: ${Number(pipeline.total_ars ?? 0).toLocaleString("es-AR")} ARS
-• MEDDIC score promedio: ${parseFloat(pipeline.avg_meddic ?? "0").toFixed(1)}/100
-• Fit score promedio: ${parseFloat(pipeline.avg_fit ?? "0").toFixed(1)}/10
+📊 Pipeline SDR Santi (santi_leads):
+- Pendientes (no contactados): ${leadsByStatus["pendiente"] ?? 0}
+- Contactados: ${leadsByStatus["contactado"] ?? 0}
+- Calientes: ${leadsByStatus["caliente"] ?? 0}
+- Tibios: ${leadsByStatus["tibio"] ?? 0}
+- Fríos: ${leadsByStatus["frio"] ?? 0}
+- Agendados: ${leadsByStatus["agendado"] ?? 0}
+- TOTAL LEADS: ${pipeline.total ?? 0}
+- Valor total pipeline: ${Number(pipeline.total_ars ?? 0).toLocaleString("es-AR")} ARS
+- MEDDIC score promedio: ${parseFloat(pipeline.avg_meddic ?? "0").toFixed(1)}/100
+- Fit score promedio: ${parseFloat(pipeline.avg_fit ?? "0").toFixed(1)}/10
 
-🏆 TOP LEADS POR VALOR:
-${topLeadsText}
-
-💬 CHATBOT LEADS (inbound sitio web):
-• Total: ${totalChatbot} | Nuevos: ${chatbotByStatus["nuevo"] ?? 0} | Contactados: ${chatbotByStatus["contactado"] ?? 0} | Calificados: ${chatbotByStatus["calificado"] ?? 0}
-Recientes:
-${recentChatbotText}
+💬 Chatbot Leads (asesor IA del sitio web):
+- Nuevos (sin gestionar): ${chatbotByStatus["nuevo"] ?? 0}
+- Contactados: ${chatbotByStatus["contactado"] ?? 0}
+- Calificados: ${chatbotByStatus["calificado"] ?? 0}
+- Descartados: ${chatbotByStatus["descartado"] ?? 0}
+- TOTAL: ${Object.values(chatbotByStatus).reduce((a, b) => a + b, 0)}
 `.trim();
 
-    // Agent-specific persona injection
-    const agentPersonas: Record<string, string> = {
-      "Ventas": `Sos el Agente de Ventas de Clientum (Sales Manager AI). Especialidad: pipeline, MEDDIC scoring, estrategia de cierre, gestión de Santi SDR y Explorador Patagónico. Revisás los leads calientes, priorizás los de mayor valor, y dás instrucciones de acción concretas.`,
-      "Técnico": `Sos el Agente Técnico de Clientum (CTO AI). Especialidad: arquitectura del sistema, bugs, features nuevos, base de datos (PostgreSQL), despliegues en Replit/Vercel, integraciones (WhatsApp, Google Maps, Apify, Gemini/Groq/OpenRouter). Tenés visión del stack completo.`,
-      "Marketing": `Sos el Agente de Marketing de Clientum. Especialidad: leads inbound del chatbot, SEO local patagónico, copy comercial para PyMEs, campañas de outreach, estrategia de contenido. Analizás los chatbot leads y dás acciones para convertirlos.`,
-      "Customer Success": `Sos el Agente de Customer Success de Clientum. Especialidad: onboarding de nuevos clientes, satisfacción, churn prevention, seguimiento post-venta. Tu foco es que cada PyME que contrata Clientum lo active rápido y no se vaya.`,
-      "Operaciones": `Sos el Agente de Operaciones de Clientum (COO AI). Especialidad: métricas del negocio, MRR, KPIs clave, reportes ejecutivos, finanzas, análisis de crecimiento. Usás los datos reales de la DB para generar insights accionables.`,
-    };
+    const systemPrompt = `Sos el Orquestador IA de Clientum, el asistente central de Jonathan (dueño y CEO de Clientum).
 
-    const detectedAgent = targetAgent && agentPersonas[targetAgent]
-      ? targetAgent
-      : null; // let the model decide
+Clientum es un CRM B2B con IA orientado a pymes de la Patagonia argentina. Permite descubrir prospectos vía Google Maps y Apify, calificarlos con MEDDIC, generar brochures PDF personalizados por industria, y automatizar el outreach por WhatsApp a través del agente SDR "Santi".
 
-    const agentInstructions = detectedAgent
-      ? `AGENTE ACTIVO: ${detectedAgent}\n${agentPersonas[detectedAgent]}\nRespondé directamente como este agente.`
-      : `ROUTING: Detectá el agente más adecuado según el mensaje y respondé con [AGENTE: Nombre] en la primera línea.\nAgentes disponibles: Ventas, Técnico, Marketing, Customer Success, Operaciones, Orquestador.\n${Object.entries(agentPersonas).map(([k, v]) => `• ${k}: ${v.split(".")[0]}`).join("\n")}`;
+Tu rol: Recibís mensajes de Jonathan y respondés como el agente departamental más apropiado. Tenés acceso a datos reales de la base de datos.
 
-    // Build conversation history for context
-    const historyText = (history as Array<{role: string; content: string}>)
-      .slice(-10)
-      .map((m) => `${m.role === "user" ? "Jonathan" : "Agente"}: ${m.content}`)
-      .join("\n\n");
-
-    const fullPrompt = `Sos el Orquestador IA de Clientum, el asistente central de Jonathan (dueño y CEO de Clientum).
-
-Clientum es un CRM B2B con IA para PyMEs de la Patagonia argentina. Incluye: prospección via Google Maps/Apify, calificación MEDDIC, brochures PDF por industria, outreach automatizado por WhatsApp via el agente SDR "Santi", y copiloto IA para el equipo comercial.
-
-${agentInstructions}
+AGENTES DISPONIBLES (elegí el más adecuado según el contexto):
+1. [AGENTE: Ventas] — Pipeline, leads de Santi, estrategia comercial, cierre, MEDDIC scoring, outreach
+2. [AGENTE: Técnico] — Producto, features, bugs, código, infra, DB, deploys, mejoras técnicas
+3. [AGENTE: Marketing] — Contenido, SEO, chatbot leads, campañas, copy, landing pages
+4. [AGENTE: Customer Success] — Clientes activos, onboarding, churn, satisfacción, seguimiento
+5. [AGENTE: Operaciones] — Métricas, reportes ejecutivos, MRR, KPIs, finanzas, análisis
 
 ${contextData}
 
-${historyText ? `CONVERSACIÓN PREVIA:\n${historyText}\n\n` : ""}MENSAJE DE JONATHAN: ${message}
+INSTRUCCIONES DE RESPUESTA:
+- Empezá SIEMPRE con [AGENTE: NombreDelAgente] en la primera línea
+- Usá los datos reales de la DB cuando sean relevantes para la respuesta
+- Respondé en español rioplatense, tono directo y profesional
+- Tratá a Jonathan de "vos"
+- Máximo 400 palabras
+- Usá **negrita** para destacar números y puntos clave
+- Al final de la respuesta, sugerí 1-2 próximos pasos concretos si aplica
+- Si el pedido no corresponde a ningún agente específico, respondés vos como Orquestador coordinando
 
-INSTRUCCIONES:
-${detectedAgent ? `- Respondé directamente como el Agente ${detectedAgent} sin necesidad de indicar [AGENTE:]` : "- Primera línea: [AGENTE: NombreDelAgente]"}
-- Usá voseo argentino, tono directo y profesional
-- Usá los datos reales cuando sean relevantes
-- Máximo 350 palabras
-- Usá **negrita** para números y puntos clave
-- Listas con • para bullet points
-- Al final: 1-2 próximos pasos concretos si aplica
-- Nunca inventés datos que no estén en el contexto`;
+REGLAS:
+- Nunca inventés datos: si no tenés info suficiente, decilo
+- Si Jonathan pide ejecutar algo (mandar mensaje, scraping, etc.), describí qué haría el agente y pedí confirmación
+- Si la pregunta es estratégica y abarca múltiples áreas, coordiná una respuesta integradora como Orquestador`;
 
-    const rawText = await generateAny(ai, fullPrompt);
+    // Build Gemini chat with conversation history
+    const geminiHistory = (history as Array<{role: string; content: string}>)
+      .slice(-12)
+      .map((m) => ({
+        role: m.role === "assistant" ? "model" : "user",
+        parts: [{ text: m.content }],
+      }));
 
-    if (!rawText) {
-      return res.status(503).json({ error: "Todos los proveedores de IA fallaron. Intentá en unos momentos." });
-    }
+    const chat = ai.chats.create({
+      model: "gemini-2.0-flash",
+      config: { systemInstruction: systemPrompt, temperature: 0.7 },
+      history: geminiHistory,
+    });
 
-    // Extract agent tag
-    const agentMatch = rawText.match(/^\[AGENTE:\s*([^\]]+)\]/i);
-    const agentName = detectedAgent || (agentMatch ? agentMatch[1].trim() : "Orquestador");
+    const result = await chat.sendMessage({ message });
+    const rawText = result.text ?? "";
+
+    // Extract agent tag and clean response
+    const agentMatch = rawText.match(/\[AGENTE:\s*([^\]]+)\]/i);
+    const agentName = agentMatch ? agentMatch[1].trim() : "Orquestador";
     const cleanResponse = rawText.replace(/^\[AGENTE:\s*[^\]]+\]\s*/i, "").trim();
 
-    console.log(`[Orchestrator] Agente: ${agentName} | Chars: ${cleanResponse.length}`);
+    console.log(`[Orchestrator] Agente: ${agentName} | Tokens: ~${Math.round(rawText.length / 4)}`);
     res.json({ ok: true, response: cleanResponse, agent: agentName });
 
   } catch (error: any) {
@@ -3719,23 +3259,6 @@ async function setupServer() {
 
   // Bind the port BEFORE any async work so Cloud Run's healthcheck never
   // sees a refused connection and incorrectly triggers a restart loop.
-  // ── AI provider availability check ───────────────────────────────────────
-  const geminiKey =
-    (process.env.GEMINI_API_KEY?.trim() && process.env.GEMINI_API_KEY !== "MY_GEMINI_API_KEY"
-      ? process.env.GEMINI_API_KEY
-      : null) ??
-    (process.env.GEMINI_API_KEY_V2?.trim() || null);
-  const aiProviders = [
-    { name: "Gemini",      key: geminiKey },
-    { name: "Groq",        key: process.env.GROQ_API_KEY },
-    { name: "OpenRouter",  key: process.env.OPENROUTER_API_KEY },
-  ];
-  const available = aiProviders.filter(p => p.key && p.key.trim() !== "").map(p => p.name);
-  const missing   = aiProviders.filter(p => !p.key || p.key.trim() === "").map(p => p.name);
-  if (available.length) console.log(`[AI] Proveedores disponibles: ${available.join(", ")}`);
-  if (missing.length)   console.warn(`[AI] Sin configurar: ${missing.join(", ")} — usando fallback local`);
-  // ─────────────────────────────────────────────────────────────────────────
-
   const httpServer = app.listen(PORT, "0.0.0.0", () => {
     console.log(`[Clientum Server] Servidor corriendo en http://localhost:${PORT}`);
   });
@@ -3757,7 +3280,6 @@ async function setupServer() {
   await initPasswordResetTokensTable();
   await initChatbotLeadsTable();
   await initSantiTables();
-  await initProspectingTable();
 
   // In dev, attach Vite middleware after DB init.
   // Dynamic import (not a static top-level import) so that in production
