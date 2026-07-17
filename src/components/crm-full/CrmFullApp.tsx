@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, Users, Package, Building2, MessageSquare, MessagesSquare, Bot, Database, Blocks, UserPlus, MapPin, MessageCircle, Settings2, Cpu, Network } from 'lucide-react';
+import { LayoutDashboard, Users, Package, Building2, MessageSquare, MessagesSquare, Bot, Database, Blocks, UserPlus, MapPin, MessageCircle, Settings2, Cpu, Network, Globe, FileText, Mail, Search, Share2, Target } from 'lucide-react';
 import CrmFullDashboard from './CrmFullDashboard';
 import CrmFullPipeline from './CrmFullPipeline';
 import CrmFullProducts from './CrmFullProducts';
@@ -15,6 +15,12 @@ import CrmFullGoogleMaps from './CrmFullGoogleMaps';
 import CrmFullWhatsApp from './CrmFullWhatsApp';
 import CrmFullConfig from './CrmFullConfig';
 import OrganigramaClientum from '../OrganigramaClientum';
+import WpChatbotIA from './WpChatbotIA';
+import WpContenido from './WpContenido';
+import WpEmailMarketing from './WpEmailMarketing';
+import WpSEO from './WpSEO';
+import WpRedesSociales from './WpRedesSociales';
+import WpProspector from './WpProspector';
 import { Conversation, Seller, Branch, Product } from './crmTypes';
 import {
   initialConversations,
@@ -23,25 +29,51 @@ import {
   initialProducts,
 } from './crmInitialData';
 
-type SubTab = 'dashboard' | 'crm' | 'products' | 'usecases' | 'sellers' | 'branches' | 'conversations' | 'leads' | 'bot' | 'cmdb' | 'agentes' | 'maps' | 'whatsapp' | 'config' | 'organigrama';
+type SubTab =
+  | 'dashboard' | 'crm' | 'products' | 'usecases' | 'sellers' | 'branches'
+  | 'conversations' | 'leads' | 'bot' | 'cmdb' | 'agentes' | 'maps'
+  | 'whatsapp' | 'config' | 'organigrama'
+  | 'wp_chatbot' | 'wp_contenido' | 'wp_email' | 'wp_seo' | 'wp_social' | 'wp_prospector';
 
-const tabs: { id: SubTab; label: string; icon: React.ReactNode }[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
-  { id: 'crm', label: 'CRM', icon: <MessagesSquare className="w-4 h-4" /> },
-  { id: 'leads', label: 'Leads', icon: <UserPlus className="w-4 h-4" /> },
-  { id: 'maps', label: 'Maps IA', icon: <MapPin className="w-4 h-4" /> },
-  { id: 'whatsapp', label: 'WhatsApp', icon: <MessageCircle className="w-4 h-4" /> },
-  { id: 'agentes', label: 'Agentes IA', icon: <Cpu className="w-4 h-4" /> },
-  { id: 'products', label: 'Productos', icon: <Package className="w-4 h-4" /> },
-  { id: 'usecases', label: 'Casos de Uso', icon: <Blocks className="w-4 h-4" /> },
-  { id: 'sellers', label: 'Vendedores', icon: <Users className="w-4 h-4" /> },
-  { id: 'branches', label: 'Sucursales', icon: <Building2 className="w-4 h-4" /> },
-  { id: 'conversations', label: 'Conversaciones', icon: <MessageSquare className="w-4 h-4" /> },
-  { id: 'bot', label: 'Bot', icon: <Bot className="w-4 h-4" /> },
-  { id: 'cmdb', label: 'Infraestructura', icon: <Database className="w-4 h-4" /> },
-  { id: 'config', label: 'Config', icon: <Settings2 className="w-4 h-4" /> },
-  { id: 'organigrama', label: 'Organigrama', icon: <Network className="w-4 h-4" /> },
+// Tabs grouped by section — the nav renders a divider between groups
+const TAB_GROUPS: { label: string; color: string; tabs: { id: SubTab; label: string; icon: React.ReactNode }[] }[] = [
+  {
+    label: 'CRM',
+    color: 'text-sky-400',
+    tabs: [
+      { id: 'dashboard',     label: 'Dashboard',      icon: <LayoutDashboard className="w-4 h-4" /> },
+      { id: 'crm',          label: 'CRM',             icon: <MessagesSquare className="w-4 h-4" /> },
+      { id: 'leads',        label: 'Leads',            icon: <UserPlus className="w-4 h-4" /> },
+      { id: 'maps',         label: 'Maps IA',          icon: <MapPin className="w-4 h-4" /> },
+      { id: 'whatsapp',     label: 'WhatsApp',         icon: <MessageCircle className="w-4 h-4" /> },
+      { id: 'agentes',      label: 'Agentes IA',       icon: <Cpu className="w-4 h-4" /> },
+      { id: 'products',     label: 'Productos',        icon: <Package className="w-4 h-4" /> },
+      { id: 'usecases',     label: 'Casos de Uso',     icon: <Blocks className="w-4 h-4" /> },
+      { id: 'sellers',      label: 'Vendedores',       icon: <Users className="w-4 h-4" /> },
+      { id: 'branches',     label: 'Sucursales',       icon: <Building2 className="w-4 h-4" /> },
+      { id: 'conversations',label: 'Conversaciones',   icon: <MessageSquare className="w-4 h-4" /> },
+      { id: 'bot',          label: 'Bot',              icon: <Bot className="w-4 h-4" /> },
+      { id: 'cmdb',         label: 'Infraestructura',  icon: <Database className="w-4 h-4" /> },
+      { id: 'config',       label: 'Config',           icon: <Settings2 className="w-4 h-4" /> },
+      { id: 'organigrama',  label: 'Organigrama',      icon: <Network className="w-4 h-4" /> },
+    ],
+  },
+  {
+    label: 'WordPress',
+    color: 'text-violet-400',
+    tabs: [
+      { id: 'wp_chatbot',   label: 'Chatbot IA',       icon: <Bot className="w-4 h-4" /> },
+      { id: 'wp_contenido', label: 'Contenido IA',     icon: <FileText className="w-4 h-4" /> },
+      { id: 'wp_email',     label: 'Email Marketing',  icon: <Mail className="w-4 h-4" /> },
+      { id: 'wp_seo',       label: 'SEO con IA',       icon: <Search className="w-4 h-4" /> },
+      { id: 'wp_social',    label: 'Redes Sociales',   icon: <Share2 className="w-4 h-4" /> },
+      { id: 'wp_prospector',label: 'Prospector',       icon: <Target className="w-4 h-4" /> },
+    ],
+  },
 ];
+
+// Flat list for legacy usage
+const tabs = TAB_GROUPS.flatMap(g => g.tabs);
 
 function loadOrDefault<T>(key: string, defaultValue: T): T {
   try {
@@ -151,6 +183,18 @@ export default function CrmFullApp({ activeTabOverride, hideNav = false }: CrmFu
         return <CrmFullCMDB />;
       case 'organigrama':
         return <OrganigramaClientum />;
+      case 'wp_chatbot':
+        return <WpChatbotIA />;
+      case 'wp_contenido':
+        return <WpContenido />;
+      case 'wp_email':
+        return <WpEmailMarketing />;
+      case 'wp_seo':
+        return <WpSEO />;
+      case 'wp_social':
+        return <WpRedesSociales />;
+      case 'wp_prospector':
+        return <WpProspector />;
       default:
         return null;
     }
@@ -165,19 +209,36 @@ export default function CrmFullApp({ activeTabOverride, hideNav = false }: CrmFu
           <Building2 className="w-5 h-5 text-sky-400 drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]" />
           <span className="font-bold text-sm font-display tracking-wide text-white uppercase">Clientum CRM</span>
         </div>
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-200 ${
-              activeTab === tab.id
-                ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30 shadow-[0_0_10px_rgba(14,165,233,0.15)]'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'
-            }`}
-          >
-            {tab.icon}
-            {tab.label}
-          </button>
+        {TAB_GROUPS.map((group, gi) => (
+          <React.Fragment key={group.label}>
+            {gi > 0 && (
+              <div className="flex items-center gap-1.5 ml-2 mr-1 flex-shrink-0">
+                <div className="w-px h-5 bg-[#1E293B]" />
+                <span className={`text-[10px] font-bold uppercase tracking-widest ${group.color} opacity-70 whitespace-nowrap`}>
+                  {group.label}
+                </span>
+              </div>
+            )}
+            {group.tabs.map(tab => {
+              const isWp = group.label === 'WordPress';
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-200 ${
+                    activeTab === tab.id
+                      ? isWp
+                        ? 'bg-violet-500/20 text-violet-300 border border-violet-500/30 shadow-[0_0_10px_rgba(139,92,246,0.15)]'
+                        : 'bg-sky-500/20 text-sky-400 border border-sky-500/30 shadow-[0_0_10px_rgba(14,165,233,0.15)]'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'
+                  }`}
+                >
+                  {tab.icon}
+                  {tab.label}
+                </button>
+              );
+            })}
+          </React.Fragment>
         ))}
       </nav>
       )}
