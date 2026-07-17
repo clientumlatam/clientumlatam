@@ -3169,9 +3169,6 @@ export default function SalesProspectorDashboard({
           </div>
         )}
 
-      </div>
-      </div>
-
       {/* MODAL CONFIGURACIÓN GOOGLE PLACES API KEY */}
       {showKeyModal && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
@@ -3314,21 +3311,21 @@ export default function SalesProspectorDashboard({
       )}
       {/* TAB: WORDPRESS — Leads del Chatbot */}
       {activeTab === "wp-leads" && (
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 -m-6 flex flex-col overflow-hidden">
           <CrmFullLeads />
         </div>
       )}
 
       {/* TAB: WORDPRESS — Configuración del Plugin */}
       {activeTab === "wp-setup" && (
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 -m-6 flex flex-col overflow-y-auto">
           <WpSetup />
         </div>
       )}
 
       {/* TAB: WORDPRESS — Módulos del Plugin */}
       {activeTab === "wp-modulos" && (
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 -m-6 flex flex-col overflow-y-auto">
           <WpModulos />
         </div>
       )}
@@ -3579,6 +3576,9 @@ export default function SalesProspectorDashboard({
           </div>
         );
       })()}
+
+      </div>{/* closes: flex-1 overflow-y-auto p-6 flex flex-col (main content) */}
+      </div>{/* closes: flex-1 flex overflow-hidden (main layout) */}
 
       {/* Asistente IA — right-side copilot panel */}
       <AsistenteIA
