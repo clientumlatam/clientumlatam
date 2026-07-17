@@ -1968,7 +1968,10 @@ app.post("/api/scrape-places", requireAuth, async (req, res) => {
 
 // Only the public chatbot demo is reachable without a session; every other
 // action here belongs to the CRM/dashboard and requires an authenticated user.
-const PUBLIC_GENERATE_ACTIONS = new Set(["chatbotAnswer"]);
+const PUBLIC_GENERATE_ACTIONS = new Set([
+  "chatbotAnswer",
+  "assistantChat",   // Asistente IA — usa GEMINI_API_KEY server-side, no requiere sesión de usuario
+]);
 
 // Brochure & Contenido actions (SidebarEditor) are admin-only.
 const ADMIN_ONLY_GENERATE_ACTIONS = new Set([
