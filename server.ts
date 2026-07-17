@@ -11,6 +11,8 @@ import nodemailer from "nodemailer";
 import crypto from "crypto";
 
 dotenv.config();
+// En un Remix recién configurado, los secrets vienen de .env.local (generado por pull-secrets.mjs)
+dotenv.config({ path: ".env.local", override: false });
 
 const app = express();
 // Trust Vercel's (and any other reverse proxy's) X-Forwarded-* headers so
