@@ -15,6 +15,10 @@ import CrmFullGoogleMaps from './CrmFullGoogleMaps';
 import CrmFullWhatsApp from './CrmFullWhatsApp';
 import CrmFullConfig from './CrmFullConfig';
 import OrganigramaClientum from '../OrganigramaClientum';
+import OrgVariantRadial from '../OrgVariantRadial';
+import OrgVariantLanes from '../OrgVariantLanes';
+import OrgVariantPipeline from '../OrgVariantPipeline';
+import OrgVariantRoster from '../OrgVariantRoster';
 import WpChatbotIA from './WpChatbotIA';
 import WpContenido from './WpContenido';
 import WpEmailMarketing from './WpEmailMarketing';
@@ -33,6 +37,7 @@ type SubTab =
   | 'dashboard' | 'crm' | 'products' | 'usecases' | 'sellers' | 'branches'
   | 'conversations' | 'leads' | 'bot' | 'cmdb' | 'agentes' | 'maps'
   | 'whatsapp' | 'config' | 'organigrama'
+  | 'org_radial' | 'org_lanes' | 'org_pipeline' | 'org_roster'
   | 'wp_chatbot' | 'wp_contenido' | 'wp_email' | 'wp_seo' | 'wp_social' | 'wp_prospector';
 
 // Tabs grouped by section — the nav renders a divider between groups
@@ -56,6 +61,10 @@ const TAB_GROUPS: { label: string; color: string; tabs: { id: SubTab; label: str
       { id: 'cmdb',         label: 'Infraestructura',  icon: <Database className="w-4 h-4" /> },
       { id: 'config',       label: 'Config',           icon: <Settings2 className="w-4 h-4" /> },
       { id: 'organigrama',  label: 'Organigrama',      icon: <Network className="w-4 h-4" /> },
+      { id: 'org_radial',   label: 'Org Radial',       icon: <Network className="w-4 h-4" /> },
+      { id: 'org_lanes',    label: 'Org Swimlanes',    icon: <Network className="w-4 h-4" /> },
+      { id: 'org_pipeline', label: 'Org Pipeline',     icon: <Network className="w-4 h-4" /> },
+      { id: 'org_roster',   label: 'Org Roster',       icon: <Network className="w-4 h-4" /> },
     ],
   },
   {
@@ -183,6 +192,14 @@ export default function CrmFullApp({ activeTabOverride, hideNav = false }: CrmFu
         return <CrmFullCMDB />;
       case 'organigrama':
         return <OrganigramaClientum />;
+      case 'org_radial':
+        return <OrgVariantRadial />;
+      case 'org_lanes':
+        return <OrgVariantLanes />;
+      case 'org_pipeline':
+        return <OrgVariantPipeline />;
+      case 'org_roster':
+        return <OrgVariantRoster />;
       case 'wp_chatbot':
         return <WpChatbotIA />;
       case 'wp_contenido':
