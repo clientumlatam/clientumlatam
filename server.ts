@@ -1759,6 +1759,44 @@ function getMockOutreach(company: string, contact: string, title: string, indust
 }
 
 // Helper function to query real-time businesses using Google Places API (New)
+// --------------------------------------------------------------------------
+// Classify a URL returned by Google Places as a real website or a social URL.
+// Google Maps often stores an Instagram / Facebook page as the business website.
+// We separate them so the frontend can show them with the right icon and label.
+// --------------------------------------------------------------------------
+const SOCIAL_DOMAINS: Record<string, string> = {
+  "instagram.com":  "instagram",
+  "facebook.com":   "facebook",
+  "fb.com":         "facebook",
+  "twitter.com":    "twitter",
+  "x.com":          "twitter",
+  "tiktok.com":     "tiktok",
+  "youtube.com":    "youtube",
+  "linkedin.com":   "linkedin",
+  "pinterest.com":  "pinterest",
+  "wa.me":          "whatsapp",
+  "linktr.ee":      "linktree",
+};
+
+function classifyWebsite(url: string): {
+  website: string | null;
+  socialUrl: string | null;
+  socialPlatform: string | null;
+} {
+  if (!url) return { website: null, socialUrl: null, socialPlatform: null };
+  try {
+    const hostname = new URL(url).hostname.toLowerCase().replace(/^www\./, "");
+    for (const [domain, platform] of Object.entries(SOCIAL_DOMAINS)) {
+      if (hostname === domain || hostname.endsWith("." + domain)) {
+        return { website: null, socialUrl: url, socialPlatform: platform };
+      }
+    }
+    return { website: url, socialUrl: null, socialPlatform: null };
+  } catch {
+    return { website: url, socialUrl: null, socialPlatform: null };
+  }
+}
+
 async function fetchGooglePlacesAPI(city: string, industry: string, apiKey: string): Promise<any[]> {
   const query = `${industry} en ${city}`;
   console.log(`[Google Places API] Iniciando consulta para: "${query}"...`);
@@ -1792,15 +1830,19 @@ async function fetchGooglePlacesAPI(city: string, industry: string, apiKey: stri
       const reviewCount = place.userRatingCount || null;
       const phone = place.nationalPhoneNumber || null;
       const address = place.formattedAddress || `Dirección en ${city}`;
-      const website = place.websiteUri || "";
+      const rawWebsiteUri = place.websiteUri || "";
+      const { website, socialUrl, socialPlatform } = classifyWebsite(rawWebsiteUri);
       const googleMapsUri = place.googleMapsUri || null;
       const types = place.types || [];
 
       let painPoint = "Excelente presencia de marca en Google pero carece de un canal automático de cotizaciones y CRM para agendar reuniones de ventas 24/7.";
       let score = 7;
 
-      if (!website) {
+      if (!website && !socialUrl) {
         painPoint = "No cuenta con página web institucional ni catálogo digital, lo que reduce su presencia digital en la Patagonia.";
+        score = 9;
+      } else if (!website && socialUrl) {
+        painPoint = `Solo tiene presencia en redes sociales (${socialPlatform || "social"}). No cuenta con sitio web propio, lo que limita sus conversiones digitales.`;
         score = 9;
       } else if (rating && rating < 4.2) {
         painPoint = `Calificación de ${rating} estrellas en Google Maps. Un asistente de WhatsApp de Clientum agiliza respuestas y puede mejorar reseñas.`;
@@ -1816,10 +1858,10 @@ async function fetchGooglePlacesAPI(city: string, industry: string, apiKey: stri
         score = 8;
       }
 
-      const baseAmount = !website ? 220000 : 180000;
+      const baseAmount = (!website && !socialUrl) ? 220000 : 180000;
       const amount = baseAmount + (index * 15000);
       // Use real Google Maps link — never invent URLs
-      const mapsUrl = googleMapsUri || (googleMapsUri ? googleMapsUri : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(companyName + " " + city)}`);
+      const mapsUrl = googleMapsUri || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(companyName + " " + city)}`;
 
       return {
         company: companyName,
@@ -1839,7 +1881,9 @@ async function fetchGooglePlacesAPI(city: string, industry: string, apiKey: stri
         googleMapsUri: googleMapsUri,
         rating: rating,
         reviewCount: reviewCount,
-        website: website
+        website: website,       // null if it's a social media URL
+        socialUrl: socialUrl,   // Instagram / Facebook / etc.
+        socialPlatform: socialPlatform  // "instagram" | "facebook" | null
       };
     });
   } catch (error: any) {

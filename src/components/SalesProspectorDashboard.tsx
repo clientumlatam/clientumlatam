@@ -2350,6 +2350,7 @@ export default function SalesProspectorDashboard({
                                     Google Maps
                                   </a>
                                 )}
+                                {/* Sitio web real (no red social) */}
                                 {p.website && (() => {
                                   try {
                                     const hostname = new URL(p.website).hostname.replace(/^www\./, "");
@@ -2366,6 +2367,45 @@ export default function SalesProspectorDashboard({
                                       </a>
                                     );
                                   } catch { return null; }
+                                })()}
+                                {/* Red social (Instagram, Facebook, etc.) — Google Maps la pone como "website" */}
+                                {p.socialUrl && (() => {
+                                  const colors: Record<string, string> = {
+                                    instagram: "text-pink-500 hover:text-pink-700",
+                                    facebook:  "text-blue-500 hover:text-blue-700",
+                                    twitter:   "text-sky-500 hover:text-sky-700",
+                                    tiktok:    "text-slate-700 hover:text-slate-900",
+                                    youtube:   "text-red-500 hover:text-red-700",
+                                    linkedin:  "text-blue-600 hover:text-blue-800",
+                                    linktree:  "text-green-600 hover:text-green-800",
+                                    whatsapp:  "text-green-500 hover:text-green-700",
+                                  };
+                                  const labels: Record<string, string> = {
+                                    instagram: "Instagram",
+                                    facebook:  "Facebook",
+                                    twitter:   "Twitter/X",
+                                    tiktok:    "TikTok",
+                                    youtube:   "YouTube",
+                                    linkedin:  "LinkedIn",
+                                    linktree:  "Linktree",
+                                    whatsapp:  "WhatsApp",
+                                  };
+                                  const platform = p.socialPlatform || "";
+                                  const color = colors[platform] || "text-violet-500 hover:text-violet-700";
+                                  const label = labels[platform] || "Red Social";
+                                  return (
+                                    <a
+                                      href={p.socialUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      onClick={(e) => e.stopPropagation()}
+                                      title={`Solo red social — sin sitio web propio`}
+                                      className={`text-[9px] font-bold flex items-center gap-0.5 hover:underline ${color}`}
+                                    >
+                                      <ExternalLink className="w-3 h-3 shrink-0" />
+                                      {label}
+                                    </a>
+                                  );
                                 })()}
                               </div>
                               <button
