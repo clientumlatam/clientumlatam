@@ -143,6 +143,40 @@ Vercel (clientum.com.ar) — auto-deploy via GitHub integration
 
 ---
 
+## Cómo hacer Remix de este proyecto
+
+Si hiciste Remix (fork) de este Replit, los secrets **no se copian** — tenés que configurarlos manualmente.
+
+**Paso 1 — Verificar qué falta:**
+```bash
+node scripts/setup-check.mjs
+```
+El script lista todos los secrets requeridos y opcionales, con descripción de cada uno y links para obtenerlos.
+
+**Paso 2 — Agregar los secrets faltantes:**
+Replit → Tools → Secrets → + New Secret
+
+**Paso 3 — Verificar que todo funciona:**
+```bash
+node scripts/setup-check.mjs   # debe mostrar ✅ Setup completo
+npm run dev
+```
+
+**Paso 4 — Si querés sincronizar tus propios Vercel/GitHub:**
+Editá `scripts/sync-secrets.mjs` y cambiá `VERCEL_PROJECT_ID` y `GITHUB_REPO` por los tuyos, luego:
+```bash
+node scripts/sync-secrets.mjs
+```
+
+---
+
+## Logs de sesiones
+
+Cada sesión de trabajo con el agente queda documentada en `docs/sessions/`.  
+Ver el índice: [`docs/sessions/README.md`](docs/sessions/README.md)
+
+---
+
 ## User preferences
 
 - Keep the existing project structure and stack
