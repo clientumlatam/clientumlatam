@@ -14,6 +14,7 @@ import OrgVariantRoster from "./OrgVariantRoster";
 import WpSetup from "./wordpress/WpSetup";
 import WpModulos from "./wordpress/WpModulos";
 import CrmFullLeads from "./crm-full/CrmFullLeads";
+import AgentOSDashboard from "./crm-full/AgentOSDashboard";
 import BrochurePreview from "./BrochurePreview";
 import IcpBuilder from "./crm-full/IcpBuilder";
 import MeddicCalificacion from "./crm-full/MeddicCalificacion";
@@ -201,7 +202,7 @@ export default function SalesProspectorDashboard({
     "pipeline" | "icp" | "research" | "meddic" | "outreach" |
     "products" | "sellers" | "branches" | "conversations" | "bot" |
     "brochure" | "config" | "pages" | "ai" | "activity" | "quickcreate" |
-    "orquestador" |
+    "orquestador" | "agent-os" |
     "wp-leads" | "wp-setup" | "wp-modulos" |
     "org-clientum" | "org-radial" | "org-lanes" | "org-pipeline" | "org-roster"
   >("config");
@@ -260,6 +261,14 @@ export default function SalesProspectorDashboard({
         { id: "pages", label: "Contenido", icon: Edit3 },
         { id: "config", label: "Configuración", icon: Sliders },
         { id: "ai", label: "Copiloto IA", icon: Sparkles },
+      ],
+    },
+    {
+      id: "agent-os",
+      label: "Agent OS",
+      icon: Cpu,
+      items: [
+        { id: "agent-os", label: "Centro de Control", desc: "Pipeline, tareas y costos del OS", icon: Cpu },
       ],
     },
     {
@@ -3329,6 +3338,13 @@ export default function SalesProspectorDashboard({
       {activeTab === "org-roster" && (
         <div className="flex-1 -m-6 overflow-hidden flex flex-col">
           <OrgVariantRoster />
+        </div>
+      )}
+
+      {/* TAB: AGENT OS — Centro de Control */}
+      {activeTab === "agent-os" && (
+        <div className="flex-1 overflow-y-auto">
+          <AgentOSDashboard />
         </div>
       )}
 
