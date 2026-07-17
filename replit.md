@@ -145,24 +145,35 @@ Vercel (clientum.com.ar) — auto-deploy via GitHub integration
 
 ## Cómo hacer Remix de este proyecto
 
-Si hiciste Remix (fork) de este Replit, los secrets **no se copian** — tenés que configurarlos manualmente.
+Los secrets **no se copian** al hacer Remix — se traen automáticamente desde Vercel con un solo comando.
 
-**Paso 1 — Verificar qué falta:**
+**Paso 1 — Agregar solo `VERCEL_TOKEN` en Replit:**
+Replit → Tools → Secrets → + New Secret → `VERCEL_TOKEN`  
+(conseguilo en https://vercel.com/account/settings/tokens)
+
+**Paso 2 — Traer todos los secrets desde Vercel:**
+```bash
+node scripts/pull-secrets.mjs
+```
+Esto crea un `.env.local` con todos los secrets. El servidor lo carga automáticamente.
+
+**Paso 3 — Levantar:**
+```bash
+npm run dev   # ya funciona con los secrets del .env.local
+```
+
+**Opcional — Verificar qué secrets están activos:**
 ```bash
 node scripts/setup-check.mjs
 ```
-El script lista todos los secrets requeridos y opcionales, con descripción de cada uno y links para obtenerlos.
 
-**Paso 2 — Agregar los secrets faltantes:**
-Replit → Tools → Secrets → + New Secret
-
-**Paso 3 — Verificar que todo funciona:**
+**Opcional — Migrar secrets a Replit permanentemente:**  
+Una vez que copiás los valores del `.env.local` a Replit Secrets uno por uno, podés borrar el archivo:
 ```bash
-node scripts/setup-check.mjs   # debe mostrar ✅ Setup completo
-npm run dev
+rm .env.local
 ```
 
-**Paso 4 — Si querés sincronizar tus propios Vercel/GitHub:**
+**Si querés sincronizar hacia tus propios Vercel/GitHub:**
 Editá `scripts/sync-secrets.mjs` y cambiá `VERCEL_PROJECT_ID` y `GITHUB_REPO` por los tuyos, luego:
 ```bash
 node scripts/sync-secrets.mjs
