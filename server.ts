@@ -46,12 +46,13 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT) : 5000;
 // stale if it's ever rotated). Otherwise falls back to DATABASE_URL
 // (Replit's own internal Postgres) for local-only setups.
 async function resolveDatabaseUrl(): Promise<string> {
-  // Priority 1: explicit Neon connection string
+  // Priority 1: canonical Neon connection string (ep-plain-bread project — the
+  // CORRECT project). POSTGRES_URL / POSTGRES_URL_NO_SSL are from a DIFFERENT
+  // Neon project (ep-noisy-water) added by the Vercel Postgres integration and
+  // should be ignored — they point to an empty database that causes auth errors.
+  if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
   if (process.env.NEON_DATABASE_URL) return process.env.NEON_DATABASE_URL;
-  // Priority 2: Vercel Postgres / any provider that sets POSTGRES_URL
-  if (process.env.POSTGRES_URL) return process.env.POSTGRES_URL;
-  if (process.env.POSTGRES_URL_NO_SSL) return process.env.POSTGRES_URL_NO_SSL;
-  // Priority 3: resolve live from Neon API (avoids stale connection strings)
+  // Priority 2: resolve live from Neon API (avoids stale connection strings)
   const neonApiKey = process.env.NEON_API_KEY;
   const neonProjectId = process.env.NEON_PROJECT_ID;
   if (neonApiKey && neonProjectId) {
