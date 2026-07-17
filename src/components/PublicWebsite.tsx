@@ -68,6 +68,7 @@ import {
 } from "lucide-react";
 
 import { BrochureData } from "../types";
+import OrganigramaClientum from "./OrganigramaClientum";
 import serviciosCatalogo from "../data/servicios-catalogo.json";
 import categoriasServicios from "../data/categorias-servicios.json";
 import cursosLms from "../data/cursos-lms.json";
@@ -2896,6 +2897,18 @@ export default function PublicWebsite({
                       Esa visión se cristaliza en una plataforma y un conjunto de herramientas tecnológicas pensadas para satisfacer la demanda de nuestros clientes y anticiparse a las necesidades del mercado.
                     </p>
                   </div>
+                </div>
+
+                {/* Organigrama IA */}
+                <div>
+                  <div className="text-center mb-8">
+                    <span className="text-indigo-600 font-mono text-[10px] uppercase tracking-widest font-bold">Arquitectura Hermes Prime · Julio 2026</span>
+                    <h2 className="text-2xl font-display font-black text-slate-950 tracking-tight mt-2">Equipo Humano + Agentes de IA</h2>
+                    <p className="text-slate-500 text-xs mt-2 max-w-lg mx-auto leading-relaxed">
+                      Jonathan dirige una empresa asistida por agentes de IA autónomos que operan ventas, marketing, soporte y operaciones 24/7.
+                    </p>
+                  </div>
+                  <OrganigramaClientum />
                 </div>
 
                 {/* CTA */}
