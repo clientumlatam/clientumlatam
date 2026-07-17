@@ -273,6 +273,18 @@ export default function SalesProspectorDashboard({
       ],
     },
     {
+      id: "organigrama",
+      label: "Organigrama",
+      icon: Network,
+      items: [
+        { id: "org-clientum",  label: "Organigrama General", desc: "Árbol completo de agentes",         icon: Network },
+        { id: "org-roster",    label: "Roster de Agentes",   desc: "Grid de 14 agentes con filtros",    icon: Users },
+        { id: "org-lanes",     label: "Swimlanes por Dept.", desc: "Vista por departamento y estado",    icon: Layers },
+        { id: "org-pipeline",  label: "Pipeline Flow",       desc: "Flujo de valor extremo a extremo",  icon: TrendingUp },
+        { id: "org-radial",    label: "Hub Radial",          desc: "Vista radial centrada en CEO",       icon: Compass },
+      ],
+    },
+    {
       id: "wordpress",
       label: "WordPress",
       icon: Globe,
