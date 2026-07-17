@@ -2,13 +2,13 @@
 type ModuleMap = Record<string, () => Promise<Record<string, unknown>>>;
 export const modules: ModuleMap = {
   "./components/mockups/OrganigramaClientum.tsx": () => import("../components/mockups/OrganigramaClientum.tsx"),
+  "./components/mockups/clientum-landing/Current.tsx": () => import("../components/mockups/clientum-landing/Current.tsx"),
+  "./components/mockups/clientum-landing/RefinedA.tsx": () => import("../components/mockups/clientum-landing/RefinedA.tsx"),
+  "./components/mockups/clientum-landing/RefinedB.tsx": () => import("../components/mockups/clientum-landing/RefinedB.tsx"),
   "./components/mockups/crm-pipeline/AccessibleReadable.tsx": () => import("../components/mockups/crm-pipeline/AccessibleReadable.tsx"),
   "./components/mockups/crm-pipeline/ClearHierarchy.tsx": () => import("../components/mockups/crm-pipeline/ClearHierarchy.tsx"),
   "./components/mockups/crm-pipeline/ConfidentDepth.tsx": () => import("../components/mockups/crm-pipeline/ConfidentDepth.tsx"),
   "./components/mockups/crm-pipeline/Current.tsx": () => import("../components/mockups/crm-pipeline/Current.tsx"),
   "./components/mockups/crm-pipeline/ExplicitAffordances.tsx": () => import("../components/mockups/crm-pipeline/ExplicitAffordances.tsx"),
-  "./components/mockups/crm-pipeline/TightenedHierarchy.tsx": () => import("../components/mockups/crm-pipeline/TightenedHierarchy.tsx"),
-  "./components/mockups/clientum-landing/Current.tsx": () => import("../components/mockups/clientum-landing/Current.tsx"),
-  "./components/mockups/clientum-landing/RefinedA.tsx": () => import("../components/mockups/clientum-landing/RefinedA.tsx"),
-  "./components/mockups/clientum-landing/RefinedB.tsx": () => import("../components/mockups/clientum-landing/RefinedB.tsx")
+  "./components/mockups/crm-pipeline/TightenedHierarchy.tsx": () => import("../components/mockups/crm-pipeline/TightenedHierarchy.tsx")
 };
