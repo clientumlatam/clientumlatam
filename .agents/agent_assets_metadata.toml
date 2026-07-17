@@ -78,3 +78,9 @@ id = "cgr3x4t91-Rf7hgQfE0bg"
 uri = "file://exports/clientum-catalogo-final.csv"
 type = "table"
 title = "Clientum — Catálogo Final (WooCommerce)"
+
+[[outputs]]
+id = "ScXpHQTCnWU1E0ec76Oki"
+uri = "file://talleres_donweb.csv"
+type = "table"
+title = "Talleres DonWeb — 140 registros"
