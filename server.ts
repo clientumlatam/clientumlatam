@@ -3929,6 +3929,38 @@ app.get("/api/leads-enriched", async (req, res) => {
   }
 });
 
+// PATCH /api/leads-enriched/:id
+app.patch("/api/leads-enriched/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { meddic, icp_fit, meddic_score, status } = req.body ?? {};
+    const updates: string[] = [];
+    const params: unknown[] = [];
+
+    if (icp_fit !== undefined) { params.push(icp_fit); updates.push(`icp_fit = ${params.length}`); }
+    if (meddic_score !== undefined) { params.push(meddic_score); updates.push(`meddic_score = ${params.length}`); }
+    if (status !== undefined) { params.push(status); updates.push(`status = ${params.length}`); }
+    if (meddic !== undefined) {
+      // Merge meddic dims into enrichment_data JSONB
+      updates.push(`enrichment_data = COALESCE(enrichment_data, '{}'::jsonb) || jsonb_build_object('meddic', ${params.length + 1}::jsonb)`);
+      params.push(JSON.stringify(meddic));
+    }
+
+    if (!updates.length) return res.status(400).json({ error: "No fields to update" });
+    updates.push(`updated_at = NOW()`);
+    params.push(id);
+
+    const result = await pgPool.query(
+      `UPDATE leads_enriched SET ${updates.join(", ")} WHERE id = ${params.length} RETURNING *`,
+      params
+    );
+    if (!result.rows.length) return res.status(404).json({ error: "Lead not found" });
+    res.json(result.rows[0]);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // POST /api/leads-enriched
 app.post("/api/leads-enriched", async (req, res) => {
   try {

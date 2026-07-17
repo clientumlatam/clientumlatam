@@ -1,50 +1,38 @@
-import React, { useState } from 'react';
-import { Target, CheckCircle2, MapPin, Search, Loader2, ArrowRight, Star, Zap, Filter } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Target, CheckCircle2, MapPin, Search, Loader2, ArrowRight, Star, Zap, Filter, RefreshCw, AlertCircle } from 'lucide-react';
 
-interface Prospect {
+interface Company {
   id: string;
   name: string;
-  rubro: string;
-  ciudad: string;
-  phone?: string;
-  website?: string;
-  fit: number;
-  meddic: { need: number; budget: number; authority: number };
-  status: 'nuevo' | 'exportado' | 'descartado';
+  industry: string | null;
+  city: string | null;
+  phone: string | null;
+  website: string | null;
+  rating: number | null;
+  status: string;
+  source: string | null;
+  leads_count?: number;
+  metadata?: { pain_point?: string; score?: number } | null;
 }
 
-const SAMPLE_PROSPECTS: Prospect[] = [
-  { id: '1', name: 'Ferretería del Comahue', rubro: 'Ferretería', ciudad: 'General Roca', phone: '+54 298 442-1190', website: 'ferreteriacomahue.com.ar', fit: 92, meddic: { need: 9, budget: 7, authority: 8 }, status: 'nuevo' },
-  { id: '2', name: 'Clínica del Neuquén', rubro: 'Salud', ciudad: 'Neuquén Capital', phone: '+54 299 448-5500', website: null as any, fit: 87, meddic: { need: 8, budget: 8, authority: 7 }, status: 'exportado' },
-  { id: '3', name: 'Distribuidora Confluencia', rubro: 'Distribución', ciudad: 'Cipolletti', phone: '+54 299 478-3310', website: 'distribuidoraconfluencia.com', fit: 81, meddic: { need: 7, budget: 6, authority: 9 }, status: 'nuevo' },
-  { id: '4', name: 'Inmobiliaria del Limay', rubro: 'Inmobiliaria', ciudad: 'Neuquén Capital', phone: null as any, website: 'limaypropiedades.com.ar', fit: 76, meddic: { need: 8, budget: 5, authority: 7 }, status: 'nuevo' },
-  { id: '5', name: 'Automotriz Patagonia Sur', rubro: 'Automotriz', ciudad: 'General Roca', phone: '+54 298 443-0022', website: null as any, fit: 68, meddic: { need: 6, budget: 7, authority: 6 }, status: 'descartado' },
+const RUBROS = [
+  'Ferretería', 'Salud', 'Inmobiliaria', 'Automotriz', 'Distribución',
+  'Retail', 'Logística', 'Agroindustria', 'Gastronomía', 'Industrial',
+  'Construcción', 'Estudio Contable',
+];
+const CIUDADES = [
+  'General Roca', 'Neuquén Capital', 'Cipolletti', 'Allen', 'Bariloche',
+  'Villa Regina', 'Centenario', 'Plottier', 'Roca', 'Zapala',
 ];
 
-const RUBROS = ['Ferretería', 'Salud', 'Inmobiliaria', 'Automotriz', 'Distribución', 'Retail', 'Logística', 'Agroindustria', 'Medios', 'Industrial'];
-const CIUDADES = ['General Roca', 'Neuquén Capital', 'Cipolletti', 'Allen', 'Bariloche', 'Villa Regina', 'Centenario', 'Plottier'];
-
 function FitBadge({ score }: { score: number }) {
-  const color = score >= 85 ? 'text-emerald-400 border-emerald-500/30 bg-emerald-400/10'
-    : score >= 70 ? 'text-amber-400 border-amber-500/30 bg-amber-400/10'
+  const color = score >= 4 ? 'text-emerald-400 border-emerald-500/30 bg-emerald-400/10'
+    : score >= 3 ? 'text-amber-400 border-amber-500/30 bg-amber-400/10'
     : 'text-slate-400 border-slate-500/30 bg-slate-400/10';
   return (
     <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border font-bold ${color}`}>
-      <Star className="w-3 h-3" /> {score}
+      <Star className="w-3 h-3" /> {score > 0 ? `${score}/5` : '—'}
     </span>
-  );
-}
-
-function MeddicBar({ label, val }: { label: string; val: number }) {
-  return (
-    <div>
-      <div className="flex justify-between text-[10px] text-slate-500 mb-0.5">
-        <span>{label}</span><span className="text-slate-300">{val}/10</span>
-      </div>
-      <div className="h-1 bg-[#1E293B] rounded-full overflow-hidden">
-        <div className="h-full bg-sky-400/60 rounded-full" style={{ width: `${val * 10}%` }} />
-      </div>
-    </div>
   );
 }
 
@@ -52,28 +40,93 @@ export default function WpProspector() {
   const [rubro, setRubro] = useState('');
   const [ciudad, setCiudad] = useState('');
   const [scanning, setScanning] = useState(false);
-  const [prospects, setProspects] = useState<Prospect[]>(SAMPLE_PROSPECTS);
-  const [statusFilter, setStatusFilter] = useState<'all' | 'nuevo' | 'exportado' | 'descartado'>('all');
+  const [loading, setLoading] = useState(true);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'new' | 'enriched' | 'discard'>('all');
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [exportMsg, setExportMsg] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
+  const [runResult, setRunResult] = useState<{ found: number; new: number } | null>(null);
+
+  const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 4000);
+  };
+
+  const loadCompanies = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({ limit: '100' });
+      if (rubro) params.set('industry', rubro);
+      if (ciudad) params.set('city', ciudad);
+      const res = await fetch(`/api/companies?${params}`);
+      if (!res.ok) throw new Error('Error cargando empresas');
+      const data = await res.json() as { companies: Company[] };
+      setCompanies(data.companies);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [rubro, ciudad]);
+
+  useEffect(() => { loadCompanies(); }, []);
 
   const runProspect = async () => {
-    if (!rubro && !ciudad) return;
+    if (!rubro && !ciudad) {
+      showToast('Seleccioná al menos rubro o ciudad', 'error');
+      return;
+    }
     setScanning(true);
-    await new Promise(r => setTimeout(r, 2400));
-    setScanning(false);
+    setRunResult(null);
+    try {
+      const res = await fetch('/api/agent/run/prospect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          industry: rubro || 'Empresa local',
+          city: ciudad || 'Neuquén Capital',
+          country: 'Argentina',
+          limit: 20,
+          source: 'auto',
+        }),
+      });
+      const data = await res.json() as { companies_found: number; new_companies: number; error?: string };
+      if (!res.ok) throw new Error(data.error ?? 'Error en prospección');
+      setRunResult({ found: data.companies_found, new: data.new_companies });
+      showToast(`${data.companies_found} empresas encontradas · ${data.new_companies} nuevas`);
+      await loadCompanies();
+    } catch (err: any) {
+      showToast(err.message ?? 'Error de prospección', 'error');
+    } finally {
+      setScanning(false);
+    }
   };
 
-  const exportToCrm = async (p: Prospect) => {
-    setProspects(prev => prev.map(x => x.id === p.id ? { ...x, status: 'exportado' } : x));
-    setExportMsg(`${p.name} exportado al CRM Pipeline ✓`);
-    setTimeout(() => setExportMsg(null), 3000);
+  const updateStatus = async (id: string, status: string) => {
+    try {
+      await fetch(`/api/companies/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      setCompanies(prev => prev.map(c => c.id === id ? { ...c, status } : c));
+      if (status === 'enriched') showToast(`Empresa exportada al CRM ✓`);
+      if (status === 'discard') showToast(`Empresa descartada`);
+    } catch {
+      showToast('Error actualizando estado', 'error');
+    }
   };
 
-  const filtered = statusFilter === 'all' ? prospects : prospects.filter(p => p.status === statusFilter);
-  const newCount = prospects.filter(p => p.status === 'nuevo').length;
-  const exportedCount = prospects.filter(p => p.status === 'exportado').length;
-  const avgFit = Math.round(prospects.reduce((a, p) => a + p.fit, 0) / prospects.length);
+  const filtered = statusFilter === 'all' ? companies
+    : statusFilter === 'new' ? companies.filter(c => c.status === 'new')
+    : statusFilter === 'enriched' ? companies.filter(c => ['enriched', 'analyzed', 'proposed', 'in_campaign'].includes(c.status))
+    : companies.filter(c => c.status === 'discard');
+
+  const newCount = companies.filter(c => c.status === 'new').length;
+  const exportedCount = companies.filter(c => ['enriched', 'analyzed', 'proposed', 'in_campaign', 'replied', 'closed'].includes(c.status)).length;
+  const avgRating = companies.length > 0
+    ? Math.round(companies.filter(c => c.rating).reduce((a, c) => a + (c.rating ?? 0), 0) / (companies.filter(c => c.rating).length || 1) * 10) / 10
+    : 0;
 
   return (
     <div className="space-y-8 text-slate-200">
@@ -84,22 +137,26 @@ export default function WpProspector() {
             <Target className="w-7 h-7 text-orange-400" />
             <h1 className="text-2xl font-bold text-white">Prospector de Leads</h1>
             <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-emerald-400/10 border border-emerald-400/30 text-emerald-400 font-semibold">
-              <CheckCircle2 className="w-3.5 h-3.5" /> Activo
+              <CheckCircle2 className="w-3.5 h-3.5" /> Conectado
             </span>
           </div>
           <p className="text-slate-400 text-sm max-w-2xl">
-            Descubrimiento de prospectos locales integrado con el Explorador Patagónico. Busca empresas por rubro y zona geográfica con calificación MEDDIC automática.
+            Prospección real vía Google Maps API y Apify. Los resultados se guardan en la base de datos y se pueden enriquecer con Hunter.io.
           </p>
         </div>
+        <button onClick={loadCompanies} disabled={loading}
+          className="flex items-center gap-1.5 px-3 py-1.5 border border-[#1E293B] text-slate-400 rounded-lg text-xs hover:text-slate-200 hover:border-slate-500 transition-all">
+          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} /> Actualizar
+        </button>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Prospectos encontrados', value: prospects.length, icon: <Target className="w-5 h-5 text-orange-400" />, border: 'border-orange-500/30' },
-          { label: 'Pendientes de exportar', value: newCount, icon: <Filter className="w-5 h-5 text-sky-400" />, border: 'border-sky-500/30' },
-          { label: 'Exportados al CRM', value: exportedCount, icon: <CheckCircle2 className="w-5 h-5 text-emerald-400" />, border: 'border-emerald-500/30' },
-          { label: 'Fit score promedio', value: avgFit, icon: <Star className="w-5 h-5 text-amber-400" />, border: 'border-amber-500/30' },
+          { label: 'Empresas en DB', value: companies.length, icon: <Target className="w-5 h-5 text-orange-400" />, border: 'border-orange-500/30' },
+          { label: 'Sin procesar', value: newCount, icon: <Filter className="w-5 h-5 text-sky-400" />, border: 'border-sky-500/30' },
+          { label: 'En pipeline', value: exportedCount, icon: <CheckCircle2 className="w-5 h-5 text-emerald-400" />, border: 'border-emerald-500/30' },
+          { label: 'Rating promedio', value: avgRating || '—', icon: <Star className="w-5 h-5 text-amber-400" />, border: 'border-amber-500/30' },
         ].map(s => (
           <div key={s.label} className={`bg-[#0A101F]/60 border ${s.border} rounded-xl p-4`}>
             <div className="flex items-center justify-between mb-2">{s.icon}<span className="text-2xl font-bold text-white">{s.value}</span></div>
@@ -108,10 +165,22 @@ export default function WpProspector() {
         ))}
       </div>
 
-      {/* Export toast */}
-      {exportMsg && (
-        <div className="flex items-center gap-2 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-sm text-emerald-400 font-semibold">
-          <CheckCircle2 className="w-4 h-4" /> {exportMsg}
+      {/* Toast */}
+      {toast && (
+        <div className={`flex items-center gap-2 p-3 rounded-xl text-sm font-semibold border ${
+          toast.type === 'success'
+            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+            : 'bg-rose-500/10 border-rose-500/30 text-rose-400'
+        }`}>
+          {toast.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+          {toast.msg}
+        </div>
+      )}
+
+      {/* Run result summary */}
+      {runResult && (
+        <div className="p-4 bg-sky-500/5 border border-sky-500/20 rounded-xl text-xs text-sky-300">
+          ✓ Prospección completada: <strong>{runResult.found}</strong> empresas encontradas · <strong>{runResult.new}</strong> nuevas guardadas en la base de datos
         </div>
       )}
 
@@ -141,114 +210,146 @@ export default function WpProspector() {
             <button onClick={runProspect} disabled={scanning}
               className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-orange-500/10 border border-orange-500/30 text-orange-400 rounded-lg text-sm font-semibold hover:bg-orange-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
               {scanning ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4" />}
-              {scanning ? 'Buscando en Google Maps...' : 'Prospectar'}
+              {scanning ? 'Buscando en Google Maps…' : 'Prospectar'}
             </button>
           </div>
         </div>
         <div className="mt-3 flex flex-wrap gap-4 text-xs text-slate-500">
           <span className="flex items-center gap-1"><Zap className="w-3 h-3 text-amber-400" /> Google Maps API</span>
-          <span className="flex items-center gap-1"><Zap className="w-3 h-3 text-sky-400" /> Calificación MEDDIC automática</span>
-          <span className="flex items-center gap-1"><Zap className="w-3 h-3 text-orange-400" /> Exportación directa al CRM</span>
+          <span className="flex items-center gap-1"><Zap className="w-3 h-3 text-sky-400" /> Apify fallback</span>
+          <span className="flex items-center gap-1"><Zap className="w-3 h-3 text-orange-400" /> Guardado en Neon DB</span>
         </div>
       </div>
 
-      {/* Prospects list */}
+      {/* Companies list */}
       <div className="space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-3">
-          <h2 className="text-base font-bold text-white">Resultados</h2>
-          <div className="flex gap-2">
-            {(['all', 'nuevo', 'exportado', 'descartado'] as const).map(f => (
-              <button key={f} onClick={() => setStatusFilter(f)}
+          <h2 className="text-base font-bold text-white">
+            Empresas prospectadas {loading && <Loader2 className="inline w-4 h-4 animate-spin text-slate-500 ml-1" />}
+          </h2>
+          <div className="flex gap-2 flex-wrap">
+            {([
+              { val: 'all', label: 'Todas' },
+              { val: 'new', label: `🔵 Sin procesar (${newCount})` },
+              { val: 'enriched', label: `✅ En pipeline (${exportedCount})` },
+              { val: 'discard', label: '⬜ Descartadas' },
+            ] as const).map(f => (
+              <button key={f.val} onClick={() => setStatusFilter(f.val)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
-                  statusFilter === f
+                  statusFilter === f.val
                     ? 'bg-[#1E293B] border-slate-500 text-white'
                     : 'bg-transparent border-[#1E293B] text-slate-500 hover:text-slate-300'
                 }`}>
-                {f === 'all' ? 'Todos' : f === 'nuevo' ? `🔵 Nuevos (${newCount})` : f === 'exportado' ? `✅ Exportados` : '⬜ Descartados'}
+                {f.label}
               </button>
             ))}
           </div>
         </div>
 
-        <div className="space-y-3">
-          {filtered.map(p => (
-            <div key={p.id}
-              className={`bg-[#0A101F]/60 border rounded-xl overflow-hidden transition-all ${
-                expanded === p.id ? 'border-orange-500/30' : 'border-[#1E293B] hover:border-orange-500/20'
-              }`}>
-              <div
-                className="p-5 flex items-start gap-4 cursor-pointer"
-                onClick={() => setExpanded(expanded === p.id ? null : p.id)}>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 flex-wrap mb-1">
-                    <p className="font-semibold text-white text-sm">{p.name}</p>
-                    <FitBadge score={p.fit} />
-                    {p.status === 'exportado' && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-400/10 border border-emerald-400/30 text-emerald-400 font-semibold">Exportado</span>
-                    )}
-                    {p.status === 'descartado' && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-slate-400/10 border border-slate-400/30 text-slate-400 font-semibold">Descartado</span>
-                    )}
-                  </div>
-                  <div className="flex flex-wrap gap-3 text-xs text-slate-500">
-                    <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{p.ciudad}</span>
-                    <span>{p.rubro}</span>
-                    {p.phone && <span>{p.phone}</span>}
-                    {p.website && <span className="text-sky-400">{p.website}</span>}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {p.status === 'nuevo' && (
-                    <button
-                      onClick={e => { e.stopPropagation(); exportToCrm(p); }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-lg text-xs font-semibold hover:bg-emerald-500/20 transition-all">
-                      <ArrowRight className="w-3.5 h-3.5" /> Exportar al CRM
-                    </button>
-                  )}
-                </div>
-              </div>
+        {!loading && filtered.length === 0 && (
+          <div className="text-center py-16 text-slate-500">
+            <Target className="w-12 h-12 mx-auto mb-3 opacity-30" />
+            <p className="text-sm">No hay empresas aún. Usá el formulario para prospectar.</p>
+          </div>
+        )}
 
-              {expanded === p.id && (
-                <div className="px-5 pb-5 border-t border-[#1E293B] pt-4 grid md:grid-cols-3 gap-4">
-                  <div className="space-y-3">
-                    <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Score MEDDIC</p>
-                    <MeddicBar label="Need (Necesidad)" val={p.meddic.need} />
-                    <MeddicBar label="Budget (Presupuesto)" val={p.meddic.budget} />
-                    <MeddicBar label="Authority (Decisor)" val={p.meddic.authority} />
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold mb-3">Datos de contacto</p>
-                    <div className="space-y-1.5 text-xs text-slate-300">
-                      {p.phone && <p>📞 {p.phone}</p>}
-                      {p.website && <p>🌐 {p.website}</p>}
-                      <p>📍 {p.ciudad}, Patagonia</p>
-                      <p>🏭 {p.rubro}</p>
+        <div className="space-y-3">
+          {filtered.map(c => {
+            const isNew = c.status === 'new';
+            const isExported = ['enriched', 'analyzed', 'proposed', 'in_campaign', 'replied', 'closed'].includes(c.status);
+            const isDiscarded = c.status === 'discard';
+
+            return (
+              <div key={c.id}
+                className={`bg-[#0A101F]/60 border rounded-xl overflow-hidden transition-all ${
+                  expanded === c.id ? 'border-orange-500/30' : 'border-[#1E293B] hover:border-orange-500/20'
+                }`}>
+                <div className="p-5 flex items-start gap-4 cursor-pointer"
+                  onClick={() => setExpanded(expanded === c.id ? null : c.id)}>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 flex-wrap mb-1">
+                      <p className="font-semibold text-white text-sm">{c.name}</p>
+                      <FitBadge score={c.rating ?? 0} />
+                      {isExported && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-400/10 border border-emerald-400/30 text-emerald-400 font-semibold">En pipeline</span>
+                      )}
+                      {isDiscarded && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-slate-400/10 border border-slate-400/30 text-slate-400 font-semibold">Descartada</span>
+                      )}
+                      {c.source && (
+                        <span className="text-[10px] text-slate-600">{c.source}</span>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-3 text-xs text-slate-500">
+                      {c.city && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{c.city}</span>}
+                      {c.industry && <span>{c.industry}</span>}
+                      {c.phone && <span>{c.phone}</span>}
+                      {c.website && <span className="text-sky-400 truncate max-w-[180px]">{c.website}</span>}
                     </div>
                   </div>
-                  <div className="flex flex-col gap-2">
-                    <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold mb-1">Acciones</p>
-                    {p.status === 'nuevo' && (
-                      <button onClick={() => exportToCrm(p)}
-                        className="flex items-center gap-2 px-3 py-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-lg text-xs font-semibold hover:bg-emerald-500/20 transition-all">
-                        <ArrowRight className="w-3.5 h-3.5" /> Exportar al CRM Pipeline
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {isNew && (
+                      <button
+                        onClick={e => { e.stopPropagation(); updateStatus(c.id, 'enriched'); }}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-lg text-xs font-semibold hover:bg-emerald-500/20 transition-all">
+                        <ArrowRight className="w-3.5 h-3.5" /> Exportar al CRM
                       </button>
                     )}
-                    <button onClick={() => setProspects(prev => prev.map(x => x.id === p.id ? { ...x, status: 'descartado' } : x))}
-                      className="flex items-center gap-2 px-3 py-2 bg-[#030712] border border-[#1E293B] text-slate-400 rounded-lg text-xs font-semibold hover:text-slate-200 transition-all">
-                      Descartar prospecto
-                    </button>
                   </div>
                 </div>
-              )}
-            </div>
-          ))}
+
+                {expanded === c.id && (
+                  <div className="px-5 pb-5 border-t border-[#1E293B] pt-4 grid md:grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold mb-3">Datos de contacto</p>
+                      <div className="space-y-1.5 text-xs text-slate-300">
+                        {c.phone && <p>📞 {c.phone}</p>}
+                        {c.website && <p>🌐 <a href={`https://${c.website.replace(/^https?:\/\//, '')}`} target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:underline">{c.website}</a></p>}
+                        {c.city && <p>📍 {c.city}, Patagonia</p>}
+                        {c.industry && <p>🏭 {c.industry}</p>}
+                        {(c.leads_count ?? 0) > 0 && <p className="text-emerald-400">👤 {c.leads_count} contacto{c.leads_count !== 1 ? 's' : ''} enriquecido{c.leads_count !== 1 ? 's' : ''}</p>}
+                      </div>
+                    </div>
+                    <div className="md:col-span-1">
+                      {c.metadata?.pain_point && (
+                        <>
+                          <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold mb-3">Pain Point (IA)</p>
+                          <p className="text-xs text-slate-300 leading-relaxed">{c.metadata.pain_point}</p>
+                        </>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold mb-1">Acciones</p>
+                      {isNew && (
+                        <button onClick={() => updateStatus(c.id, 'enriched')}
+                          className="flex items-center gap-2 px-3 py-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-lg text-xs font-semibold hover:bg-emerald-500/20 transition-all">
+                          <ArrowRight className="w-3.5 h-3.5" /> Exportar al CRM Pipeline
+                        </button>
+                      )}
+                      {!isDiscarded && (
+                        <button onClick={() => updateStatus(c.id, 'discard')}
+                          className="flex items-center gap-2 px-3 py-2 bg-[#030712] border border-[#1E293B] text-slate-400 rounded-lg text-xs font-semibold hover:text-slate-200 transition-all">
+                          Descartar empresa
+                        </button>
+                      )}
+                      {isDiscarded && (
+                        <button onClick={() => updateStatus(c.id, 'new')}
+                          className="flex items-center gap-2 px-3 py-2 bg-[#030712] border border-[#1E293B] text-slate-400 rounded-lg text-xs font-semibold hover:text-slate-200 transition-all">
+                          Restaurar
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      {/* CRM integration note */}
+      {/* Footer note */}
       <div className="p-4 bg-orange-500/5 border border-orange-500/20 rounded-xl text-xs text-orange-300">
-        <strong>CRM:</strong> Los leads se exportan directo al <strong>CRM Pipeline → Patagonia Explorer</strong>.
-        El fit score MEDDIC se preserva en el contacto para priorizar el seguimiento desde la pestaña <strong>Leads</strong>.
+        <strong>CRM:</strong> Las empresas exportadas pasan al pipeline. Usá <strong>Leads</strong> para enriquecer contactos con Hunter.io y generar propuestas personalizadas.
       </div>
     </div>
   );
