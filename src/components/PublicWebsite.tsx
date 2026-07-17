@@ -734,10 +734,14 @@ export default function PublicWebsite({
   const SOLUTIONS_ITEMS = useMemo(() => [
     { id: "chatbot", label: "Chatbot WhatsApp", desc: "Tu negocio atiende solo, las 24 horas", icon: Bot, color: "text-green-500 bg-green-50" },
     { id: "crm_inteligente", label: "CRM Inteligente", desc: "Nunca más perdas una venta", icon: Briefcase, color: "text-blue-500 bg-blue-50" },
+    { id: "asistente_ia", label: "Asistente IA", desc: "Tu analista de negocio, siempre disponible", icon: Sparkles, color: "text-violet-500 bg-violet-50" },
+    { id: "automatizacion", label: "Broadcast & Automatización", desc: "Campañas masivas de WhatsApp y flujos sin código", icon: Radio, color: "text-amber-500 bg-amber-50" },
+    { id: "portal_cliente", label: "Portal del Cliente", desc: "Tus clientes se autoatienden", icon: LayoutGrid, color: "text-teal-500 bg-teal-50" },
+    { id: "desarrollo_web", label: "Desarrollo Web", desc: "Tu presencia web, conectada al CRM", icon: Code2, color: "text-slate-600 bg-slate-100" },
+    { id: "integraciones", label: "Integraciones", desc: "WhatsApp, AFIP, MercadoPago y más de 60 servicios", icon: Workflow, color: "text-emerald-500 bg-emerald-50" },
     { id: "afip", label: "Facturación AFIP", desc: "Facturá electrónicamente sin salir del CRM", icon: FileText, color: "text-blue-700 bg-blue-50" },
     { id: "mercadopago", label: "Suscripciones Mercado Pago", desc: "Cobros recurrentes y links de pago automáticos", icon: CreditCard, color: "text-sky-600 bg-sky-50" },
     { id: "leads", label: "Prospección de Leads", desc: "Encontrá y calificá clientes potenciales con IA", icon: Rocket, color: "text-violet-500 bg-violet-50" },
-    { id: "automatizacion", label: "Broadcast & Automatización", desc: "Campañas masivas de WhatsApp y flujos sin código", icon: Radio, color: "text-amber-500 bg-amber-50" },
     { id: "reportes", label: "Business Intelligence", desc: "Métricas y reportes accionables de tu negocio", icon: BarChart2, color: "text-fuchsia-500 bg-fuchsia-50" },
     { id: "ecommerce", label: "E-Commerce", desc: "Vendé online, integrado a tu CRM y stock", icon: ShoppingCart, color: "text-orange-500 bg-orange-50", query: "ecommerce" },
   ], []);
@@ -3879,6 +3883,46 @@ export default function PublicWebsite({
                   ))}
                 </div>
 
+                {/* Catálogo completo — 10 categorías · 63 herramientas */}
+                <div>
+                  <div className="text-center mb-8">
+                    <span className="text-emerald-600 font-mono text-[10px] uppercase tracking-widest font-bold">Ecosistema completo</span>
+                    <h2 className="text-2xl font-display font-black text-slate-950 tracking-tight mt-2">63 integraciones en 10 categorías</h2>
+                    <p className="text-slate-500 text-xs max-w-2xl mx-auto mt-2 leading-relaxed">
+                      Nativo = construido por Clientum · Certificado = partnership oficial · Partner = programa de partners · API = conexión vía API pública
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {[
+                      { emoji: "🛒", cat: "E-Commerce", tools: ["WooCommerce (Nativo)", "Shopify (API)", "PrestaShop", "Tiendanube (API)", "MercadoShops", "Jumpseller (API)"] },
+                      { emoji: "💳", cat: "Pagos & Cobros", tools: ["MercadoPago (Nativo)", "PayPal (API)", "Stripe (API)", "Modo", "GetNet/Prisma", "Naranja X"] },
+                      { emoji: "💬", cat: "Mensajería", tools: ["WhatsApp Business API (Certificado)", "Meta FB/IG (Partner)", "Twilio (API)", "360dialog (Certificado)", "Telegram Bot", "Gmail API", "SMTP propio (Nativo)"] },
+                      { emoji: "📣", cat: "Marketing", tools: ["Meta Ads (Partner)", "Google Ads (Partner)", "TikTok for Business", "LinkedIn Ads", "Mailchimp (API)", "ActiveCampaign (API)", "Brevo (API)"] },
+                      { emoji: "🏢", cat: "ERP & Facturación", tools: ["AFIP Facturación electrónica (Nativo)", "Dolibarr ERP (Nativo)", "Odoo", "Contabilium (API)", "Colppy", "Xubio", "Tango Gestión"] },
+                      { emoji: "☁️", cat: "Cloud & Hosting", tools: ["Google Cloud (Partner)", "Amazon AWS (Partner)", "Microsoft Azure (Partner)", "Cloudflare (Certificado)", "DigitalOcean", "Hostinger"] },
+                      { emoji: "📊", cat: "Analytics & BI", tools: ["Google Analytics 4 (Nativo)", "Looker Studio", "Power BI", "Meta Pixel (Nativo)", "Hotjar", "Tableau"] },
+                      { emoji: "⚙️", cat: "Productividad", tools: ["Google Workspace (Certificado)", "Microsoft 365", "Slack (API)", "Zoom", "Teams", "Notion (API)", "Trello/Jira"] },
+                      { emoji: "🔒", cat: "Seguridad", tools: ["Let's Encrypt/SSL (Nativo)", "Cloudflare WAF (Certificado)", "reCAPTCHA (Nativo)", "2FA/TOTP (Nativo)", "OAuth 2.0/SSO (Nativo)"] },
+                      { emoji: "🤖", cat: "Inteligencia Artificial", tools: ["OpenAI GPT-4 (API)", "Google Gemini (API)", "Anthropic Claude (API)", "Whisper STT (API)", "ElevenLabs TTS (API)", "Stability AI (API)"] },
+                    ].map(({ emoji, cat, tools }) => (
+                      <div key={cat} className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-lg">{emoji}</span>
+                          <h4 className="font-bold text-slate-900 text-sm">{cat}</h4>
+                          <span className="ml-auto text-[10px] font-mono text-slate-400">{tools.length} herramientas</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {tools.map((t) => (
+                            <span key={t} className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${t.includes("Nativo") ? "bg-emerald-50 text-emerald-700 border-emerald-200" : t.includes("Certificado") ? "bg-blue-50 text-blue-700 border-blue-200" : t.includes("Partner") ? "bg-violet-50 text-violet-700 border-violet-200" : "bg-slate-50 text-slate-600 border-slate-200"}`}>
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 {/* API & Webhooks Technical Section */}
                 <div className="bg-slate-900 text-white rounded-2xl p-8 border border-slate-800 grid grid-cols-1 md:grid-cols-2 gap-8 items-center mt-4">
                   <div>
@@ -5098,6 +5142,249 @@ export default function PublicWebsite({
                   <h3 className="text-lg font-display font-bold text-slate-900">¿Tenés un proyecto en mente?</h3>
                   <p className="text-xs text-slate-500 mt-2">Contanos qué necesitás y te damos presupuesto en 48 horas.</p>
                   <button onClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="mt-5 bg-slate-900 hover:bg-[#1A3461] text-white font-bold text-xs px-6 py-2.5 rounded-lg transition-all cursor-pointer">Pedir presupuesto →</button>
+                </div>
+              </div>
+            )}
+
+            {/* ── INDUSTRIAS ── */}
+            {activeTab === "industrias" && (
+              <div className="max-w-6xl mx-auto px-6 py-12 flex flex-col gap-16">
+                <div className="text-center max-w-2xl mx-auto">
+                  <span className="text-[#1A3461] font-mono text-xs uppercase tracking-widest font-bold">Sectores que ya usamos</span>
+                  <h1 className="text-3xl md:text-4xl font-display font-black text-slate-950 tracking-tight mt-1">
+                    Clientum se adapta a tu industria
+                  </h1>
+                  <p className="text-slate-500 text-sm mt-4 leading-relaxed">
+                    Ofrecemos soluciones sumamente personalizables. Nos adaptamos a diferentes industrias, escalas de facturación y requerimientos específicos de cada sector.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[
+                    { id: "retail", label: "Comercios y Retail", desc: "Chatbot para consultas de stock, CRM de clientes frecuentes, facturación integrada y e-commerce sincronizado con inventario.", icon: ShoppingCart, color: "text-orange-500 bg-orange-50 border-orange-100" },
+                    { id: "salud", label: "Salud", desc: "Turnos por WhatsApp, recordatorios automáticos, historia clínica básica integrada al CRM y portal de pacientes.", icon: Stethoscope, color: "text-rose-500 bg-rose-50 border-rose-100" },
+                    { id: "agroindustria", label: "Agroindustria", desc: "Gestión de campos, seguimiento de cosechas, facturación de granos y comunicación con proveedores por WhatsApp.", icon: Package, color: "text-lime-600 bg-lime-50 border-lime-100" },
+                    { id: "inmobiliaria", label: "Inmobiliaria", desc: "CRM de propiedades y clientes, bots para precalificar interesados, firma digital de contratos y portal de propietarios.", icon: Home, color: "text-teal-500 bg-teal-50 border-teal-100" },
+                    { id: "logística", label: "Logística y Distribución", desc: "Seguimiento de pedidos en tiempo real, rutas optimizadas, notificaciones automáticas al destinatario y facturación al cierre.", icon: Truck, color: "text-slate-600 bg-slate-100 border-slate-200" },
+                    { id: "industrial", label: "Industrial y Manufactura", desc: "Control de stock de insumos, órdenes de producción, ERP Dolibarr integrado y reportes de márgenes por línea de producto.", icon: Building, color: "text-amber-600 bg-amber-50 border-amber-100" },
+                    { id: "automotriz", label: "Automotriz", desc: "CRM de concesionarios, seguimiento de test drives, recordatorios de service y gestión de flota de vehículos.", icon: Compass, color: "text-blue-600 bg-blue-50 border-blue-100" },
+                    { id: "medios", label: "Medios y Comunicación", desc: "Gestión de anunciantes, pipelines de pauta publicitaria, facturación de espacios y newsletter automatizado.", icon: Monitor, color: "text-fuchsia-600 bg-fuchsia-50 border-fuchsia-100" },
+                    { id: "institucional", label: "Institucional y ONGs", desc: "Gestión de socios, cobro de cuotas por MercadoPago, portal de miembros y comunicación masiva por WhatsApp.", icon: Building, color: "text-indigo-600 bg-indigo-50 border-indigo-100" },
+                  ].map(({ label, desc, icon: Icon, color }) => (
+                    <div key={label} className={`bg-white border rounded-2xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col gap-4 border-slate-200`}>
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color.split(" ").slice(1).join(" ")}`}>
+                        <Icon className={`w-5 h-5 ${color.split(" ")[0]}`} />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-slate-900 text-sm">{label}</h3>
+                        <p className="text-xs text-slate-500 leading-relaxed mt-2">{desc}</p>
+                      </div>
+                      <button
+                        onClick={() => { setActiveTab("casos"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                        className="text-xs font-bold text-[#1A3461] hover:text-emerald-600 transition-colors flex items-center gap-1 mt-auto"
+                      >
+                        Ver casos de éxito →
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <div className="bg-[#1A3461] text-white rounded-2xl p-8 text-center">
+                  <h3 className="text-lg font-display font-bold">¿Tu industria no está en la lista?</h3>
+                  <p className="text-xs text-slate-300 mt-2 max-w-xl mx-auto">
+                    Clientum es modular y configurable. Si tu rubro tiene particularidades, lo adaptamos. Contanos tu negocio y en 48 horas te mostramos cómo quedaría.
+                  </p>
+                  <button
+                    onClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                    className="mt-5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs px-6 py-2.5 rounded-lg transition-all cursor-pointer"
+                  >
+                    Hablar con un especialista →
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ── CARRERAS / TRABAJÁ CON NOSOTROS ── */}
+            {activeTab === "carreras" && (
+              <div className="max-w-6xl mx-auto px-6 py-12 flex flex-col gap-16">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                  <div>
+                    <span className="text-emerald-600 font-mono text-xs uppercase tracking-widest font-bold">Trabajá con Nosotros</span>
+                    <h1 className="text-3xl md:text-4xl font-display font-black text-slate-950 tracking-tight mt-1">
+                      Sumate al equipo<br />que digitalizamos la Patagonia
+                    </h1>
+                    <p className="text-slate-500 text-sm mt-4 leading-relaxed">
+                      En Clientum construimos tecnología real para PyMEs reales. Si te apasiona el impacto concreto, trabajar con autonomía y aprender rápido, este es tu lugar.
+                    </p>
+                    <ul className="mt-6 flex flex-col gap-3 text-xs text-slate-600">
+                      {["Trabajo 100% remoto desde cualquier lugar de Argentina", "Equipo chico, decisiones rápidas y sin burocracia", "Proyectos reales con clientes reales desde el día 1"].map((item) => (
+                        <li key={item} className="flex items-center gap-2">
+                          <Check className="w-4 h-4 text-emerald-500 shrink-0" />{item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                    <h4 className="font-bold text-slate-950 text-sm mb-4">Cultura Clientum</h4>
+                    <div className="flex flex-col gap-3">
+                      {[
+                        { title: "Autonomía real", desc: "Cada integrante tiene ownership de su área. Sin micromanagement." },
+                        { title: "Impacto visible", desc: "Lo que hacés se usa al día siguiente. Clientes reales, feedback inmediato." },
+                        { title: "Aprendizaje continuo", desc: "Acceso a Clientum Academia, conferencias y cursos de la industria." },
+                        { title: "Equipo diverso", desc: "Desarrolladores, marketers, consultores y diseñadores — todos en la misma mesa." },
+                      ].map(({ title, desc }) => (
+                        <div key={title} className="flex gap-3 items-start border-b border-slate-100 pb-3 last:border-0">
+                          <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                          <div>
+                            <div className="text-xs font-bold text-slate-800">{title}</div>
+                            <div className="text-[11px] text-slate-500 mt-0.5">{desc}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Posiciones abiertas */}
+                <div>
+                  <div className="text-center mb-8">
+                    <span className="text-emerald-600 font-mono text-[10px] uppercase tracking-widest font-bold">Posiciones abiertas</span>
+                    <h2 className="text-2xl font-display font-black text-slate-950 tracking-tight mt-2">Buscamos personas que resuelvan</h2>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {[
+                      { role: "Desarrollador/a Full Stack", type: "Remoto · Full time", skills: ["React / TypeScript", "Node.js / Express", "PostgreSQL", "APIs REST"], desc: "Desarrollás nuevas funciones del CRM, integraciones con servicios externos y mejoras de performance del sistema." },
+                      { role: "Consultor/a de Implementación", type: "Remoto · Full time", skills: ["CRM", "Onboarding", "WhatsApp Business", "Excel/Sheets"], desc: "Acompañás a nuevos clientes en su proceso de adopción de Clientum: configuración, capacitación y soporte post-lanzamiento." },
+                      { role: "Ejecutivo/a Comercial", type: "Remoto · Full time", skills: ["Ventas B2B", "CRM", "Propuestas", "WhatsApp"], desc: "Prospectás, calificás y cerrás clientes PyME en toda Argentina y Latinoamérica. Comisión sobre ventas + base." },
+                      { role: "Diseñador/a UI/UX", type: "Remoto · Part time", skills: ["Figma", "Tailwind CSS", "Mobile first", "Diseño de producto"], desc: "Diseñás nuevas interfaces del CRM, el sitio y las piezas de marketing. Trabajo asíncrono con el equipo de desarrollo." },
+                    ].map(({ role, type, skills, desc }) => (
+                      <div key={role} className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col gap-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <h3 className="font-bold text-slate-900 text-sm leading-snug">{role}</h3>
+                          <span className="text-[10px] font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full shrink-0 font-bold">{type}</span>
+                        </div>
+                        <p className="text-xs text-slate-500 leading-relaxed">{desc}</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {skills.map((s) => (
+                            <span key={s} className="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full font-semibold">{s}</span>
+                          ))}
+                        </div>
+                        <button
+                          onClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                          className="mt-auto text-xs font-bold text-[#1A3461] hover:text-emerald-600 transition-colors flex items-center gap-1"
+                        >
+                          Postularme →
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-8 text-center">
+                  <h3 className="text-lg font-display font-bold text-slate-900">¿No encontrás tu perfil?</h3>
+                  <p className="text-xs text-slate-500 mt-2 max-w-lg mx-auto">
+                    Mandanos tu CV y contanos en qué podés aportar. Siempre estamos abiertos a perfiles que sorprendan.
+                  </p>
+                  <button
+                    onClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                    className="mt-5 bg-[#1A3461] hover:bg-[#0d1f3c] text-white font-bold text-xs px-6 py-2.5 rounded-lg transition-all cursor-pointer"
+                  >
+                    Enviar CV espontáneo →
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ── DOCUMENTACIÓN API ── */}
+            {activeTab === "documentacion" && (
+              <div className="max-w-5xl mx-auto px-6 py-12 flex flex-col gap-12">
+                <div className="text-center max-w-xl mx-auto">
+                  <span className="text-slate-600 font-mono text-xs uppercase tracking-widest font-bold">Para Desarrolladores</span>
+                  <h1 className="text-3xl font-display font-black text-slate-950 tracking-tight mt-1">
+                    API REST & Documentación Técnica
+                  </h1>
+                  <p className="text-slate-500 text-xs mt-2 leading-relaxed">
+                    Integrá Clientum con tus sistemas propios, automatizaciones externas o herramientas de BI usando nuestra API REST y sistema de webhooks en tiempo real.
+                  </p>
+                </div>
+
+                {/* Recursos principales */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  {[
+                    { title: "API REST", icon: Terminal, color: "text-emerald-600", desc: "Endpoints autenticados con Bearer Token para leer y escribir contactos, deals, facturas y actividad del CRM desde cualquier sistema externo." },
+                    { title: "Webhooks en tiempo real", icon: Workflow, color: "text-blue-600", desc: "Recibí notificaciones instantáneas cuando ocurren eventos: lead creado, deal ganado, pago recibido, factura emitida, mensaje recibido." },
+                    { title: "OAuth 2.0 / SSO", icon: Settings, color: "text-violet-600", desc: "Conectá tu sistema de autenticación propio usando el estándar OAuth 2.0. Compatible con Google Workspace, Microsoft 365 y proveedores SAML." },
+                  ].map(({ title, icon: Icon, color, desc }) => (
+                    <div key={title} className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                      <Icon className={`w-5 h-5 mb-3 ${color}`} />
+                      <h4 className="font-bold text-slate-900 text-sm mb-2">{title}</h4>
+                      <p className="text-xs text-slate-500 leading-relaxed">{desc}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Endpoints disponibles */}
+                <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                  <h3 className="font-bold text-slate-950 text-sm mb-4 border-b border-slate-100 pb-3">Endpoints disponibles</h3>
+                  <div className="flex flex-col gap-2">
+                    {[
+                      { method: "GET", path: "/api/contacts", desc: "Listar contactos con filtros de búsqueda" },
+                      { method: "POST", path: "/api/contacts", desc: "Crear un nuevo contacto" },
+                      { method: "GET", path: "/api/deals", desc: "Obtener deals del pipeline con etapas y valores" },
+                      { method: "POST", path: "/api/deals", desc: "Crear un deal y asignarlo a un contacto" },
+                      { method: "PATCH", path: "/api/deals/:id/stage", desc: "Avanzar o retroceder la etapa de un deal" },
+                      { method: "GET", path: "/api/invoices", desc: "Listar facturas emitidas con estado de pago" },
+                      { method: "POST", path: "/api/webhooks", desc: "Registrar un endpoint para recibir eventos" },
+                      { method: "GET", path: "/api/activity", desc: "Obtener el log de actividad por contacto o deal" },
+                    ].map(({ method, path, desc }) => (
+                      <div key={path} className="flex items-center gap-3 py-2 border-b border-slate-100 last:border-0">
+                        <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded shrink-0 ${method === "GET" ? "bg-blue-50 text-blue-700" : method === "POST" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
+                          {method}
+                        </span>
+                        <code className="text-[11px] font-mono text-slate-800 shrink-0">{path}</code>
+                        <span className="text-[11px] text-slate-400 ml-auto text-right">{desc}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Webhook payload */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="font-bold text-slate-950 text-sm mb-3">Eventos de webhook disponibles</h3>
+                    <div className="flex flex-col gap-2">
+                      {[
+                        "lead.created", "lead.qualified", "deal.created",
+                        "deal.stage_changed", "deal.won", "deal.lost",
+                        "invoice.issued", "invoice.paid", "contact.updated", "message.received"
+                      ].map((evt) => (
+                        <div key={evt} className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                          <code className="text-[11px] font-mono text-slate-700">{evt}</code>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="bg-slate-900 rounded-xl p-5 font-mono text-[11px] text-slate-300 leading-relaxed">
+                    <div className="text-slate-500 mb-2">// POST a tu endpoint cuando se gana un deal</div>
+                    <div><span className="text-emerald-400">"event"</span>: <span className="text-amber-300">"deal.won"</span>,</div>
+                    <div><span className="text-emerald-400">"timestamp"</span>: <span className="text-amber-300">"2026-07-17T14:00:00Z"</span>,</div>
+                    <div><span className="text-emerald-400">"data"</span>: &#123;</div>
+                    <div className="pl-4"><span className="text-emerald-400">"deal_id"</span>: <span className="text-amber-300">"DL-2847"</span>,</div>
+                    <div className="pl-4"><span className="text-emerald-400">"company"</span>: <span className="text-amber-300">"Ferretería Central"</span>,</div>
+                    <div className="pl-4"><span className="text-emerald-400">"amount_usd"</span>: <span className="text-blue-400">450</span>,</div>
+                    <div className="pl-4"><span className="text-emerald-400">"invoice_cae"</span>: <span className="text-amber-300">"74123456789012"</span></div>
+                    <div>&#125;</div>
+                  </div>
+                </div>
+
+                <div className="bg-slate-100 border border-slate-200 rounded-2xl p-8 text-center">
+                  <h3 className="text-lg font-display font-bold text-slate-900">¿Necesitás integrar Clientum?</h3>
+                  <p className="text-xs text-slate-500 mt-2">Nuestro equipo técnico puede guiarte en la integración. Escribinos y te respondemos en menos de 24 horas hábiles.</p>
+                  <button
+                    onClick={() => { setActiveTab("contacto"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                    className="mt-5 bg-slate-900 hover:bg-[#1A3461] text-white font-bold text-xs px-6 py-2.5 rounded-lg transition-all cursor-pointer"
+                  >
+                    Contactar al equipo técnico →
+                  </button>
                 </div>
               </div>
             )}
