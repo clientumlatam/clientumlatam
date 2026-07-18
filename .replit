@@ -64,9 +64,6 @@ defaultBucketID = "replit-objstore-ee52125a-7ef9-4c14-a221-3b1abc6ac4b1"
 [userenv]
 
 [userenv.shared]
-APP_URL = "https://clientum.com.ar"
-NODE_ENV = "production"
-PORT = "5000"
 
 [userenv.development]
 
