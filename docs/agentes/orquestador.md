@@ -11,7 +11,6 @@ ambiguo elige la interpretación más razonable y avisa qué asumió.
 
 ## memoria
 
-
 (vacío — primera ejecución pendiente)
 
 ## proceso
@@ -40,4 +39,3 @@ o el resumen del tablero manualmente.
 **Cron:** revisa el estado general del tablero cada 15 min
 **Output al hablar con Jonathan:** solo avisa cuando hay una decisión que requiere
 su intervención, o cuando un objetivo completo termina — no interrumpe por cada paso intermedio
-
