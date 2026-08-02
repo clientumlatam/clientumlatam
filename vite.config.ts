@@ -25,7 +25,12 @@ export default defineConfig(() => {
       },
     },
     server: {
-      hmr: process.env.DISABLE_HMR !== 'true',
+      hmr: process.env.DISABLE_HMR === 'true' ? false : {
+        // Replit proxies WebSocket through port 443 (WSS) — without this,
+        // the Vite HMR client tries to connect on the wrong port and fails.
+        clientPort: 443,
+        protocol: 'wss',
+      },
       watch: process.env.DISABLE_HMR === 'true' ? null : {
         // nzip2 is a huge, separate WordPress/PHP repo copied for reference only —
         // it is not part of this app and watching its ~29k files exhausts the
