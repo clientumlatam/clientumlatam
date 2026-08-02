@@ -232,7 +232,13 @@ const pgPool = {
       try {
         return await rawPgPool.query(text, params);
       } catch (err: any) {
-        if (err.code === "ECONNREFUSED" || err.message?.includes("connect")) {
+        const isConnErr =
+          err.code === "ECONNREFUSED" ||
+          err.code === "ENOTFOUND" ||
+          err.code === "ETIMEDOUT" ||
+          err.code === "ENOENT" ||
+          err.message?.includes("connect");
+        if (isConnErr) {
           console.warn("[DB Fallback] PostgreSQL no disponible — usando in-memory DB fallback");
           return runMemoryQuery(text, params);
         }
