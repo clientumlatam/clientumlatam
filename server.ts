@@ -56,7 +56,10 @@ function resolveDatabaseUrl(): string {
     url.includes("localhost:5432") ||
     url.includes("127.0.0.1:5432") ||
     url.includes("clientum_dev") ||
-    url.includes("placeholder")
+    url.includes("placeholder") ||
+    // Replit's internal postgres uses hostname "base" — not reachable externally
+    /@base[/:]/i.test(url) ||
+    /\/\/[^@]*@base\b/.test(url)
   ) {
     return "";
   }

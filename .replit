@@ -26,8 +26,12 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "pnpm run dev"
+args = "CI=1 pnpm run dev"
 waitForPort = 5000
+
+[[ports]]
+localPort = 3000
+externalPort = 3003
 
 [[ports]]
 localPort = 5000
@@ -71,6 +75,7 @@ defaultBucketID = "replit-objstore-ee52125a-7ef9-4c14-a221-3b1abc6ac4b1"
 CRM_INTERNAL_TOKEN = "dev-crm-internal-token-secret"
 NODE_ENV = "development"
 SANTI_API_KEY = "santi-dev-api-key-secret"
+PORT = "5000"
 
 [userenv.development]
 
