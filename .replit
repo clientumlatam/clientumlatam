@@ -68,6 +68,9 @@ defaultBucketID = "replit-objstore-ee52125a-7ef9-4c14-a221-3b1abc6ac4b1"
 [userenv]
 
 [userenv.shared]
+CRM_INTERNAL_TOKEN = "dev-crm-internal-token-secret"
+NODE_ENV = "development"
+SANTI_API_KEY = "santi-dev-api-key-secret"
 
 [userenv.development]
 
