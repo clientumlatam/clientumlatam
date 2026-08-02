@@ -1,0 +1,1 @@
+- [Replit Postgres setup](replit-postgres.md) — use PGHOST/PGPORT/PGUSER/PGPASSWORD/PGDATABASE with ssl:false; helium is the internal hostname.

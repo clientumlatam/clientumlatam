@@ -50,20 +50,20 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 // stale if it's ever rotated). Otherwise falls back to DATABASE_URL
 // (Replit's own internal Postgres) for local-only setups.
 function resolveDatabaseUrl(): string {
-  const url = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL || "";
+  // Prefer explicit Neon URL if provided and valid
+  const neonUrl = process.env.NEON_DATABASE_URL || "";
   if (
-    !url ||
-    url.includes("localhost:5432") ||
-    url.includes("127.0.0.1:5432") ||
-    url.includes("clientum_dev") ||
-    url.includes("placeholder") ||
-    // Replit's internal postgres uses hostname "base" — not reachable externally
-    /@base[/:]/i.test(url) ||
-    /\/\/[^@]*@base\b/.test(url)
+    neonUrl &&
+    !neonUrl.includes("localhost:5432") &&
+    !neonUrl.includes("127.0.0.1:5432") &&
+    !neonUrl.includes("clientum_dev") &&
+    !neonUrl.includes("placeholder") &&
+    neonUrl.startsWith("postgresql")
   ) {
-    return "";
+    return neonUrl;
   }
-  return url;
+  // No valid external URL — signal to use Replit's PG* env vars directly
+  return "";
 }
 
 const databaseUrl = resolveDatabaseUrl();
@@ -92,11 +92,23 @@ interface MemoryResetToken {
 const memoryTokens: MemoryResetToken[] = [];
 let nextTokenId = 1;
 
+// Use Replit's built-in Postgres (via PG* env vars) when no external URL is set.
+// The internal DB does not support SSL, so ssl must be disabled.
 const rawPgPool = databaseUrl
   ? new Pool({
       connectionString: databaseUrl,
-      ssl: /sslmode=disable/i.test(databaseUrl) ? false : { rejectUnauthorized: false },
-      connectionTimeoutMillis: 3000,
+      ssl: { rejectUnauthorized: false },
+      connectionTimeoutMillis: 5000,
+    })
+  : process.env.PGHOST
+  ? new Pool({
+      host: process.env.PGHOST,
+      port: Number(process.env.PGPORT || 5432),
+      user: process.env.PGUSER,
+      password: process.env.PGPASSWORD,
+      database: process.env.PGDATABASE,
+      ssl: false,
+      connectionTimeoutMillis: 5000,
     })
   : null;
 
